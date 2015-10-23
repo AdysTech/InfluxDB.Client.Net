@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.40629.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdysTech.InfluxDB.Client.Net", "AdysTech.InfluxDB.Client.Net\AdysTech.InfluxDB.Client.Net.csproj", "{31C6D4D4-86A6-4E76-9E54-F4C399140CE7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdysTech.InfluxDB.Client.Net.Test", "AdysTech.InfluxDB.Client.Net.Test\AdysTech.InfluxDB.Client.Net.Test.csproj", "{C76424F8-1563-4699-9019-A36B74FA7FF5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{31C6D4D4-86A6-4E76-9E54-F4C399140CE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31C6D4D4-86A6-4E76-9E54-F4C399140CE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31C6D4D4-86A6-4E76-9E54-F4C399140CE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31C6D4D4-86A6-4E76-9E54-F4C399140CE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C76424F8-1563-4699-9019-A36B74FA7FF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C76424F8-1563-4699-9019-A36B74FA7FF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C76424F8-1563-4699-9019-A36B74FA7FF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C76424F8-1563-4699-9019-A36B74FA7FF5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
