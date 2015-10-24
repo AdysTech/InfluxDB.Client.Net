@@ -10,6 +10,7 @@ namespace InfluxDB.Client.Test
     public class InfluxDBClientTest
     {
         const string dbName = "testDB";
+        const string measurementName = "TestMeasurement";
         const string invalidDbName = "test DB";
         const string dbUName = "admin";
         const string dbpwd = "admin";
@@ -50,7 +51,7 @@ namespace InfluxDB.Client.Test
         {
             try
             {
-                //pass 8089, which is not influx port
+                
                 var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
                 var r = await client.GetInfluxDBNamesAsync ();
                 Assert.IsTrue (r != null && r.Count > 0, "GetInfluxDBNamesAsync retunred null or empty collection");
@@ -69,7 +70,7 @@ namespace InfluxDB.Client.Test
         {
             try
             {
-                //pass 8089, which is not influx port
+                
                 var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
                 var r = await client.GetInfluxDBStructureAsync ("InvalidDB");
                 Assert.IsTrue (r != null && r.Count == 0, "GetInfluxDBNamesAsync retunred null or non empty collection");
@@ -83,11 +84,19 @@ namespace InfluxDB.Client.Test
         }
 
         [TestMethod]
+        [ExpectedException (typeof (ArgumentException))]
+        public async Task TestCreateDatabaseAsync_InvalidName()
+        {
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+            var r = await client.CreateDatabaseAsync (invalidDbName);
+        }
+
+        [TestMethod]
         public async Task TestCreateDatabaseAsync()
         {
             try
             {
-                //pass 8089, which is not influx port
+                
                 var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
                 var r = await client.CreateDatabaseAsync (dbName);
                 Assert.IsTrue (r, "CreateDatabaseAsync retunred false");
@@ -105,13 +114,23 @@ namespace InfluxDB.Client.Test
             }
         }
 
-
         [TestMethod]
-        [ExpectedException (typeof (ArgumentException))]
-        public async Task TestCreateDatabaseAsync_InvalidName()
+        public async Task TestPostValueAsync()
         {
-            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
-            var r = await client.CreateDatabaseAsync (invalidDbName);
+            try
+            {
+                var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+                var r = await client.PostValueAsync (dbName, measurementName, DateTime.Now.ToEpoch(TimePrecision.Seconds),TimePrecision.Seconds,"testTag=testTagValue","Temp",33.05);
+                Assert.IsTrue (r, "PostValueAsync retunred false");
+            }
+            catch ( Exception e )
+            {
+
+                Assert.Fail ("Unexpected exception of type {0} caught: {1}",
+                            e.GetType (), e.Message);
+                return;
+            }
         }
+
     }
 }

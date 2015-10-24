@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ExtensionMethods.cs" />
     <Compile Include="IInfluxDBClient.cs" />
     <Compile Include="InfluxDBClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
