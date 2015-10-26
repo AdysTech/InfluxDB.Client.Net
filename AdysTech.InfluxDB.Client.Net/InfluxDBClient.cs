@@ -19,7 +19,8 @@ namespace AdysTech.InfluxDB.Client.Net
         Seconds = 3,
         Milliseconds = 4,
         Microseconds = 5,
-        Nanoseconds = 6
+        Nanoseconds = 6,
+        H=1
     }
 
     public class InfluxDBClient : IInfluxDBClient
@@ -253,7 +254,7 @@ namespace AdysTech.InfluxDB.Client.Net
                     new KeyValuePair<string, string>("precision", precisionLiterals[(int) precision])
                     }).ReadAsStringAsync ();
 
-            var content = String.Format ("{0},{1} {2}={3:0.00} {4}", measurement, tags, field, value, timestamp);
+            var content = String.Format ("{0},{1} {2}={3} {4}", measurement, tags, field, value, timestamp);
             ByteArrayContent requestContent = new ByteArrayContent (Encoding.UTF8.GetBytes (content));
             HttpResponseMessage response = await PostAsync (builder, requestContent);
 
@@ -280,7 +281,7 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <returns>True:Success, False:Failure</returns>
         ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
         ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>   
-        public async Task<bool> PostValuesAsync(string dbName, string measurement, long timestamp, TimePrecision precision, string tags, IEnumerable<string> values)
+        public async Task<bool> PostValuesAsync(string dbName, string measurement, long timestamp, TimePrecision precision, string tags, IDictionary<string,double> values)
         {
             var influxAddress = new Uri (String.Format ("{0}/write?", InfluxUrl));
             var builder = new UriBuilder (influxAddress);
@@ -289,11 +290,13 @@ namespace AdysTech.InfluxDB.Client.Net
                     new KeyValuePair<string, string>("precision", precisionLiterals[(int) precision])
                     }).ReadAsStringAsync ();
 
-            var content = new StringBuilder ();
-            foreach ( var value in values )
-                content.AppendFormat ("{0},{1} {2} {3}\n", measurement, tags, value, timestamp);
-            //remove last \n
-            content.Remove (content.Length - 1, 1);
+            //var content = new StringBuilder ();
+            //foreach ( var value in values )
+            //    content.AppendFormat ("{0},{1} {2} {3}\n", measurement, tags, value, timestamp);
+            ////remove last \n
+            //content.Remove (content.Length - 1, 1);
+            var valuesTxt=String.Join (",", values.Select (v => String.Format ("{0}={1}", v.Key, v.Value)));
+            var content = String.Format ("{0},{1} {2} {3}", measurement, tags, valuesTxt, timestamp);
 
             ByteArrayContent requestContent = new ByteArrayContent (Encoding.UTF8.GetBytes (content.ToString ()));
             HttpResponseMessage response = await PostAsync (builder, requestContent);
@@ -337,6 +340,8 @@ namespace AdysTech.InfluxDB.Client.Net
             else
                 return false;
         }
+
+
     }
 
 }

@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using AdysTech.InfluxDB.Client.Net;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace InfluxDB.Client.Test
 {
@@ -120,7 +121,7 @@ namespace InfluxDB.Client.Test
             try
             {
                 var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
-                var r = await client.PostValueAsync (dbName, measurementName, DateTime.Now.ToEpoch(TimePrecision.Seconds),TimePrecision.Seconds,"testTag=testTagValue","Temp",33.05);
+                var r = await client.PostValueAsync (dbName, measurementName, DateTime.UtcNow.ToEpoch(TimePrecision.Seconds),TimePrecision.Seconds,"testTag=testTagValue","Temp",33.05);
                 Assert.IsTrue (r, "PostValueAsync retunred false");
             }
             catch ( Exception e )
@@ -132,5 +133,24 @@ namespace InfluxDB.Client.Test
             }
         }
 
+        [TestMethod]
+        public async Task TestPostValuesAsync()
+        {
+            try
+            {
+                var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+                var val = new Random ();
+                var values = new Dictionary<string, double> () { { "filed1", val.NextDouble () * 10 }, { "filed2", val.NextDouble () * 10 }, { "filed3", val.NextDouble () * 10 } };
+                var r = await client.PostValuesAsync (dbName, measurementName, DateTime.UtcNow.ToEpoch (TimePrecision.Seconds), TimePrecision.Seconds, "testTag=testTagValue",values);
+                Assert.IsTrue (r, "PostValuesAsync retunred false");
+            }
+            catch ( Exception e )
+            {
+
+                Assert.Fail ("Unexpected exception of type {0} caught: {1}",
+                            e.GetType (), e.Message);
+                return;
+            }
+        }
     }
 }
