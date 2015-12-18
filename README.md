@@ -27,7 +27,7 @@ c.	Deleting data
 ####Create new database
 `CreateDatabaseAsync("<db name>");`
 
-###New Version - 12/19/2015
+###--------------New Version - 12/19/2015--------------------
 Added the functionality to query for existing data from InfluxDB
 
 ####Query for data points
