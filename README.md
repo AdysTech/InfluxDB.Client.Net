@@ -26,3 +26,14 @@ c.	Deleting data
 
 ####Create new database
 `CreateDatabaseAsync("<db name>");`
+
+###New Version - 12/19/2015
+Added the functionality to query for existing data from InfluxDB
+
+####Query for data points
+`await client.QueryDBAsync ("<db name>", "<query">);`
+
+This function uses dynamic object (`ExpandoObject` to be exact), so `var r = await client.QueryDBAsync ("stress", "select * from performance limit 10");` will result in list of objects, where each object has properties with its value set to measument value.
+So the result can be used like `r[0].time`. This also opens up a way to have an update mechanism as you can now query for data, change some values/tags etc, and write back. Since Influx uses combination of timestamp, tags as primary key, if you don't change tags, the values will be overwritten.
+
+Also unknown little quirk was Influx's need for . (dot) to treat a number as a number, so non US local code can beak Influx data writes. Thanks to @spamik, now double to string conversion will work in any locale.
