@@ -14,5 +14,6 @@ namespace AdysTech.InfluxDB.Client.Net
         Task<bool> PostValueAsync(string dbName, string measurement, long timestamp, TimePrecision precision, string tags, string field, double value);
         Task<bool> PostValuesAsync(string dbName, string measurement, long timestamp, TimePrecision precision, string tags, IDictionary<string,double> values);
         Task<bool> PostRawValueAsync(string dbName, TimePrecision precision, string content);
+        Task<List<dynamic>> QueryDBAsync(string dbName, string measurementQuery);
     }
 }

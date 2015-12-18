@@ -1,14 +1,18 @@
 ﻿//Copyright: Adarsha@AdysTech
+
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using AdysTech.InfluxDB.Client.Net.DataContracts;
 
 namespace AdysTech.InfluxDB.Client.Net
 {
@@ -341,7 +345,52 @@ namespace AdysTech.InfluxDB.Client.Net
                 return false;
         }
 
+        /// <summary>
+        /// Queries Influx DB and gets a time series data back ideal for fetching measurement values, 
+        /// The return list is of dynamics, and each element in their will have properties named after columns in series
+        /// </summary>
+        /// <param name="dbName">Name of the database</param>
+        /// <param name="measurementQuery">Query text, Only results with single series are supported for now</param>
+        /// <returns>List of ExpandoObjects (in the form of dynamic). 
+        /// The objects will have columns as Peoperties with their current values</returns>
+        public async Task<List<dynamic>> QueryDBAsync(string dbName, string measurementQuery)
+        {
+            var dbStructure = new Dictionary<string, List<string>> ();
+            var query = new Uri (InfluxUrl + "/query?");
+            var builder = new UriBuilder (query);
+            builder.Query = await new FormUrlEncodedContent (new[] { 
+					new KeyValuePair<string, string>("db", dbName) ,
+					new KeyValuePair<string, string>("q", measurementQuery) 
+					}).ReadAsStringAsync ();
+            var response = await GetAsync (builder);
+            if ( response.StatusCode == HttpStatusCode.OK )
+            {
+                var content = await response.Content.ReadAsStreamAsync ();
+                DataContractJsonSerializer js = new DataContractJsonSerializer (typeof (InfluxResponse));
+                var result = js.ReadObject (content) as InfluxResponse;
 
+                if ( result.Results.Count > 1 )
+                    throw new ArgumentException ("The query is resulting in Multi Series respone, which is not supported by this method");
+
+                if ( result.Results[0].Series.Count > 1 )
+                    throw new ArgumentException ("The query is resulting in Multi Series respone, which is not supported by this method");
+
+                var series = result.Results[0].Series[0];
+
+                var results = new List<dynamic> ();
+                for ( var row = 0; row < series.Values.Count; row++ )
+                {
+                    dynamic entry = new ExpandoObject ();
+                    results.Add (entry);
+                    for ( var col = 0; col < series.ColumnHeaders.Count; col++ )
+                    {
+                        ( (IDictionary<string, object>) entry ).Add (series.ColumnHeaders[col], series.Values[row][col]);
+                    }
+                }
+                return results;
+            }
+            return null;
+        }
     }
 
 }
