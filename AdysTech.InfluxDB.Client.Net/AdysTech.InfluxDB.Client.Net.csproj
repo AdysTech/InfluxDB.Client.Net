@@ -42,7 +42,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="IInfluxDatapoint.cs" />
     <Compile Include="IInfluxDBClient.cs" />
+    <Compile Include="InfluxDatapoint.cs" />
     <Compile Include="InfluxDBClient.cs" />
     <Compile Include="DataContracts\InfluxJsonTypes.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
