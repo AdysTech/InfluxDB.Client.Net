@@ -19,8 +19,8 @@ namespace AdysTech.InfluxDB.Client.Net
                 case TimePrecision.Minutes: return (long) t.TotalMinutes;
                 case TimePrecision.Seconds: return (long) t.TotalSeconds;
                 case TimePrecision.Milliseconds: return (long) t.TotalMilliseconds;
-                case TimePrecision.Microseconds: return (long) t.TotalMilliseconds * 1000;
-                case TimePrecision.Nanoseconds: return (long) t.TotalMilliseconds * 1000 * 1000;
+                case TimePrecision.Microseconds: return (long) t.Ticks * ( TimeSpan.TicksPerMillisecond / 1000 );
+                case TimePrecision.Nanoseconds: return (long) t.Ticks * 100; //1 tick = 100 nano sec
             }
             return 0;
         }
