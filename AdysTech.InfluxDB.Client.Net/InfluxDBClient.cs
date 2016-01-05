@@ -399,13 +399,14 @@ namespace AdysTech.InfluxDB.Client.Net
         /// </summary>
         /// <param name="dbName">InfluxDB database name</param>
         /// <param name="Points">Collection of Influx data points to be written</param>
-        /// <returns>True:Success, False:Failure</returns>
+        /// <returns>True:Success, False:Failure, or partial failure</returns>
+        /// Sets Saved property on InfluxDatapoint to true to successful points
         ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
         ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>   
         public async Task<bool> PostPointsAsync(string dbName, IEnumerable<IInfluxDatapoint> Points)
         {
             int maxBatchSize = 255;
-
+            bool finalResult = true, result;
             foreach ( var group in Points.GroupBy (p => p.Precision) )
             {
                 var pointsGroup = group.AsEnumerable ().Select ((point, index) => new { Index = index, Point = point })//get the index of each point
@@ -413,7 +414,9 @@ namespace AdysTech.InfluxDB.Client.Net
                      .Select (x => x.Select (v => v.Point)); //get the points
                 foreach ( var points in pointsGroup )
                 {
-                    if ( await PostPointsAsync (dbName, group.Key, points) )
+                    result = await PostPointsAsync (dbName, group.Key, points);
+                    finalResult = result && finalResult;
+                    if ( result )
                     {
                         points.ToList ().ForEach (p => p.Saved = true);
                     }
@@ -421,7 +424,7 @@ namespace AdysTech.InfluxDB.Client.Net
 
             }
 
-            return true;
+            return finalResult;
         }
 
 
