@@ -135,7 +135,8 @@ namespace AdysTech.InfluxDB.Client.Net
                 ////double has to have a . as decimal seperator for Influx
                 fields = String.Join (",", Fields.Select (v => new StringBuilder ().AppendFormat ("{0}={1}", EscapeChars (v.Key), String.Format (System.Globalization.CultureInfo.GetCultureInfo ("en-US"), "{0}", v.Value))));
 
-            line.AppendFormat (" {0} {1}", fields, UtcTimestamp.ToEpoch (Precision));
+
+            line.AppendFormat (" {0} {1}", fields, UtcTimestamp != DateTime.MinValue ? UtcTimestamp.ToEpoch (Precision) : DateTime.UtcNow.ToEpoch (Precision));
 
             return line.ToString ();
         }

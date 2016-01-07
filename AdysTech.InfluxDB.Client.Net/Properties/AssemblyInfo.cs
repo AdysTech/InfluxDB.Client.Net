@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("AdysTech")]
 [assembly: AssemblyProduct("AdysTech.InfluxDB.Client.Net")]
-[assembly: AssemblyCopyright("Copyright © AdysTech 2015")]
+[assembly: AssemblyCopyright("Copyright © AdysTech 2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
