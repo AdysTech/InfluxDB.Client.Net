@@ -359,6 +359,30 @@ namespace InfluxDB.Client.Test
 
         [TestMethod]
         [ExpectedException (typeof (InfluxDBException))]
+        public async Task TestPostPointAsync_InvalidReq()
+        {
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+            var time = DateTime.Now;
+            var today = DateTime.Now.ToShortDateString ();
+            var now = DateTime.Now.ToShortTimeString ();
+
+            var valDouble = new InfluxDatapoint<double> ();
+            valDouble.UtcTimestamp = DateTime.UtcNow;
+            valDouble.Tags.Add ("TestDate", today);
+            valDouble.Tags.Add ("TestTime", now);
+            valDouble.Fields.Add ("Doublefield", DataGen.RandomDouble ());
+            valDouble.Fields.Add ("Doublefield2", Double.NaN);
+            valDouble.MeasurementName = measurementName;
+            valDouble.Precision = TimePrecision.Seconds;
+
+            var r = await client.PostPointAsync (dbName, valDouble);
+            Assert.IsTrue (r, "PostPointsAsync retunred false");
+
+        }
+
+
+        [TestMethod]
+        [ExpectedException (typeof (InfluxDBException))]
         public async Task TestPostPointsAsync_PartialWrite()
         {
             var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);

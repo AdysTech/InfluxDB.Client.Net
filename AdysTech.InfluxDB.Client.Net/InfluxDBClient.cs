@@ -413,6 +413,28 @@ namespace AdysTech.InfluxDB.Client.Net
             if ( response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.BadGateway || ( response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error" ) ) //502 Connection refused
                 throw new UnauthorizedAccessException ("InfluxDB needs authentication. Check uname, pwd parameters");
             //if(response.StatusCode==HttpStatusCode.NotFound)
+            else if ( response.StatusCode == HttpStatusCode.BadRequest )
+            {
+                var content = await response.Content.ReadAsStringAsync ();
+                //regex assumes error text from https://github.com/influxdata/influxdb/blob/master/models/points.go ParsePointsWithPrecision
+                //fmt.Sprintf("'%s': %v", string(block[start:len(block)])
+                List<string> parts; bool partialWrite;
+                if ( content.Contains ("partial write") )
+                {
+                    if ( content.Contains ("\\n") )
+                        parts = Regex.Matches (content.Substring (content.IndexOf ("partial write:\\n") + 16), @"([\P{Cc}].*?) '([\P{Cc}].*?)':([\P{Cc}].*?)\\n").ToList ();
+                    else
+                        parts = Regex.Matches (content.Substring (content.IndexOf ("partial write:\\n") + 16), @"([\P{Cc}].*?) '([\P{Cc}].*?)':([\P{Cc}].*?)").ToList ();
+                    partialWrite = true;
+                }
+                else
+                {
+                    parts = Regex.Matches (content, @"{\""error"":""([9\P{Cc}]+) '([\P{Cc}]+)':([a-zA-Z0-9 ]+)").ToList ();
+                    partialWrite = false;
+                }
+                throw new InfluxDBException (partialWrite ? "Partial Write" : "Failed to Write", String.Format ("{0}: {1} due to {2}", partialWrite ? "Partial Write" : "Failed to Write", parts[0], parts[2]), point);
+                return false;
+            }
             else if ( response.StatusCode == HttpStatusCode.NoContent )
             {
                 point.Saved = true;
