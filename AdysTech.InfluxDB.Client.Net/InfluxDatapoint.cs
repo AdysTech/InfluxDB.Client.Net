@@ -60,6 +60,48 @@ namespace AdysTech.InfluxDB.Client.Net
         }
 
         /// <summary>
+        /// Initializes tags with a preexisitng dictionary
+        /// </summary>
+        /// <param name="tags">Dictionary of tag/value pairs</param>
+        /// <returns>True:Success, False:Failure</returns>
+        public bool InitializeTags(IDictionary<string, string> tags)
+        {
+            if ( Tags.Count > 0 )
+                throw new InvalidOperationException ("Tags can be initialized only when the collection is empty");
+            try
+            {
+                Tags = new Dictionary<string, string> (tags);
+                return true;
+            }
+            catch ( Exception )
+            {
+                Tags = new Dictionary<string, string> ();
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Initializes fields with a preexisting dictionary
+        /// </summary>
+        /// <param name="fields">Dictionary of Field/Value pairs</param>
+        /// <returns>True:Success, False:Failure</returns>
+        public bool InitializeFields(IDictionary<string, T> fields)
+        {
+            if ( Fields.Count > 0 )
+                throw new InvalidOperationException ("Fields can be initialized only when the collection is empty");
+            try
+            {
+                Fields = new Dictionary<string, T> (fields);
+                return true;
+            }
+            catch ( Exception )
+            {
+                Fields = new Dictionary<string, T> ();
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Returns the string representing the point in InfluxDB Line protocol
         /// </summary>
         /// <returns></returns>
@@ -68,6 +110,8 @@ namespace AdysTech.InfluxDB.Client.Net
         {
             if ( Fields.Count == 0 )
                 throw new InvalidOperationException ("InfluxDB needs atleast one field in a line");
+            if ( String.IsNullOrWhiteSpace (MeasurementName) )
+                throw new InvalidOperationException ("InfluxDB needs a measurement name to accept a point");
 
             var line = new StringBuilder ();
             line.AppendFormat ("{0}", MeasurementName);
@@ -91,7 +135,8 @@ namespace AdysTech.InfluxDB.Client.Net
                 ////double has to have a . as decimal seperator for Influx
                 fields = String.Join (",", Fields.Select (v => new StringBuilder ().AppendFormat ("{0}={1}", EscapeChars (v.Key), String.Format (System.Globalization.CultureInfo.GetCultureInfo ("en-US"), "{0}", v.Value))));
 
-            line.AppendFormat (" {0} {1}", fields, UtcTimestamp.ToEpoch (Precision));
+
+            line.AppendFormat (" {0} {1}", fields, UtcTimestamp != DateTime.MinValue ? UtcTimestamp.ToEpoch (Precision) : DateTime.UtcNow.ToEpoch (Precision));
 
             return line.ToString ();
         }
@@ -104,6 +149,10 @@ namespace AdysTech.InfluxDB.Client.Net
                 val = val.Replace (" ", "\\ ");
             if ( escapeEqualSign && val.Contains ('=') )
                 val = val.Replace ("=", "\\=");
+            //edge case, which will trigger Unbalanced Quotes exception in InfluxDB
+            if ( val.EndsWith ("\\") )
+                val = val.Substring (0, val.Length - 1);
+
             return val;
         }
 

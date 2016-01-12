@@ -122,6 +122,38 @@ namespace AdysTech.InfluxDB.Client.Net
             if ( response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.BadGateway || ( response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error" ) ) //502 Connection refused
                 throw new UnauthorizedAccessException ("InfluxDB needs authentication. Check uname, pwd parameters");
             //if(response.StatusCode==HttpStatusCode.NotFound)
+            else if ( response.StatusCode == HttpStatusCode.BadRequest )
+            {
+                var content = await response.Content.ReadAsStringAsync ();
+                //regex assumes error text from https://github.com/influxdata/influxdb/blob/master/models/points.go ParsePointsWithPrecision
+                //fmt.Sprintf("'%s': %v", string(block[start:len(block)])
+                List<string> parts; bool partialWrite;
+                if ( content.Contains ("partial write") )
+                {
+                    if ( content.Contains ("\\n") )
+                        parts = Regex.Matches (content.Substring (content.IndexOf ("partial write:\\n") + 16), @"([\P{Cc}].*?) '([\P{Cc}].*?)':([\P{Cc}].*?)\\n").ToList ();
+                    else
+                        parts = Regex.Matches (content.Substring (content.IndexOf ("partial write:\\n") + 16), @"([\P{Cc}].*?) '([\P{Cc}].*?)':([\P{Cc}].*?)").ToList ();
+                    partialWrite = true;
+                }
+                else
+                {
+                    parts = Regex.Matches (content, @"{\""error"":""([9\P{Cc}]+) '([\P{Cc}]+)':([a-zA-Z0-9 ]+)").ToList ();
+                    partialWrite = false;
+                }
+                string l;
+                if ( parts[1].Contains ("\\n") )
+                    l = parts[1].Substring (0, parts[1].IndexOf ("\\n")).Unescape ();
+                else
+                    l = parts[1].Unescape ();
+
+                var point = points.Where (p => p.ConvertToInfluxLineProtocol () == l).FirstOrDefault ();
+                if ( point != null )
+                    throw new InfluxDBException (partialWrite ? "Partial Write" : "Failed to Write", String.Format ("{0}: {1} due to {2}", partialWrite ? "Partial Write" : "Failed to Write", parts[0], parts[2]), point);
+                else
+                    throw new InfluxDBException (partialWrite ? "Partial Write" : "Failed to Write", String.Format ("{0}: {1} due to {2}", partialWrite ? "Partial Write" : "Failed to Write", parts[0], parts[2]), l);
+                return false;
+            }
             else if ( response.StatusCode == HttpStatusCode.NoContent )
                 return true;
             else
@@ -381,6 +413,28 @@ namespace AdysTech.InfluxDB.Client.Net
             if ( response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.BadGateway || ( response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error" ) ) //502 Connection refused
                 throw new UnauthorizedAccessException ("InfluxDB needs authentication. Check uname, pwd parameters");
             //if(response.StatusCode==HttpStatusCode.NotFound)
+            else if ( response.StatusCode == HttpStatusCode.BadRequest )
+            {
+                var content = await response.Content.ReadAsStringAsync ();
+                //regex assumes error text from https://github.com/influxdata/influxdb/blob/master/models/points.go ParsePointsWithPrecision
+                //fmt.Sprintf("'%s': %v", string(block[start:len(block)])
+                List<string> parts; bool partialWrite;
+                if ( content.Contains ("partial write") )
+                {
+                    if ( content.Contains ("\\n") )
+                        parts = Regex.Matches (content.Substring (content.IndexOf ("partial write:\\n") + 16), @"([\P{Cc}].*?) '([\P{Cc}].*?)':([\P{Cc}].*?)\\n").ToList ();
+                    else
+                        parts = Regex.Matches (content.Substring (content.IndexOf ("partial write:\\n") + 16), @"([\P{Cc}].*?) '([\P{Cc}].*?)':([\P{Cc}].*?)").ToList ();
+                    partialWrite = true;
+                }
+                else
+                {
+                    parts = Regex.Matches (content, @"{\""error"":""([9\P{Cc}]+) '([\P{Cc}]+)':([a-zA-Z0-9 ]+)").ToList ();
+                    partialWrite = false;
+                }
+                throw new InfluxDBException (partialWrite ? "Partial Write" : "Failed to Write", String.Format ("{0}: {1} due to {2}", partialWrite ? "Partial Write" : "Failed to Write", parts[0], parts[2]), point);
+                return false;
+            }
             else if ( response.StatusCode == HttpStatusCode.NoContent )
             {
                 point.Saved = true;
@@ -399,13 +453,14 @@ namespace AdysTech.InfluxDB.Client.Net
         /// </summary>
         /// <param name="dbName">InfluxDB database name</param>
         /// <param name="Points">Collection of Influx data points to be written</param>
-        /// <returns>True:Success, False:Failure</returns>
+        /// <returns>True:Success, False:Failure, or partial failure</returns>
+        /// Sets Saved property on InfluxDatapoint to true to successful points
         ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
         ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>   
         public async Task<bool> PostPointsAsync(string dbName, IEnumerable<IInfluxDatapoint> Points)
         {
             int maxBatchSize = 255;
-
+            bool finalResult = true, result;
             foreach ( var group in Points.GroupBy (p => p.Precision) )
             {
                 var pointsGroup = group.AsEnumerable ().Select ((point, index) => new { Index = index, Point = point })//get the index of each point
@@ -413,7 +468,9 @@ namespace AdysTech.InfluxDB.Client.Net
                      .Select (x => x.Select (v => v.Point)); //get the points
                 foreach ( var points in pointsGroup )
                 {
-                    if ( await PostPointsAsync (dbName, group.Key, points) )
+                    result = await PostPointsAsync (dbName, group.Key, points);
+                    finalResult = result && finalResult;
+                    if ( result )
                     {
                         points.ToList ().ForEach (p => p.Saved = true);
                     }
@@ -421,7 +478,7 @@ namespace AdysTech.InfluxDB.Client.Net
 
             }
 
-            return true;
+            return finalResult;
         }
 
 
