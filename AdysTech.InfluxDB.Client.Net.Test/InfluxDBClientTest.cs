@@ -218,18 +218,7 @@ namespace InfluxDB.Client.Test
             }
         }
 
-        private string GenerateRandomString()
-        {
-            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ,=/\\";
-            var stringChars = new char[16];
-            var random = new Random ();
 
-            for ( int i = 0; i < stringChars.Length; i++ )
-            {
-                stringChars[i] = chars[random.Next (chars.Length)];
-            }
-            return new String (stringChars);
-        }
 
         [TestMethod]
         public async Task TestPostStringPointAsync()
@@ -242,7 +231,7 @@ namespace InfluxDB.Client.Test
                 valString.UtcTimestamp = DateTime.UtcNow;
                 valString.Tags.Add ("TestDate", time.ToShortDateString ());
                 valString.Tags.Add ("TestTime", time.ToShortTimeString ());
-                valString.Fields.Add ("Stringfield", GenerateRandomString ());
+                valString.Fields.Add ("Stringfield", @"j0,Oox7ju6lJvA0\");//DataGen.RandomString ());
                 valString.MeasurementName = measurementName;
                 valString.Precision = TimePrecision.Seconds;
                 var r = await client.PostPointAsync (dbName, valString);
@@ -291,47 +280,70 @@ namespace InfluxDB.Client.Test
             {
                 var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
                 var time = DateTime.Now;
-                var rand = new Random ();
+                var today = DateTime.Now.ToShortDateString ();
+                var now = DateTime.Now.ToShortTimeString ();
+
+                var points = new List<IInfluxDatapoint> ();
 
                 var valDouble = new InfluxDatapoint<double> ();
                 valDouble.UtcTimestamp = DateTime.UtcNow;
-                valDouble.Tags.Add ("TestDate", time.ToShortDateString ());
-                valDouble.Tags.Add ("TestTime", time.ToShortTimeString ());
-                valDouble.Fields.Add ("Doublefield", rand.NextDouble ());
-                valDouble.Fields.Add ("Doublefield2", rand.NextDouble ());
+                valDouble.Tags.Add ("TestDate", today);
+                valDouble.Tags.Add ("TestTime", now);
+                valDouble.Fields.Add ("Doublefield", DataGen.RandomDouble ());
+                valDouble.Fields.Add ("Doublefield2", DataGen.RandomDouble ());
                 valDouble.MeasurementName = measurementName;
-                valDouble.Precision = TimePrecision.Milliseconds;
+                valDouble.Precision = TimePrecision.Nanoseconds;
+                points.Add (valDouble);
+
+                valDouble = new InfluxDatapoint<double> ();
+                valDouble.UtcTimestamp = DateTime.UtcNow;
+                valDouble.Tags.Add ("TestDate", today);
+                valDouble.Tags.Add ("TestTime", now);
+                valDouble.Fields.Add ("Doublefield", DataGen.RandomDouble ());
+                valDouble.Fields.Add ("Doublefield2", DataGen.RandomDouble ());
+                valDouble.MeasurementName = measurementName;
+                valDouble.Precision = TimePrecision.Microseconds;
+                points.Add (valDouble);
 
                 var valInt = new InfluxDatapoint<int> ();
                 valInt.UtcTimestamp = DateTime.UtcNow;
-                valInt.Tags.Add ("TestDate", time.ToShortDateString ());
-                valInt.Tags.Add ("TestTime", time.ToShortTimeString ());
-                valInt.Fields.Add ("Intfield", rand.Next ());
-                valInt.Fields.Add ("Intfield2", rand.Next ());
+                valInt.Tags.Add ("TestDate", today);
+                valInt.Tags.Add ("TestTime", now);
+                valInt.Fields.Add ("Intfield", DataGen.RandomInt ());
+                valInt.Fields.Add ("Intfield2", DataGen.RandomInt ());
+                valInt.MeasurementName = measurementName;
+                valInt.Precision = TimePrecision.Milliseconds;
+                points.Add (valInt);
+
+                valInt = new InfluxDatapoint<int> ();
+                valInt.UtcTimestamp = DateTime.UtcNow;
+                valInt.Tags.Add ("TestDate", today);
+                valInt.Tags.Add ("TestTime", now);
+                valInt.Fields.Add ("Intfield", DataGen.RandomInt ());
+                valInt.Fields.Add ("Intfield2", DataGen.RandomInt ());
                 valInt.MeasurementName = measurementName;
                 valInt.Precision = TimePrecision.Seconds;
+                points.Add (valInt);
 
                 var valBool = new InfluxDatapoint<bool> ();
                 valBool.UtcTimestamp = DateTime.UtcNow;
-                valBool.Tags.Add ("TestDate", time.ToShortDateString ());
-                valBool.Tags.Add ("TestTime", time.ToShortTimeString ());
+                valBool.Tags.Add ("TestDate", today);
+                valBool.Tags.Add ("TestTime", now);
                 valBool.Fields.Add ("Booleanfield", time.Ticks % 2 == 0);
                 valBool.MeasurementName = measurementName;
                 valBool.Precision = TimePrecision.Minutes;
+                points.Add (valBool);
 
                 var valString = new InfluxDatapoint<string> ();
                 valString.UtcTimestamp = DateTime.UtcNow;
-                valString.Tags.Add ("TestDate", time.ToShortDateString ());
-                valString.Tags.Add ("TestTime", time.ToShortTimeString ());
-                valString.Fields.Add ("Stringfield", GenerateRandomString ());
+                valString.Tags.Add ("TestDate", today);
+                valString.Tags.Add ("TestTime", now);
+                valString.Fields.Add ("Stringfield", DataGen.RandomString ());
                 valString.MeasurementName = measurementName;
                 valString.Precision = TimePrecision.Hours;
-
-                var points = new List<IInfluxDatapoint> ();
                 points.Add (valString);
-                points.Add (valInt);
-                points.Add (valDouble);
-                points.Add (valBool);
+
+
                 var r = await client.PostPointsAsync (dbName, points);
                 Assert.IsTrue (r, "PostPointsAsync retunred false");
             }
@@ -342,6 +354,58 @@ namespace InfluxDB.Client.Test
                             e.GetType (), e.Message);
                 return;
             }
+        }
+
+
+        [TestMethod]
+        [ExpectedException (typeof (InfluxDBException))]
+        public async Task TestPostPointsAsync_PartialWrite()
+        {
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+            var time = DateTime.Now;
+            var today = DateTime.Now.ToShortDateString ();
+            var now = DateTime.Now.ToShortTimeString ();
+
+            var points = new List<IInfluxDatapoint> ();
+
+
+            var valDouble = new InfluxDatapoint<double> ();
+            valDouble.UtcTimestamp = DateTime.UtcNow;
+            valDouble.Tags.Add ("TestDate", today);
+            valDouble.Tags.Add ("TestTime", now);
+            valDouble.Fields.Add ("Doublefield", DataGen.RandomDouble ());
+            valDouble.Fields.Add ("Doublefield2", Double.NaN);
+            valDouble.MeasurementName = measurementName;
+            valDouble.Precision = TimePrecision.Seconds;
+            points.Add (valDouble);
+
+
+            for ( int i = 0; i < 5; i++ )
+            {
+                var valInt = new InfluxDatapoint<int> ();
+                valInt.UtcTimestamp = DateTime.UtcNow.AddSeconds (-1 * DataGen.RandomInt (3600));
+                valInt.Tags.Add ("TestDate", today);
+                valInt.Tags.Add ("TestTime", now);
+                valInt.Fields.Add ("Intfield", DataGen.RandomInt ());
+                valInt.Fields.Add ("Intfield2", DataGen.RandomInt ());
+                valInt.MeasurementName = measurementName;
+                valInt.Precision = TimePrecision.Seconds;
+                points.Add (valInt);
+            }
+
+            valDouble = new InfluxDatapoint<double> ();
+            valDouble.UtcTimestamp = DateTime.UtcNow;
+            valDouble.Tags.Add ("TestDate", today);
+            valDouble.Tags.Add ("TestTime", now);
+            valDouble.Fields.Add ("Doublefield", DataGen.RandomDouble ());
+            valDouble.Fields.Add ("Doublefield2", Double.NaN);
+            valDouble.MeasurementName = measurementName;
+            valDouble.Precision = TimePrecision.Seconds;
+            points.Add (valDouble);
+
+            var r = await client.PostPointsAsync (dbName, points);
+            Assert.IsTrue (r, "PostPointsAsync retunred false");
+
         }
 
         /// <summary>
@@ -355,49 +419,49 @@ namespace InfluxDB.Client.Test
             try
             {
                 var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
-                
-                var rand = new Random ();
+
                 var points = new List<IInfluxDatapoint> ();
 
                 var today = DateTime.Now.ToShortDateString ();
                 var now = DateTime.Now.ToShortTimeString ();
+                var start = DateTime.Now.AddDays (-5);
+                var end = DateTime.Now;
 
-                for ( int i = 0; i < 500; i++ )
+                for ( int i = 0; i < 5000; i++ )
                 {
-                    var utcTime = DateTime.UtcNow;
                     var valDouble = new InfluxDatapoint<double> ();
-                    valDouble.UtcTimestamp = utcTime;
+                    valDouble.UtcTimestamp = DataGen.RandomDate (start, end);
                     valDouble.Tags.Add ("TestDate", today);
                     valDouble.Tags.Add ("TestTime", now);
-                    valDouble.Fields.Add ("Doublefield", rand.NextDouble ());
-                    valDouble.Fields.Add ("Doublefield2", rand.NextDouble ());
+                    valDouble.Fields.Add ("Doublefield", DataGen.RandomDouble ());
+                    valDouble.Fields.Add ("Doublefield2", DataGen.RandomDouble ());
                     valDouble.MeasurementName = measurementName;
-                    valDouble.Precision = (TimePrecision) ( rand.Next () % 6 ) + 1;
+                    valDouble.Precision = (TimePrecision) ( DataGen.RandomInt () % 6 ) + 1;
 
                     var valInt = new InfluxDatapoint<int> ();
-                    valInt.UtcTimestamp = utcTime;
+                    valInt.UtcTimestamp = DataGen.RandomDate (start, end);
                     valInt.Tags.Add ("TestDate", today);
                     valInt.Tags.Add ("TestTime", now);
-                    valInt.Fields.Add ("Intfield", rand.Next ());
-                    valInt.Fields.Add ("Intfield2", rand.Next ());
+                    valInt.Fields.Add ("Intfield", DataGen.RandomInt ());
+                    valInt.Fields.Add ("Intfield2", DataGen.RandomInt ());
                     valInt.MeasurementName = measurementName;
-                    valInt.Precision = (TimePrecision) ( rand.Next () % 6 ) + 1;
+                    valInt.Precision = (TimePrecision) ( DataGen.RandomInt () % 6 ) + 1;
 
                     var valBool = new InfluxDatapoint<bool> ();
-                    valBool.UtcTimestamp = utcTime;
+                    valBool.UtcTimestamp = DataGen.RandomDate (start, end);
                     valBool.Tags.Add ("TestDate", today);
                     valBool.Tags.Add ("TestTime", now);
                     valBool.Fields.Add ("Booleanfield", DateTime.Now.Ticks % 2 == 0);
                     valBool.MeasurementName = measurementName;
-                    valBool.Precision = (TimePrecision) ( rand.Next () % 6 ) + 1;
+                    valBool.Precision = (TimePrecision) ( DataGen.RandomInt () % 6 ) + 1;
 
                     var valString = new InfluxDatapoint<string> ();
-                    valString.UtcTimestamp = utcTime;
+                    valString.UtcTimestamp = DataGen.RandomDate (start, end);
                     valString.Tags.Add ("TestDate", today);
                     valString.Tags.Add ("TestTime", now);
-                    valString.Fields.Add ("Stringfield", GenerateRandomString ());
+                    valString.Fields.Add ("Stringfield", DataGen.RandomString ());
                     valString.MeasurementName = measurementName;
-                    valString.Precision = (TimePrecision) ( rand.Next () % 6 ) + 1;
+                    valString.Precision = (TimePrecision) ( DataGen.RandomInt () % 6 ) + 1;
 
 
                     points.Add (valString);

@@ -73,7 +73,7 @@ namespace AdysTech.InfluxDB.Client.Net
                 Tags = new Dictionary<string, string> (tags);
                 return true;
             }
-            catch ( Exception)
+            catch ( Exception )
             {
                 Tags = new Dictionary<string, string> ();
                 return false;
@@ -94,7 +94,7 @@ namespace AdysTech.InfluxDB.Client.Net
                 Fields = new Dictionary<string, T> (fields);
                 return true;
             }
-            catch ( Exception)
+            catch ( Exception )
             {
                 Fields = new Dictionary<string, T> ();
                 return false;
@@ -149,6 +149,10 @@ namespace AdysTech.InfluxDB.Client.Net
                 val = val.Replace (" ", "\\ ");
             if ( escapeEqualSign && val.Contains ('=') )
                 val = val.Replace ("=", "\\=");
+            //edge case, which will trigger Unbalanced Quotes exception in InfluxDB
+            if ( val.EndsWith ("\\") )
+                val = val.Substring (0, val.Length - 1);
+
             return val;
         }
 
