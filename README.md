@@ -14,6 +14,9 @@ a.	Query for all tags, their unique values
 b.	Updating retention policies
 c.	Deleting data 
 
+####Nuget
+https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net
+
 ###Usage
 ####Creating Client
 `InfluxDBClient client = new InfluxDBClient (influxUrl, dbUName, dbpwd);`
