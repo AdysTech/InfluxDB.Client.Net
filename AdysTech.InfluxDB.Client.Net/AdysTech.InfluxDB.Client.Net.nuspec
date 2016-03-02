@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>InfluxDB.Client.Net</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <licenseUrl>https://github.com/AdysTech/InfluxDB.Client.Net/blob/master/License.md</licenseUrl>
+    <projectUrl>https://github.com/AdysTech/InfluxDB.Client.Net</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <releaseNotes>Added type safe write methods via a new data structure called InfluxDataPoint. Previous write methods are marked obsolete. </releaseNotes>
+    <copyright>Copyright 2016</copyright>
+    <tags>InfluxDB Influx TSDB TimeSeries</tags>
+  </metadata>
+</package>
