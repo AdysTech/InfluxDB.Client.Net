@@ -13,6 +13,9 @@ namespace AdysTech.InfluxDB.Client.Net.DataContracts
         [DataMember(Name="name")]
         public string SeriesName { get; set; }
 
+        [DataMember(Name = "tags")]
+        public Dictionary<string,string> Tags { get; set; }
+
         [DataMember (Name = "columns")]
         public List<string> ColumnHeaders { get; set; }
 
