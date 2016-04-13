@@ -12,6 +12,12 @@ namespace AdysTech.InfluxDB.Client.Net
     /// </summary>
     public interface IInfluxDatapoint
     {
+
+        /// <summary>
+        /// Gets/Sets the InfluxDB retention policy that the point should be stored under
+        /// </summary>
+        IInfluxRetentionPolicy Retention { get; set; }
+
         /// <summary>
         /// Gets/Sets the InfluxDB measurement name
         /// </summary>
@@ -36,6 +42,8 @@ namespace AdysTech.InfluxDB.Client.Net
         /// Indicates whether a point got saved to InfluxDB successfully
         /// </summary>
         bool Saved { get; set; }
+
+        
 
         /// <summary>
         /// Returns the string representing the point in InfluxDB Line protocol

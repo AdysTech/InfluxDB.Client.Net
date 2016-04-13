@@ -41,15 +41,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Interfaces\IInfluxRetentionPolicy.cs" />
+    <Compile Include="Interfaces\IInfluxDatabase.cs" />
+    <Compile Include="Interfaces\IInfluxMeasurement.cs" />
+    <Compile Include="DataStructures\InfluxDatabase.cs" />
+    <Compile Include="DataStructures\InfluxMeasurement.cs" />
     <Compile Include="ExtensionMethods.cs" />
-    <Compile Include="IInfluxDatapoint.cs" />
-    <Compile Include="IInfluxDBClient.cs" />
-    <Compile Include="InfluxDatapoint.cs" />
+    <Compile Include="Interfaces\IInfluxDatapoint.cs" />
+    <Compile Include="Interfaces\IInfluxDBClient.cs" />
+    <Compile Include="DataStructures\InfluxDatapoint.cs" />
     <Compile Include="InfluxDBClient.cs" />
     <Compile Include="DataContracts\InfluxJsonTypes.cs" />
-    <Compile Include="InfluxDBException.cs" />
+    <Compile Include="DataStructures\InfluxDBException.cs" />
+    <Compile Include="DataStructures\InfluxSeries.cs" />
+    <Compile Include="DataStructures\InfluxRetentionPolicy.cs" />
+    <Compile Include="DataStructures\InfluxValueField.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ServiceUnavailableException.cs" />
+    <Compile Include="DataStructures\ServiceUnavailableException.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

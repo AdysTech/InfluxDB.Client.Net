@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace InfluxDB.Client.Test
+namespace AdysTech.InfluxDB.Client.Net.Tests
 {
     static class DataGen
     {
@@ -48,7 +48,7 @@ namespace InfluxDB.Client.Test
             var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ,=/\\";
             var stringChars = new StringBuilder (16, 16);
 
-            for ( int i = 0; i < stringChars.Length; i++ )
+            for ( int i = 0; i < stringChars.Capacity; i++ )
             {
                 lock ( syncLock )
                 {

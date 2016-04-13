@@ -9,19 +9,19 @@ namespace AdysTech.InfluxDB.Client.Net
 {
     public static class EpochHelper
     {
-        private static readonly DateTime Origin = new DateTime (1970, 1, 1);
+        private static readonly DateTime Origin = new DateTime(1970, 1, 1);
 
         public static long ToEpoch(this DateTime time, TimePrecision precision)
         {
             TimeSpan t = time - Origin;
-            switch ( precision )
+            switch (precision)
             {
-                case TimePrecision.Hours: return (long) t.TotalHours;
-                case TimePrecision.Minutes: return (long) t.TotalMinutes;
-                case TimePrecision.Seconds: return (long) t.TotalSeconds;
-                case TimePrecision.Milliseconds: return (long) t.TotalMilliseconds;
-                case TimePrecision.Microseconds: return (long) t.Ticks / ( TimeSpan.TicksPerMillisecond * 1000 );
-                case TimePrecision.Nanoseconds: return (long) t.Ticks * 100; //1 tick = 100 nano sec
+                case TimePrecision.Hours: return (long)t.TotalHours;
+                case TimePrecision.Minutes: return (long)t.TotalMinutes;
+                case TimePrecision.Seconds: return (long)t.TotalSeconds;
+                case TimePrecision.Milliseconds: return (long)t.TotalMilliseconds;
+                case TimePrecision.Microseconds: return (long)t.Ticks / (TimeSpan.TicksPerMillisecond * 1000);
+                case TimePrecision.Nanoseconds: return (long)t.Ticks * 100; //1 tick = 100 nano sec
             }
             return 0;
         }
@@ -31,14 +31,14 @@ namespace AdysTech.InfluxDB.Client.Net
     {
         public static List<string> ToList(this MatchCollection matches)
         {
-            return matches.Cast<Match> ()
+            return matches.Cast<Match>()
                 // flatten to single list
-                .SelectMany (o =>
-                    // extract captured results
-                    o.Groups.Cast<Capture> ()
-                        // don't need the pattern
-                    .Skip (1)
-                    .Select (c => c.Value)).ToList ();
+                .SelectMany(o =>
+                   // extract captured results
+                   o.Groups.Cast<Capture>()
+                   // don't need the pattern
+                   .Skip(1)
+                   .Select(c => c.Value)).ToList();
         }
     }
 
@@ -46,30 +46,101 @@ namespace AdysTech.InfluxDB.Client.Net
     {
         public static string Unescape(this string txt)
         {
-            if ( string.IsNullOrEmpty (txt) ) { return txt; }
-            StringBuilder retval = new StringBuilder (txt.Length);
-             for ( int ix = 0; ix < txt.Length; )
+            if (string.IsNullOrEmpty(txt)) { return txt; }
+            StringBuilder retval = new StringBuilder(txt.Length);
+            for (int ix = 0; ix < txt.Length;)
             {
-                int jx = txt.IndexOf ('\\', ix);
-                if ( jx < 0 || jx == txt.Length - 1 ) jx = txt.Length;
-                retval.Append (txt, ix, jx - ix);
-                if ( jx >= txt.Length ) break;
-                switch ( txt[jx + 1] )
+                int jx = txt.IndexOf('\\', ix);
+                if (jx < 0 || jx == txt.Length - 1) jx = txt.Length;
+                retval.Append(txt, ix, jx - ix);
+                if (jx >= txt.Length) break;
+                switch (txt[jx + 1])
                 {
-                    case 'n': retval.Append ('\n'); break;  // Line feed
-                    case 'r': retval.Append ('\r'); break;  // Carriage return
-                    case 't': retval.Append ('\t'); break;  // Tab
-                    case ',': retval.Append (','); break;
-                    case '"': retval.Append ('"'); break;
-                    case '=': retval.Append ('='); break;
-                    case '\\': retval.Append ('\\'); break; // Don't escape
+                    case 'n': retval.Append('\n'); break;  // Line feed
+                    case 'r': retval.Append('\r'); break;  // Carriage return
+                    case 't': retval.Append('\t'); break;  // Tab
+                    case ',': retval.Append(','); break;
+                    case '"': retval.Append('"'); break;
+                    case '=': retval.Append('='); break;
+                    case '\\': retval.Append('\\'); break; // Don't escape
                     default:                                 // Unrecognized, copy as-is
-                        retval.Append ('\\').Append (txt[jx + 1]); break;
+                        retval.Append('\\').Append(txt[jx + 1]); break;
                 }
                 ix = jx + 2;
             }
 
-            return retval.ToString ();
+            return retval.ToString();
+        }
+
+        public static string EscapeChars(this string val, bool escapeEqualSign = true)
+        {
+            if (val.Contains(','))
+                val = val.Replace(",", "\\,");
+            if (val.Contains(' '))
+                val = val.Replace(" ", "\\ ");
+            if (val.Contains('\n'))
+                val = val.Replace(" ", "\\n");
+            if (escapeEqualSign && val.Contains('='))
+                val = val.Replace("=", "\\=");
+            //edge case, which will trigger Unbalanced Quotes exception in InfluxDB
+            if (val.EndsWith("\\"))
+                val = val.Substring(0, val.Length - 1);
+
+            return val;
+        }
+
+        public static TimeSpan ParseDuration(this string strDuration)
+        {
+            var durationLiterals = new string[] { "w", "d", "h", "m", "s", "ms", "u" };
+            TimeSpan duration = TimeSpan.Zero;
+            if (strDuration != "0")
+            {
+
+                var indexes = durationLiterals.Select(s => strDuration.IndexOf(s, 0)).ToArray();
+                //handle only ms duration, and confusing with m and s with ms.
+                if (indexes[3] == indexes[5] && indexes[4] > indexes[5])
+                {
+                    indexes[3] = indexes[5] = -1;
+                }
+
+                for (var index = 0; index < durationLiterals.Length; index++)
+                {
+                    if (indexes[index] > -1)
+                    {
+                        try
+                        {
+                            int val = 0;
+                            var len = index == 0 || indexes[index - 1] == -1 ? indexes[index] : indexes[index] - indexes[index - 1] - 1;
+                            var start = index == 0 || indexes[index - 1] == -1 ? 0 : indexes[index - 1] + 1;
+                            if (int.TryParse(strDuration.Substring(start, len), out val))
+                            {
+                                switch (durationLiterals[index])
+                                {
+                                    case "w": duration += TimeSpan.FromDays(val * 7); break;
+                                    case "d": duration += TimeSpan.FromDays(val); break;
+                                    case "h": duration += TimeSpan.FromHours(val); break;
+                                    case "m": duration += TimeSpan.FromMinutes(val); break;
+                                    case "s": duration += TimeSpan.FromSeconds(val); break;
+                                    case "ms": duration += TimeSpan.FromMilliseconds(val); break;
+                                    case "u": duration += TimeSpan.FromMilliseconds(val / 1000); break;
+                                }
+                            }
+                        }
+                        catch (Exception)
+                        {
+
+                            throw;
+                        }
+                    }
+                }
+
+            }
+            else
+            {
+                duration = TimeSpan.MaxValue;
+            }
+
+            return duration;
         }
 
     }
