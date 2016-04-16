@@ -1,3 +1,8 @@
+## v0.5.1 [7/2/2016]
+
+### Release Notes
+This is a minor update to revert to using .Net 4.5.1. Previous version was chnaged to use .Net 4.6 by mistake.
+
 ## v0.5.0 [4/15/2016]
 
 ### Release Notes

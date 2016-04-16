@@ -1,11 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdysTech.InfluxDB.Client.Net", "AdysTech.InfluxDB.Client.Net\AdysTech.InfluxDB.Client.Net.csproj", "{31C6D4D4-86A6-4E76-9E54-F4C399140CE7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdysTech.InfluxDB.Client.Net.Test", "AdysTech.InfluxDB.Client.Net.Test\AdysTech.InfluxDB.Client.Net.Test.csproj", "{C76424F8-1563-4699-9019-A36B74FA7FF5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{339B244B-D02D-4A6B-A016-92B9AD124635}"
+	ProjectSection(SolutionItems) = preProject
+		appveyor.yml = appveyor.yml
+		CHANGELOG.md = CHANGELOG.md
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

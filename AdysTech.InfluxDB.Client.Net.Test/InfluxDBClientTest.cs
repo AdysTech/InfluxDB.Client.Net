@@ -43,7 +43,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
                 s.Start();
                 var r = await client.GetInfluxDBNamesAsync();
                 s.Stop();
-                Debug.WriteLine(s.ElapsedMilliseconds);
+                Debug.WriteLine( s.ElapsedMilliseconds);
 
                 Assert.IsTrue(r != null && r.Count > 0, "GetInfluxDBNamesAsync retunred null or empty collection");
             }
@@ -81,7 +81,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
                 var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
                 Stopwatch s = new Stopwatch();
                 s.Start();
-                var r = await client.GetInfluxDBStructureAsync("_internal");
+                var r = await client.GetInfluxDBStructureAsync(dbName);
                 s.Stop();
                 Debug.WriteLine(s.ElapsedMilliseconds);
                 Assert.IsTrue(r != null && r.Measurements.Count >= 0, "GetInfluxDBStructureAsync retunred null or non empty collection");
@@ -133,8 +133,8 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             {
 
                 var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
-                var r = await client.QueryDBAsync("_internal", "show measurements");
-                Assert.IsTrue(r != null && r[0].Name != null, "QueryDBAsync retunred null or invalid data");
+                var r = await client.QueryDBAsync(dbName, "show measurements");
+                Assert.IsTrue(r != null && r.Count>0, "QueryDBAsync retunred null or invalid data");
             }
             catch (Exception e)
             {
@@ -151,7 +151,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             
             Stopwatch s = new Stopwatch();
             s.Start();
-            var r = await client.QueryMultiSeriesAsync("_internal", "SHOW STATS");
+            var r = await client.QueryMultiSeriesAsync(dbName, "SHOW STATS");
 
             s.Stop();
             Debug.WriteLine("Elapsed{0}", s.ElapsedMilliseconds);
@@ -325,7 +325,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
         /// </summary>
         /// <returns></returns>
         [TestMethod]
-        public async Task TestBachingPostPointsAsync()
+        public async Task TestPostPointsAsync_Batch()
         {
             try
             {
