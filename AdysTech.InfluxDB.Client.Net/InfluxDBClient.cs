@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -13,6 +12,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AdysTech.InfluxDB.Client.Net.DataContracts;
+using System.Web.Script.Serialization;
 
 namespace AdysTech.InfluxDB.Client.Net
 {
@@ -111,7 +111,7 @@ namespace AdysTech.InfluxDB.Client.Net
                 }
                 else if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.BadGateway || (response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error")) //502 Connection refused
                     throw new UnauthorizedAccessException("InfluxDB needs authentication. Check uname, pwd parameters");
-                else if(response.StatusCode==HttpStatusCode.BadRequest)
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
                 {
                     var error = await response.Content.ReadAsStringAsync();
                     throw new ArgumentException("Invalid Query resulted in an {0}", error.Substring(10));
@@ -159,6 +159,10 @@ namespace AdysTech.InfluxDB.Client.Net
 
         private async Task<bool> PostPointsAsync(string dbName, TimePrecision precision, string retention, IEnumerable<IInfluxDatapoint> points)
         {
+            Regex multiLinePattern = new Regex(@"([\P{Cc}].*?) '([\P{Cc}].*?)':([\P{Cc}].*?)\\n", RegexOptions.Compiled, TimeSpan.FromSeconds(5));
+            Regex oneLinePattern = new Regex(@"{\""error"":""([9\P{Cc}]+) '([\P{Cc}]+)':([a-zA-Z0-9 ]+)", RegexOptions.Compiled, TimeSpan.FromSeconds(5));
+            Regex errorLinePattern = new Regex(@"{\""error"":""([9\P{Cc}]+) '([\P{Cc}]+)':([a-zA-Z0-9 ]+)", RegexOptions.Compiled, TimeSpan.FromSeconds(5));
+
             var line = new StringBuilder();
             foreach (var point in points)
                 line.AppendFormat("{0}\n", point.ConvertToInfluxLineProtocol());
@@ -179,31 +183,38 @@ namespace AdysTech.InfluxDB.Client.Net
                 var content = await response.Content.ReadAsStringAsync();
                 //regex assumes error text from https://github.com/influxdata/influxdb/blob/master/models/points.go ParsePointsWithPrecision
                 //fmt.Sprintf("'%s': %v", string(block[start:len(block)])
-                List<string> parts; bool partialWrite;
-                if (content.Contains("partial write"))
+                List<string> parts=null; bool partialWrite =false; string l="";
+                try
                 {
-                    if (content.Contains("\\n"))
-                        parts = Regex.Matches(content.Substring(content.IndexOf("partial write:\\n") + 16), @"([\P{Cc}].*?) '([\P{Cc}].*?)':([\P{Cc}].*?)\\n").ToList();
+                    if (content.Contains("partial write"))
+                    {
+                        if (content.Contains("\\n"))
+                            parts = multiLinePattern.Matches(content.Substring(content.IndexOf("partial write:\\n") + 16)).ToList();
+                        else
+                            parts = oneLinePattern.Matches(content.Substring(content.IndexOf("partial write:\\n") + 16)).ToList();
+                        partialWrite = true;
+                    }
                     else
-                        parts = Regex.Matches(content.Substring(content.IndexOf("partial write:\\n") + 16), @"([\P{Cc}].*?) '([\P{Cc}].*?)':([\P{Cc}].*?)").ToList();
-                    partialWrite = true;
+                    {
+                        parts = errorLinePattern.Matches(content).ToList();
+                        partialWrite = false;
+                    }
+                   
+                    if (parts[1].Contains("\\n"))
+                        l = parts[1].Substring(0, parts[1].IndexOf("\\n")).Unescape();
+                    else
+                        l = parts[1].Unescape();
                 }
-                else
+                catch (Exception)
                 {
-                    parts = Regex.Matches(content, @"{\""error"":""([9\P{Cc}]+) '([\P{Cc}]+)':([a-zA-Z0-9 ]+)").ToList();
-                    partialWrite = false;
+                   
                 }
-                string l;
-                if (parts[1].Contains("\\n"))
-                    l = parts[1].Substring(0, parts[1].IndexOf("\\n")).Unescape();
-                else
-                    l = parts[1].Unescape();
 
                 var point = points.Where(p => p.ConvertToInfluxLineProtocol() == l).FirstOrDefault();
                 if (point != null)
-                    throw new InfluxDBException(partialWrite ? "Partial Write" : "Failed to Write", String.Format("{0}: {1} due to {2}", partialWrite ? "Partial Write" : "Failed to Write", parts[0], parts[2]), point);
+                    throw new InfluxDBException(partialWrite ? "Partial Write" : "Failed to Write", String.Format("{0}: {1} due to {2}", partialWrite ? "Partial Write" : "Failed to Write", parts?[0], parts?[2]), point);
                 else
-                    throw new InfluxDBException(partialWrite ? "Partial Write" : "Failed to Write", String.Format("{0}: {1} due to {2}", partialWrite ? "Partial Write" : "Failed to Write", parts[0], parts[2]), l);
+                    throw new InfluxDBException(partialWrite ? "Partial Write" : "Failed to Write", String.Format("{0}: {1} due to {2}", partialWrite ? "Partial Write" : "Failed to Write", parts?[0], parts?[2]), l);
                 return false;
             }
             else if (response.StatusCode == HttpStatusCode.NoContent)
@@ -354,9 +365,11 @@ namespace AdysTech.InfluxDB.Client.Net
             var response = await GetAsync(new Dictionary<string, string>() { { "db", dbName }, { "q", measurementQuery } });
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                var content = await response.Content.ReadAsStreamAsync();
-                DataContractJsonSerializer js = new DataContractJsonSerializer(typeof(InfluxResponse));
-                var result = js.ReadObject(content) as InfluxResponse;
+                //var content = await response.Content.ReadAsStreamAsync();
+                //DataContractJsonSerializer js = new DataContractJsonSerializer(typeof(InfluxResponse));
+                //var result = js.ReadObject(content) as InfluxResponse;
+
+                var result = new JavaScriptSerializer().Deserialize<InfluxResponse>(await response.Content.ReadAsStringAsync());
 
                 if (result.Results.Count > 1)
                     throw new ArgumentException("The query is resulting in Multi Series respone, which is not supported by this method");
@@ -371,9 +384,9 @@ namespace AdysTech.InfluxDB.Client.Net
                 {
                     dynamic entry = new ExpandoObject();
                     results.Add(entry);
-                    for (var col = 0; col < series.ColumnHeaders.Count; col++)
+                    for (var col = 0; col < series.Columns.Count; col++)
                     {
-                        var header = char.ToUpper(series.ColumnHeaders[col][0]) + series.ColumnHeaders[col].Substring(1);
+                        var header = char.ToUpper(series.Columns[col][0]) + series.Columns[col].Substring(1);
 
                         ((IDictionary<string, object>)entry).Add(header, series.Values[row][col]);
                     }
@@ -449,18 +462,28 @@ namespace AdysTech.InfluxDB.Client.Net
             bool finalResult = true, result;
             foreach (var group in Points.GroupBy(p => new { p.Precision, p.Retention?.Name }))
             {
+
                 var pointsGroup = group.AsEnumerable().Select((point, index) => new { Index = index, Point = point })//get the index of each point
-                     .GroupBy(x => x.Index / maxBatchSize) //chunk into smaller batches
-                     .Select(x => x.Select(v => v.Point)); //get the points
+                          .GroupBy(x => x.Index / maxBatchSize) //chunk into smaller batches
+                          .Select(x => x.Select(v => v.Point)); //get the points
                 foreach (var points in pointsGroup)
                 {
-                    result = await PostPointsAsync(dbName, group.Key.Precision, group.Key.Name, points);
+                    try
+                    {
+                        result = await PostPointsAsync(dbName, group.Key.Precision, group.Key.Name, points);
+                    }
+                    catch (Exception)
+                    {
+                        throw;
+                    }
                     finalResult = result && finalResult;
                     if (result)
                     {
                         points.ToList().ForEach(p => p.Saved = true);
                     }
                 }
+
+
 
             }
 
@@ -568,9 +591,12 @@ namespace AdysTech.InfluxDB.Client.Net
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 var results = new List<InfluxSeries>();
-                var content = await response.Content.ReadAsStreamAsync();
-                DataContractJsonSerializer js = new DataContractJsonSerializer(typeof(InfluxResponse));
-                var rawResult = js.ReadObject(content) as InfluxResponse;
+                
+                //var content = await response.Content.ReadAsStreamAsync();
+                //DataContractJsonSerializer js = new DataContractJsonSerializer(typeof(InfluxResponse));
+                //var rawResult = js.ReadObject(content) as InfluxResponse;
+
+                var rawResult = new JavaScriptSerializer().Deserialize <InfluxResponse> (await response.Content.ReadAsStringAsync());
 
                 if (rawResult.Results.Count > 1)
                     throw new ArgumentException("The query is resulting in a format, which is not supported by this method yet");
@@ -582,16 +608,16 @@ namespace AdysTech.InfluxDB.Client.Net
                     {
                         var result = new InfluxSeries();
                         results.Add(result);
-                        result.SeriesName = series.SeriesName;
-                        //result.Tags=series.ta
+                        result.SeriesName = series.Name;
+                        result.Tags = series.Tags;
                         result.Entries = new List<dynamic>();
                         for (var row = 0; row < series.Values.Count; row++)
                         {
                             dynamic entry = new ExpandoObject();
                             result.Entries.Add(entry);
-                            for (var col = 0; col < series.ColumnHeaders.Count; col++)
+                            for (var col = 0; col < series.Columns.Count; col++)
                             {
-                                var header = char.ToUpper(series.ColumnHeaders[col][0]) + series.ColumnHeaders[col].Substring(1);
+                                var header = char.ToUpper(series.Columns[col][0]) + series.Columns[col].Substring(1);
 
                                 ((IDictionary<string, object>)entry).Add(header, series.Values[row][col]);
                             }

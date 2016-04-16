@@ -32,25 +32,6 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             var r = await client.GetInfluxDBNamesAsync();
         }
 
-        //[TestMethod]
-        //[ExpectedException(typeof(UnauthorizedAccessException))]
-        //public async Task TestGetInfluxDBNamesAsync_Auth()
-        //{
-        //    var client = new InfluxDBClient(influxUrl);
-        //    var r = await client.GetInfluxDBNamesAsync();
-        //}
-
-
-        //[TestMethod]
-        //[ExpectedException(typeof(UnauthorizedAccessException))]
-        //public async Task TestGetInfluxDBNamesAsync_Auth2()
-        //{
-        //    var client = new InfluxDBClient(influxUrl, invalidUName, dbpwd);
-        //    var r = await client.GetInfluxDBNamesAsync();
-        //}
-
-
-
         [TestMethod]
         public async Task TestGetInfluxDBNamesAsync()
         {
@@ -164,10 +145,16 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
         }
 
         [TestMethod]
-        public async Task TestQueryAsync_MultiSeries()
+        public async Task TestQueryMultiSeriesAsync()
         {
             var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
-            var r = await client.QueryMultiSeriesAsync("_internal", "Show field keys");
+            
+            Stopwatch s = new Stopwatch();
+            s.Start();
+            var r = await client.QueryMultiSeriesAsync("_internal", "SHOW STATS");
+
+            s.Stop();
+            Debug.WriteLine("Elapsed{0}", s.ElapsedMilliseconds);
             Assert.IsTrue(r != null && r.Count > 0, "QueryMultiSeriesAsync retunred null or invalid data");
         }
 

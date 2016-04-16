@@ -45,7 +45,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
 
         public static string RandomString()
         {
-            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ,=/\\";
+            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ,=/";
             var stringChars = new StringBuilder (16, 16);
 
             for ( int i = 0; i < stringChars.Capacity; i++ )
