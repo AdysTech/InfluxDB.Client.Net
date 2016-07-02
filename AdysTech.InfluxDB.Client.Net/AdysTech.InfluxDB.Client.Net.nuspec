@@ -10,7 +10,10 @@
     <projectUrl>https://github.com/AdysTech/InfluxDB.Client.Net</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-    <releaseNotes>Added type safe write methods via a new data structure called InfluxDataPoint. Previous write methods are marked obsolete. </releaseNotes>
+    <releaseNotes>This version supports Retention policies. You can create a new retention policy, or post into existing ones, as well as query them. This version also supports querying multi series data. 
+ There is a breaking change to  GetInfluxDBStructureAsync , which now returns a custom InfluxDB object, which not only provides info about measurements, but also about tags and fields in each of them.
+ Now querying data which is returned in multiple series (e.g. show stats) is supported. Also supported is querying for InfluxDB server version
+ </releaseNotes>
     <copyright>Copyright 2016</copyright>
     <tags>InfluxDB Influx TSDB TimeSeries</tags>
   </metadata>

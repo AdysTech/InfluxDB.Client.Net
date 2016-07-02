@@ -273,8 +273,9 @@ namespace AdysTech.InfluxDB.Client.Net
             var dbNames = new List<String>();
 
             var dbs = await QueryDBAsync(null, "SHOW DATABASES");
+
             foreach (var db in dbs)
-                dbNames.Add(db.Name);
+                dbNames.Add(db?.Name);
 
             return dbNames;
         }
@@ -371,16 +372,16 @@ namespace AdysTech.InfluxDB.Client.Net
 
                 var result = new JavaScriptSerializer().Deserialize<InfluxResponse>(await response.Content.ReadAsStringAsync());
 
-                if (result.Results.Count > 1)
+                if (result?.Results?.Count > 1)
                     throw new ArgumentException("The query is resulting in Multi Series respone, which is not supported by this method");
 
-                if (result.Results[0].Series.Count > 1)
+                if (result?.Results?[0].Series?.Count > 1)
                     throw new ArgumentException("The query is resulting in Multi Series respone, which is not supported by this method");
 
-                var series = result.Results[0].Series[0];
+                var series = result?.Results?[0].Series?[0];
 
                 var results = new List<dynamic>();
-                for (var row = 0; row < series.Values.Count; row++)
+                for (var row = 0; row < series?.Values?.Count; row++)
                 {
                     dynamic entry = new ExpandoObject();
                     results.Add(entry);

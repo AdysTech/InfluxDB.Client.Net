@@ -8,7 +8,15 @@ before_build:
 - set PATH="C:\Program Files (x86)\MSBuild\14.0\Bin";%PATH%
 build:
   verbosity: minimal
-
+  publish_nuget: true
+  publish_nuget_symbols: true
+deploy:
+- provider: NuGet
+  server: https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net
+  api_key:
+    secure: nlBDuJJE7GoAtSvHKJDjdutExvlEQErL8Q9gFqmhURY4xUgFT946cs2mLeQ2Qezi
+  on:
+    branch: master
 test_script:
 - ps: >-
     $source = "https://github.com/mvadu/influxdb/releases/download/v0.11.0-rc1/Influxdb.v0.11.0-rc1.zip"
@@ -24,5 +32,3 @@ test_script:
     pwd
 
     vstest.console /logger:Appveyor ".\AdysTech.InfluxDB.Client.Net.Test\bin\Debug\Tests.orderedtest"
-
-deploy: off
