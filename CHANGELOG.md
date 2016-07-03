@@ -1,3 +1,8 @@
+## v0.5.3 [7/8/2016]
+
+### Release Notes
+Updated to handle default auto generated retention policy name other than "default" [#6586](https://github.com/influxdata/influxdb/pull/6586)
+
 ## v0.5.1 [7/2/2016]
 
 ### Release Notes
