@@ -1,12 +1,9 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Dynamic;
-using System.Linq;
-using AdysTech.InfluxDB.Client.Net;
-using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AdysTech.InfluxDB.Client.Net.Tests
 {
@@ -429,6 +426,34 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
                             e.GetType(), e.Message);
                 return;
             }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InfluxDBException))]
+        public async Task TestPostPointsAsyncFailure()
+        {
+            var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+
+            var points = new List<IInfluxDatapoint>();
+
+            var firstPoint = new InfluxDatapoint<int>();
+            firstPoint.UtcTimestamp = DateTime.UtcNow;
+            firstPoint.Fields.Add("value", 1);
+            firstPoint.MeasurementName = "SameKeyDifferentType";
+            firstPoint.Precision = TimePrecision.Milliseconds;
+            points.Add(firstPoint);
+
+
+            var secondPoint = new InfluxDatapoint<double>();
+            secondPoint.UtcTimestamp = DateTime.UtcNow;
+            secondPoint.Fields.Add("value", 123.1234);
+            secondPoint.MeasurementName = "SameKeyDifferentType";
+            secondPoint.Precision = TimePrecision.Milliseconds;
+            points.Add(secondPoint);
+
+
+            var r = await client.PostPointsAsync("Development", points);
+            Assert.IsTrue(r, "PostPointsAsync returned false");
         }
 
         [TestMethod()]
