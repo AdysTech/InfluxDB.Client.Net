@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<OrderedTest name="tests" storage="e:\visual studio projects\console\influxdb.client.net\adystech.influxdb.client.net.test\tests.orderedtest" id="ae8a7c43-c134-4ca0-8c92-bb18e7ee9a52" continueAfterFailure="true" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+<OrderedTest name="tests" storage="c:\_personal\github\influxdb.client.net\adystech.influxdb.client.net.test\tests.orderedtest" id="ae8a7c43-c134-4ca0-8c92-bb18e7ee9a52" continueAfterFailure="true" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
   <TestLinks>
     <TestLink id="57d01cf9-83ef-a005-0f85-eb5792247c78" name="TestGetInfluxDBNamesAsync_ServiceUnavailable" storage="bin\debug\influxdb.client.test.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <TestLink id="532c19b5-ea6f-7493-b6d5-a1d2fa80cf18" name="TestCreateDatabaseAsync" storage="bin\debug\influxdb.client.test.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
@@ -18,5 +18,6 @@
     <TestLink id="0fcf513b-dd30-6a18-48ac-393796540954" name="TestQueryAsync" storage="bin\debug\influxdb.client.test.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <TestLink id="53cf4c7c-91be-9ef6-6a88-f63a16979ee9" name="TestQueryMultiSeriesAsync" storage="bin\debug\influxdb.client.test.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <TestLink id="6001049c-1b46-8498-b0d8-f808d2fe3833" name="TestPostPointsAsync_PartialWrite" storage="bin\debug\influxdb.client.test.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <TestLink id="11054fc4-d3d5-b4ec-5a6d-a504cf2b3f90" name="TestPostPointsAsyncDifferentTypeFailure" storage="bin\debug\influxdb.client.test.dll" type="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestElement, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.ObjectModel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   </TestLinks>
 </OrderedTest>

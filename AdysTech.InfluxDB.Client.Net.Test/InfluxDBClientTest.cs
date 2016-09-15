@@ -40,7 +40,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
                 s.Start();
                 var r = await client.GetInfluxDBNamesAsync();
                 s.Stop();
-                Debug.WriteLine( s.ElapsedMilliseconds);
+                Debug.WriteLine(s.ElapsedMilliseconds);
 
                 Assert.IsTrue(r != null && r.Count > 0, "GetInfluxDBNamesAsync retunred null or empty collection");
             }
@@ -131,7 +131,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
 
                 var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
                 var r = await client.QueryDBAsync(dbName, "show measurements");
-                Assert.IsTrue(r != null && r.Count>0, "QueryDBAsync retunred null or invalid data");
+                Assert.IsTrue(r != null && r.Count > 0, "QueryDBAsync retunred null or invalid data");
             }
             catch (Exception e)
             {
@@ -145,7 +145,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
         public async Task TestQueryMultiSeriesAsync()
         {
             var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
-            
+
             Stopwatch s = new Stopwatch();
             s.Start();
             var r = await client.QueryMultiSeriesAsync(dbName, "SHOW STATS");
@@ -430,7 +430,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
 
         [TestMethod]
         [ExpectedException(typeof(InfluxDBException))]
-        public async Task TestPostPointsAsyncFailure()
+        public async Task TestPostPointsAsyncDifferentTypeFailure()
         {
             var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
 
@@ -452,8 +452,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             points.Add(secondPoint);
 
 
-            var r = await client.PostPointsAsync("Development", points);
-            Assert.IsTrue(r, "PostPointsAsync returned false");
+            var r = await client.PostPointsAsync(dbName, points);
         }
 
         [TestMethod()]
@@ -485,7 +484,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             Assert.IsTrue(p.Saved, "CreateRetentionPolicyAsync failed");
         }
 
-     
+
     }
 
 }
