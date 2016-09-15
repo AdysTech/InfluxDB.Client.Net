@@ -160,7 +160,7 @@ namespace AdysTech.InfluxDB.Client.Net
         {
             Regex multiLinePattern = new Regex (@"([\P{Cc}].*?) '([\P{Cc}].*?)':([\P{Cc}].*?)\\n", RegexOptions.Compiled, TimeSpan.FromSeconds (5));
             Regex oneLinePattern = new Regex(@"{\""error"":""([9\P{Cc}]+) '([\P{Cc}]+)':([a-zA-Z0-9 ]+)", RegexOptions.Compiled, TimeSpan.FromSeconds(5));
-            Regex errorLinePattern = new Regex(@"{\""error\"":""([\w\s]+): ([\w\s]+): ([\d\w\s\""\\,-]+)", RegexOptions.Compiled, TimeSpan.FromSeconds(5));
+            Regex errorLinePattern = new Regex(@"{\""error\"":""([\w\s]+): ([\w\s]+) ([\d\w\s\""\\,-]+)", RegexOptions.Compiled, TimeSpan.FromSeconds(5));
 
             var line = new StringBuilder ();
             foreach (var point in points)
@@ -477,7 +477,7 @@ namespace AdysTech.InfluxDB.Client.Net
                     {
                         result = await PostPointsAsync (dbName, group.Key.Precision, group.Key.Name, points);
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                         throw;
                     }
