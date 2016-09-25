@@ -91,7 +91,7 @@ namespace AdysTech.InfluxDB.Client.Net
 
         private async Task<HttpResponseMessage> GetAsync (Dictionary<string, string> Query)
         {
-            var querybaseUrl = new Uri (String.Format ("{0}/query?", InfluxUrl));
+            var querybaseUrl = new Uri ($"{InfluxUrl}/query?");
             var builder = new UriBuilder (querybaseUrl);
 
             if (InfluxDBUserName != null && !Query.ContainsKey ("u"))
@@ -112,8 +112,7 @@ namespace AdysTech.InfluxDB.Client.Net
                     throw new UnauthorizedAccessException ("InfluxDB needs authentication. Check uname, pwd parameters");
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
                 {
-                    var error = await response.Content.ReadAsStringAsync ();
-                    throw new ArgumentException ("Invalid Query resulted in an {0}", error.Substring (10));
+                    throw InfluxDBException.ProcessInfluxDBError (await response.Content.ReadAsStringAsync ());
                 }
 
             }
@@ -129,7 +128,7 @@ namespace AdysTech.InfluxDB.Client.Net
         private async Task<HttpResponseMessage> PostAsync (Dictionary<string, string> EndPoint, ByteArrayContent requestContent)
         {
 
-            var querybaseUrl = new Uri (String.Format ("{0}/write?", InfluxUrl));
+            var querybaseUrl = new Uri ($"{InfluxUrl}/write?");
             var builder = new UriBuilder (querybaseUrl);
 
             if (!EndPoint.ContainsKey ("u"))
@@ -159,8 +158,7 @@ namespace AdysTech.InfluxDB.Client.Net
         private async Task<bool> PostPointsAsync (string dbName, TimePrecision precision, string retention, IEnumerable<IInfluxDatapoint> points)
         {
             Regex multiLinePattern = new Regex (@"([\P{Cc}].*?) '([\P{Cc}].*?)':([\P{Cc}].*?)\\n", RegexOptions.Compiled, TimeSpan.FromSeconds (5));
-            Regex oneLinePattern = new Regex(@"{\""error"":""([9\P{Cc}]+) '([\P{Cc}]+)':([a-zA-Z0-9 ]+)", RegexOptions.Compiled, TimeSpan.FromSeconds(5));
-            Regex errorLinePattern = new Regex(@"{\""error\"":""([\w\s]+): ([\w\s]+) ([\d\w\s\""\\,-]+)", RegexOptions.Compiled, TimeSpan.FromSeconds(5));
+            Regex oneLinePattern = new Regex (@"{\""error"":""([9\P{Cc}]+) '([\P{Cc}]+)':([a-zA-Z0-9 ]+)", RegexOptions.Compiled, TimeSpan.FromSeconds (5));
 
             var line = new StringBuilder ();
             foreach (var point in points)
@@ -184,39 +182,37 @@ namespace AdysTech.InfluxDB.Client.Net
                 var content = await response.Content.ReadAsStringAsync ();
                 //regex assumes error text from https://github.com/influxdata/influxdb/blob/master/models/points.go ParsePointsWithPrecision
                 //fmt.Sprintf("'%s': %v", string(block[start:len(block)])
-                List<string> parts = null; bool partialWrite = false; string l = "";
-                try
+                List<string> parts = null; string l = "";
+
+                if (content.Contains ("partial write"))
                 {
-                    if (content.Contains ("partial write"))
+                    try
                     {
                         if (content.Contains ("\\n"))
                             parts = multiLinePattern.Matches (content.Substring (content.IndexOf ("partial write:\\n") + 16)).ToList ();
                         else
                             parts = oneLinePattern.Matches (content.Substring (content.IndexOf ("partial write:\\n") + 16)).ToList ();
-                        partialWrite = true;
+
+                        if (parts[1].Contains ("\\n"))
+                            l = parts[1].Substring (0, parts[1].IndexOf ("\\n")).Unescape ();
+                        else
+                            l = parts[1].Unescape ();
                     }
-                    else
+                    catch (Exception)
                     {
-                        parts = errorLinePattern.Matches (content).ToList ();
-                        partialWrite = false;
+
                     }
 
-                    if (parts[1].Contains ("\\n"))
-                        l = parts[1].Substring (0, parts[1].IndexOf ("\\n")).Unescape ();
+                    var point = points.Where (p => p.ConvertToInfluxLineProtocol () == l).FirstOrDefault ();
+                    if (point != null)
+                        throw new InfluxDBException ("Partial Write", $"Partial Write : {parts?[0]} due to {parts?[2]}", point);
                     else
-                        l = parts[1].Unescape ();
+                        throw new InfluxDBException ("Partial Write", $"Partial Write : {parts?[0]} due to {parts?[2]}", l);
                 }
-                catch (Exception)
-                {
-
-                }
-
-                var point = points.Where (p => p.ConvertToInfluxLineProtocol () == l).FirstOrDefault ();
-                if (point != null)
-                    throw new InfluxDBException (partialWrite ? "Partial Write" : "Failed to Write", String.Format ("{0}: {1} due to {2}", partialWrite ? "Partial Write" : "Failed to Write", parts?[0], parts?[2]), point);
                 else
-                    throw new InfluxDBException (partialWrite ? "Partial Write" : "Failed to Write", String.Format ("{0}: {1} due to {2}", partialWrite ? "Partial Write" : "Failed to Write", parts?[0], parts?[2]), l);
-                return false;
+                {
+                    throw InfluxDBException.ProcessInfluxDBError (content);
+                }
             }
             else if (response.StatusCode == HttpStatusCode.NoContent)
                 return true;
@@ -246,7 +242,7 @@ namespace AdysTech.InfluxDB.Client.Net
             _client = new HttpClient (handler);
             if (!(String.IsNullOrWhiteSpace (InfluxDBUserName) && String.IsNullOrWhiteSpace (InfluxDBPassword)))
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue ("Basic",
-                    Convert.ToBase64String (System.Text.ASCIIEncoding.ASCII.GetBytes (string.Format ("{0}:{1}", InfluxDBUserName, InfluxDBPassword))));
+                    Convert.ToBase64String (System.Text.ASCIIEncoding.ASCII.GetBytes ($"{InfluxDBUserName}:{InfluxDBPassword}")));
             _client.DefaultRequestHeaders.ConnectionClose = false;
         }
 
@@ -255,7 +251,7 @@ namespace AdysTech.InfluxDB.Client.Net
         /// </summary>
         /// <param name="InfluxUrl">Url for the Inflex Server, e.g. localhost:8086</param>
         public InfluxDBClient (string InfluxUrl)
-            : this (InfluxUrl, null, null)
+                : this (InfluxUrl, null, null)
         {
 
         }
@@ -321,7 +317,7 @@ namespace AdysTech.InfluxDB.Client.Net
         ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
         public async Task<bool> CreateDatabaseAsync (string dbName)
         {
-            var response = await GetAsync (new Dictionary<string, string> () { { "q", String.Format ("CREATE DATABASE {0}", dbName) } });
+            var response = await GetAsync (new Dictionary<string, string> () { { "q", $"CREATE DATABASE {dbName}" } });
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 var content = await response.Content.ReadAsStringAsync ();
@@ -329,9 +325,7 @@ namespace AdysTech.InfluxDB.Client.Net
                     throw new InvalidOperationException ("database already exists");
                 return true;
             }
-            else if (response.StatusCode == HttpStatusCode.BadRequest)
-                throw new ArgumentException ("Invalid DB Name");
-
+            
             return false;
         }
 
@@ -419,25 +413,7 @@ namespace AdysTech.InfluxDB.Client.Net
 
             if (response.StatusCode == HttpStatusCode.BadRequest)
             {
-                var content = await response.Content.ReadAsStringAsync ();
-                //regex assumes error text from https://github.com/influxdata/influxdb/blob/master/models/points.go ParsePointsWithPrecision
-                //fmt.Sprintf("'%s': %v", string(block[start:len(block)])
-                List<string> parts; bool partialWrite;
-                if (content.Contains ("partial write"))
-                {
-                    if (content.Contains ("\\n"))
-                        parts = Regex.Matches (content.Substring (content.IndexOf ("partial write:\\n") + 16), @"([\P{Cc}].*?) '([\P{Cc}].*?)':([\P{Cc}].*?)\\n").ToList ();
-                    else
-                        parts = Regex.Matches (content.Substring (content.IndexOf ("partial write:\\n") + 16), @"([\P{Cc}].*?) '([\P{Cc}].*?)':([\P{Cc}].*?)").ToList ();
-                    partialWrite = true;
-                }
-                else
-                {
-                    parts = Regex.Matches (content, @"{\""error"":""([9\P{Cc}]+) '([\P{Cc}]+)':([a-zA-Z0-9 ]+)").ToList ();
-                    partialWrite = false;
-                }
-                throw new InfluxDBException (partialWrite ? "Partial Write" : "Failed to Write", String.Format ("{0}: {1} due to {2}", partialWrite ? "Partial Write" : "Failed to Write", parts[0], parts[2]), point);
-                return false;
+                throw InfluxDBException.ProcessInfluxDBError (await response.Content.ReadAsStringAsync ());
             }
             else if (response.StatusCode == HttpStatusCode.NoContent)
             {
@@ -501,7 +477,7 @@ namespace AdysTech.InfluxDB.Client.Net
         /// </summary>
         public async Task<string> GetServerVersionAsync ()
         {
-            var querybaseUrl = new Uri (String.Format ("{0}/ping", InfluxUrl));
+            var querybaseUrl = new Uri ($"{InfluxUrl}/ping");
             var builder = new UriBuilder (querybaseUrl);
 
             try
@@ -559,8 +535,6 @@ namespace AdysTech.InfluxDB.Client.Net
 
         }
 
-
-
         /// <summary>
         /// Creates a retention policy
         /// </summary>
@@ -577,8 +551,6 @@ namespace AdysTech.InfluxDB.Client.Net
                     policy.Saved = true;
                     return true;
                 }
-                else if (response.StatusCode == HttpStatusCode.BadRequest)
-                    throw new ArgumentException ("Invalid Retention Policy");
             }
             return false;
         }
@@ -603,21 +575,22 @@ namespace AdysTech.InfluxDB.Client.Net
 
                 var rawResult = new JavaScriptSerializer ().Deserialize<InfluxResponse> (await response.Content.ReadAsStringAsync ());
 
-                if (rawResult.Results.Count > 1)
+                if (rawResult?.Results?.Count > 1)
                     throw new ArgumentException ("The query is resulting in a format, which is not supported by this method yet");
 
-                if (rawResult.Results[0].Series != null)
+                if (rawResult?.Results[0]?.Series != null)
                 {
-
-                    foreach (var series in rawResult.Results[0].Series)
+                    foreach (var series in rawResult?.Results[0]?.Series)
                     {
                         var result = new InfluxSeries ();
+                        result.HasEntries = false;
                         results.Add (result);
                         result.SeriesName = series.Name;
                         result.Tags = series.Tags;
                         result.Entries = new List<dynamic> ();
-                        for (var row = 0; row < series.Values.Count; row++)
+                        for (var row = 0; row < series?.Values?.Count; row++)
                         {
+                            result.HasEntries = true;
                             dynamic entry = new ExpandoObject ();
                             result.Entries.Add (entry);
                             for (var col = 0; col < series.Columns.Count; col++)
@@ -633,6 +606,72 @@ namespace AdysTech.InfluxDB.Client.Net
             }
             return null;
         }
+
+
+        /// <summary>
+        /// Gets the list of Continuous Queries currently in efect
+        /// </summary>
+        /// <returns>List of InfluxContinuousQuery objects</returns>
+        public async Task<List<InfluxContinuousQuery>> GetContinuousQueriesAsync ()
+        {
+            var cqPattern = new Regex (@"^CREATE CONTINUOUS QUERY (\S*) ON (\S*) (RESAMPLE (EVERY (\d\S)*)? ?(FOR (\d\S)*)?)? ?BEGIN ([\s\S]*GROUP BY time\((\d\S)\)[\s\S]*) END", RegexOptions.IgnoreCase | RegexOptions.Compiled, TimeSpan.FromSeconds (10));
+            //Show Continous Queries runs at a global scope, not just for a given DB.
+            var rawCQList = await QueryMultiSeriesAsync (null, "SHOW CONTINUOUS QUERIES");
+            var queries = new List<InfluxContinuousQuery> ();
+
+            foreach (var dbEntry in rawCQList.Where (cq => cq.HasEntries == true))
+            {
+                foreach (var rawCQ in dbEntry.Entries)
+                {
+                    var cq = new InfluxContinuousQuery ()
+                    {
+                        DBName = dbEntry.SeriesName,
+                        Name = rawCQ.Name,
+                        Saved = true
+                    };
+                    Match queryParts;
+                    try
+                    {
+                        queryParts = cqPattern.Match (rawCQ.Query);
+                        cq.ResampleFrequency = StringHelper.ParseDuration (queryParts.Groups[5].ToString ());
+                        cq.ResampleDuration = StringHelper.ParseDuration (queryParts.Groups[7].ToString ());
+                        cq.Query = queryParts.Groups[8].ToString ();
+                        cq.GroupByInterval = StringHelper.ParseDuration (queryParts.Groups[9].ToString ());
+                    }
+                    catch (Exception e)
+                    {
+                        string query = rawCQ.Query.ToString ();
+                        var begin = query.IndexOf ("BEGIN", StringComparison.InvariantCultureIgnoreCase) + 5;
+                        cq.Query = query.Substring (begin, query.IndexOf (" END", StringComparison.InvariantCultureIgnoreCase));
+
+                    }
+
+                    queries.Add (cq);
+                }
+            }
+            return queries;
+
+        }
+        /// <summary>
+        /// Creates a Continuous Queries
+        /// </summary>
+        /// <param name="cq">An instance of the Continuous Query, DBName, Name, Query must be set</param>
+        /// <returns>True: Success</returns>
+        public async Task<bool> CreateContinuousQueryAsync (InfluxContinuousQuery cq)
+        {
+            var query = cq.GetCreateSyntax ();
+            if (query != null)
+            {
+                var response = await GetAsync (new Dictionary<string, string> () { { "q", query } });
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    cq.Saved = true;
+                    return true;
+                }
+            }
+            return false;
+        }
+
     }
 
 }

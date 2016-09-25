@@ -41,23 +41,23 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <summary>
         /// if this object is saved to Influx DB
         /// </summary>
-        public bool Saved { get;internal set; }
+        public bool Saved { get; internal set; }
 
-        public InfluxRetentionPolicy()
+        public InfluxRetentionPolicy ()
         {
             ReplicaN = 1;
         }
 
-        internal string GetCreateSyntax()
+        internal string GetCreateSyntax ()
         {
-            if (!String.IsNullOrWhiteSpace(DBName) && !String.IsNullOrWhiteSpace(Name) && Duration >= TimeSpan.FromMinutes(60))
-                return String.Format("CREATE RETENTION POLICY {0} ON {1} DURATION {2}m REPLICATION {3}{4}", Name, DBName, Duration.TotalMinutes, ReplicaN, IsDefault ? " DEFAULT" : "");
-            else if (Duration < TimeSpan.FromMinutes(60))
-                throw new ArgumentException("Minimum retention duration is 1 hour");
-            else if (String.IsNullOrWhiteSpace(Name))
-                throw new ArgumentException("Name not set");
-            else if (String.IsNullOrWhiteSpace(DBName))
-                throw new ArgumentException("DBName is not set");
+            if (!String.IsNullOrWhiteSpace (DBName) && !String.IsNullOrWhiteSpace (Name) && Duration >= TimeSpan.FromMinutes (60))
+                return $"CREATE RETENTION POLICY {Name} ON {DBName} DURATION {Duration.TotalMinutes}m REPLICATION {ReplicaN} {(IsDefault ? " DEFAULT" : "")}";
+            else if (Duration < TimeSpan.FromMinutes (60))
+                throw new ArgumentException ("Minimum retention duration is 1 hour");
+            else if (String.IsNullOrWhiteSpace (Name))
+                throw new ArgumentException ("Name not set");
+            else if (String.IsNullOrWhiteSpace (DBName))
+                throw new ArgumentException ("DBName is not set");
             return null;
         }
     }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AdysTech.InfluxDB.Client.Net;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -7,7 +8,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AdysTech.InfluxDB.Client.Net.Tests
 {
-    [TestClass()]
+    [TestClass ()]
     public class InfluxDBClientTest
     {
 
@@ -22,297 +23,292 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
 
 
         [TestMethod]
-        [ExpectedException(typeof(ServiceUnavailableException))]
-        public async Task TestGetInfluxDBNamesAsync_ServiceUnavailable()
+        [ExpectedException (typeof (ServiceUnavailableException))]
+        public async Task TestGetInfluxDBNamesAsync_ServiceUnavailable ()
         {
-            var client = new InfluxDBClient(invalidInfluxUrl);
-            var r = await client.GetInfluxDBNamesAsync();
+            var client = new InfluxDBClient (invalidInfluxUrl);
+            var r = await client.GetInfluxDBNamesAsync ();
         }
 
         [TestMethod]
-        public async Task TestGetInfluxDBNamesAsync()
+        public async Task TestGetInfluxDBNamesAsync ()
         {
             try
             {
 
-                var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
-                Stopwatch s = new Stopwatch();
-                s.Start();
-                var r = await client.GetInfluxDBNamesAsync();
-                s.Stop();
-                Debug.WriteLine(s.ElapsedMilliseconds);
+                var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+                Stopwatch s = new Stopwatch ();
+                s.Start ();
+                var r = await client.GetInfluxDBNamesAsync ();
+                s.Stop ();
+                Debug.WriteLine (s.ElapsedMilliseconds);
 
-                Assert.IsTrue(r != null && r.Count > 0, "GetInfluxDBNamesAsync retunred null or empty collection");
+                Assert.IsTrue (r != null && r.Count > 0, "GetInfluxDBNamesAsync retunred null or empty collection");
             }
             catch (Exception e)
             {
-                Assert.Fail("Unexpected exception of type {0} caught: {1}",
-                            e.GetType(), e.Message);
+                Assert.Fail ($"Unexpected exception of type {e.GetType ()} caught: {e.Message}");
                 return;
             }
         }
 
         [TestMethod]
-        public async Task TestGetInfluxDBStructureAsync_InvalidDB()
+        public async Task TestGetInfluxDBStructureAsync_InvalidDB ()
         {
             try
             {
-                var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
-                var r = await client.GetInfluxDBStructureAsync("InvalidDB");
-                Assert.IsTrue(r != null && r.Measurements.Count() == 0, "GetInfluxDBStructureAsync retunred non null or non empty collection");
+                var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+                var r = await client.GetInfluxDBStructureAsync ("InvalidDB");
+                Assert.IsTrue (r != null && r.Measurements.Count () == 0, "GetInfluxDBStructureAsync retunred non null or non empty collection");
             }
             catch (Exception e)
             {
-                Assert.Fail("Unexpected exception of type {0} caught: {1}",
-                            e.GetType(), e.Message);
+                Assert.Fail ($"Unexpected exception of type {e.GetType ()} caught: {e.Message}");
                 return;
             }
         }
 
         [TestMethod]
-        public async Task TestGetInfluxDBStructureAsync()
+        public async Task TestGetInfluxDBStructureAsync ()
         {
             try
             {
 
-                var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
-                Stopwatch s = new Stopwatch();
-                s.Start();
-                var r = await client.GetInfluxDBStructureAsync(dbName);
-                s.Stop();
-                Debug.WriteLine(s.ElapsedMilliseconds);
-                Assert.IsTrue(r != null && r.Measurements.Count >= 0, "GetInfluxDBStructureAsync retunred null or non empty collection");
+                var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+                Stopwatch s = new Stopwatch ();
+                s.Start ();
+                var r = await client.GetInfluxDBStructureAsync (dbName);
+                s.Stop ();
+                Debug.WriteLine (s.ElapsedMilliseconds);
+                Assert.IsTrue (r != null && r.Measurements.Count >= 0, "GetInfluxDBStructureAsync retunred null or non empty collection");
             }
             catch (Exception e)
             {
-                Assert.Fail("Unexpected exception of type {0} caught: {1}",
-                            e.GetType(), e.Message);
+                Assert.Fail ($"Unexpected exception of type {e.GetType ()} caught: {e.Message}");
                 return;
             }
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        public async Task TestCreateDatabaseAsync_InvalidName()
+        [ExpectedException (typeof (InfluxDBException))]
+        public async Task TestCreateDatabaseAsync_InvalidName ()
         {
-            var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
-            var r = await client.CreateDatabaseAsync(invalidDbName);
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+            var r = await client.CreateDatabaseAsync (invalidDbName);
         }
 
         [TestMethod]
-        public async Task TestCreateDatabaseAsync()
+        public async Task TestCreateDatabaseAsync ()
         {
             try
             {
 
-                var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
-                var r = await client.CreateDatabaseAsync(dbName);
-                Assert.IsTrue(r, "CreateDatabaseAsync retunred false");
+                var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+                var r = await client.CreateDatabaseAsync (dbName);
+                Assert.IsTrue (r, "CreateDatabaseAsync retunred false");
             }
             catch (InvalidOperationException e)
             {
-                StringAssert.Equals(e.Message, "database already exists");
+                StringAssert.Equals (e.Message, "database already exists");
             }
             catch (Exception e)
             {
 
-                Assert.Fail("Unexpected exception of type {0} caught: {1}",
-                            e.GetType(), e.Message);
+                Assert.Fail ($"Unexpected exception of type {e.GetType ()} caught: {e.Message}");
                 return;
             }
         }
 
 
         [TestMethod]
-        public async Task TestQueryAsync()
+        public async Task TestQueryAsync ()
         {
             try
             {
 
-                var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
-                var r = await client.QueryDBAsync(dbName, "show measurements");
-                Assert.IsTrue(r != null && r.Count > 0, "QueryDBAsync retunred null or invalid data");
+                var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+                var r = await client.QueryDBAsync (dbName, "show measurements");
+                Assert.IsTrue (r != null && r.Count > 0, "QueryDBAsync retunred null or invalid data");
             }
             catch (Exception e)
             {
-                Assert.Fail("Unexpected exception of type {0} caught: {1}",
-                            e.GetType(), e.Message);
+                Assert.Fail ($"Unexpected exception of type {e.GetType ()} caught: {e.Message}");
                 return;
             }
         }
 
         [TestMethod]
-        public async Task TestQueryMultiSeriesAsync()
+        public async Task TestQueryMultiSeriesAsync ()
         {
-            var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
 
-            Stopwatch s = new Stopwatch();
-            s.Start();
-            var r = await client.QueryMultiSeriesAsync(dbName, "SHOW STATS");
+            Stopwatch s = new Stopwatch ();
+            s.Start ();
+            var r = await client.QueryMultiSeriesAsync (dbName, "SHOW STATS");
 
-            s.Stop();
-            Debug.WriteLine("Elapsed{0}", s.ElapsedMilliseconds);
-            Assert.IsTrue(r != null && r.Count > 0, "QueryMultiSeriesAsync retunred null or invalid data");
+            s.Stop ();
+            Debug.WriteLine ($"Elapsed{s.ElapsedMilliseconds}");
+            Assert.IsTrue (r != null && r.Count > 0, "QueryMultiSeriesAsync retunred null or invalid data");
         }
 
 
 
         [TestMethod]
-        public async Task TestPostPointsAsync()
+        public async Task TestPostPointsAsync ()
         {
             try
             {
-                var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+                var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
                 var time = DateTime.Now;
-                var today = DateTime.Now.ToShortDateString();
-                var now = DateTime.Now.ToShortTimeString();
+                var today = DateTime.Now.ToShortDateString ();
+                var now = DateTime.Now.ToShortTimeString ();
 
-                var points = new List<IInfluxDatapoint>();
+                var points = new List<IInfluxDatapoint> ();
 
-                var valDouble = new InfluxDatapoint<double>();
+                var valDouble = new InfluxDatapoint<double> ();
                 valDouble.UtcTimestamp = DateTime.UtcNow;
-                valDouble.Tags.Add("TestDate", today);
-                valDouble.Tags.Add("TestTime", now);
-                valDouble.Fields.Add("Doublefield", DataGen.RandomDouble());
-                valDouble.Fields.Add("Doublefield2", DataGen.RandomDouble());
+                valDouble.Tags.Add ("TestDate", today);
+                valDouble.Tags.Add ("TestTime", now);
+                valDouble.Fields.Add ("Doublefield", DataGen.RandomDouble ());
+                valDouble.Fields.Add ("Doublefield2", DataGen.RandomDouble ());
                 valDouble.MeasurementName = measurementName;
                 valDouble.Precision = TimePrecision.Nanoseconds;
-                points.Add(valDouble);
+                points.Add (valDouble);
 
-                valDouble = new InfluxDatapoint<double>();
+                valDouble = new InfluxDatapoint<double> ();
                 valDouble.UtcTimestamp = DateTime.UtcNow;
-                valDouble.Tags.Add("TestDate", today);
-                valDouble.Tags.Add("TestTime", now);
-                valDouble.Fields.Add("Doublefield", DataGen.RandomDouble());
-                valDouble.Fields.Add("Doublefield2", DataGen.RandomDouble());
+                valDouble.Tags.Add ("TestDate", today);
+                valDouble.Tags.Add ("TestTime", now);
+                valDouble.Fields.Add ("Doublefield", DataGen.RandomDouble ());
+                valDouble.Fields.Add ("Doublefield2", DataGen.RandomDouble ());
                 valDouble.MeasurementName = measurementName;
                 valDouble.Precision = TimePrecision.Microseconds;
-                points.Add(valDouble);
+                points.Add (valDouble);
 
-                var valInt = new InfluxDatapoint<int>();
+                var valInt = new InfluxDatapoint<int> ();
                 valInt.UtcTimestamp = DateTime.UtcNow;
-                valInt.Tags.Add("TestDate", today);
-                valInt.Tags.Add("TestTime", now);
-                valInt.Fields.Add("Intfield", DataGen.RandomInt());
-                valInt.Fields.Add("Intfield2", DataGen.RandomInt());
+                valInt.Tags.Add ("TestDate", today);
+                valInt.Tags.Add ("TestTime", now);
+                valInt.Fields.Add ("Intfield", DataGen.RandomInt ());
+                valInt.Fields.Add ("Intfield2", DataGen.RandomInt ());
                 valInt.MeasurementName = measurementName;
                 valInt.Precision = TimePrecision.Milliseconds;
-                points.Add(valInt);
+                points.Add (valInt);
 
-                valInt = new InfluxDatapoint<int>();
+                valInt = new InfluxDatapoint<int> ();
                 valInt.UtcTimestamp = DateTime.UtcNow;
-                valInt.Tags.Add("TestDate", today);
-                valInt.Tags.Add("TestTime", now);
-                valInt.Fields.Add("Intfield", DataGen.RandomInt());
-                valInt.Fields.Add("Intfield2", DataGen.RandomInt());
+                valInt.Tags.Add ("TestDate", today);
+                valInt.Tags.Add ("TestTime", now);
+                valInt.Fields.Add ("Intfield", DataGen.RandomInt ());
+                valInt.Fields.Add ("Intfield2", DataGen.RandomInt ());
                 valInt.MeasurementName = measurementName;
                 valInt.Precision = TimePrecision.Seconds;
-                points.Add(valInt);
+                points.Add (valInt);
 
-                var valBool = new InfluxDatapoint<bool>();
+                var valBool = new InfluxDatapoint<bool> ();
                 valBool.UtcTimestamp = DateTime.UtcNow;
-                valBool.Tags.Add("TestDate", today);
-                valBool.Tags.Add("TestTime", now);
-                valBool.Fields.Add("Booleanfield", time.Ticks % 2 == 0);
+                valBool.Tags.Add ("TestDate", today);
+                valBool.Tags.Add ("TestTime", now);
+                valBool.Fields.Add ("Booleanfield", time.Ticks % 2 == 0);
                 valBool.MeasurementName = measurementName;
                 valBool.Precision = TimePrecision.Minutes;
-                points.Add(valBool);
+                points.Add (valBool);
 
-                var valString = new InfluxDatapoint<string>();
+                var valString = new InfluxDatapoint<string> ();
                 valString.UtcTimestamp = DateTime.UtcNow;
-                valString.Tags.Add("TestDate", today);
-                valString.Tags.Add("TestTime", now);
-                valString.Fields.Add("Stringfield", DataGen.RandomString());
+                valString.Tags.Add ("TestDate", today);
+                valString.Tags.Add ("TestTime", now);
+                valString.Fields.Add ("Stringfield", DataGen.RandomString ());
                 valString.MeasurementName = measurementName;
                 valString.Precision = TimePrecision.Hours;
-                points.Add(valString);
+                points.Add (valString);
 
 
-                var r = await client.PostPointsAsync(dbName, points);
-                Assert.IsTrue(r, "PostPointsAsync retunred false");
+                var r = await client.PostPointsAsync (dbName, points);
+                Assert.IsTrue (r, "PostPointsAsync retunred false");
             }
             catch (Exception e)
             {
 
-                Assert.Fail("Unexpected exception of type {0} caught: {1}",
-                            e.GetType(), e.Message);
+                Assert.Fail ($"Unexpected exception of type {e.GetType ()} caught: {e.Message}");
                 return;
             }
         }
 
 
         [TestMethod]
-        [ExpectedException(typeof(InfluxDBException))]
-        public async Task TestPostPointAsync_InvalidReq()
+        [ExpectedException (typeof (InfluxDBException))]
+        public async Task TestPostPointAsync_InvalidReq ()
         {
-            var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
             var time = DateTime.Now;
-            var today = DateTime.Now.ToShortDateString();
-            var now = DateTime.Now.ToShortTimeString();
+            var today = DateTime.Now.ToShortDateString ();
+            var now = DateTime.Now.ToShortTimeString ();
 
-            var valDouble = new InfluxDatapoint<double>();
+            var valDouble = new InfluxDatapoint<double> ();
             valDouble.UtcTimestamp = DateTime.UtcNow;
-            valDouble.Tags.Add("TestDate", today);
-            valDouble.Tags.Add("TestTime", now);
-            valDouble.Fields.Add("Doublefield", DataGen.RandomDouble());
-            valDouble.Fields.Add("Doublefield2", Double.NaN);
+            valDouble.Tags.Add ("TestDate", today);
+            valDouble.Tags.Add ("TestTime", now);
+            valDouble.Fields.Add ("Doublefield", DataGen.RandomDouble ());
+            valDouble.Fields.Add ("Doublefield2", Double.NaN);
             valDouble.MeasurementName = measurementName;
             valDouble.Precision = TimePrecision.Seconds;
 
-            var r = await client.PostPointAsync(dbName, valDouble);
-            Assert.IsTrue(r, "PostPointsAsync retunred false");
+            var r = await client.PostPointAsync (dbName, valDouble);
+            Assert.IsTrue (r, "PostPointsAsync retunred false");
 
         }
 
 
         [TestMethod]
-        [ExpectedException(typeof(InfluxDBException))]
-        public async Task TestPostPointsAsync_PartialWrite()
+        [ExpectedException (typeof (InfluxDBException))]
+        public async Task TestPostPointsAsync_PartialWrite ()
         {
-            var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
             var time = DateTime.Now;
-            var today = DateTime.Now.ToShortDateString();
-            var now = DateTime.Now.ToShortTimeString();
+            var today = DateTime.Now.ToShortDateString ();
+            var now = DateTime.Now.ToShortTimeString ();
 
-            var points = new List<IInfluxDatapoint>();
+            var points = new List<IInfluxDatapoint> ();
 
 
-            var valDouble = new InfluxDatapoint<double>();
+            var valDouble = new InfluxDatapoint<double> ();
             valDouble.UtcTimestamp = DateTime.UtcNow;
-            valDouble.Tags.Add("TestDate", today);
-            valDouble.Tags.Add("TestTime", now);
-            valDouble.Fields.Add("Doublefield", DataGen.RandomDouble());
-            valDouble.Fields.Add("Doublefield2", Double.NaN);
+            valDouble.Tags.Add ("TestDate", today);
+            valDouble.Tags.Add ("TestTime", now);
+            valDouble.Fields.Add ("Doublefield", DataGen.RandomDouble ());
+            valDouble.Fields.Add ("Doublefield2", Double.NaN);
             valDouble.MeasurementName = measurementName;
             valDouble.Precision = TimePrecision.Seconds;
-            points.Add(valDouble);
+            points.Add (valDouble);
 
 
             for (int i = 0; i < 5; i++)
             {
-                var valInt = new InfluxDatapoint<int>();
-                valInt.UtcTimestamp = DateTime.UtcNow.AddSeconds(-1 * DataGen.RandomInt(3600));
-                valInt.Tags.Add("TestDate", today);
-                valInt.Tags.Add("TestTime", now);
-                valInt.Fields.Add("Intfield", DataGen.RandomInt());
-                valInt.Fields.Add("Intfield2", DataGen.RandomInt());
+                var valInt = new InfluxDatapoint<int> ();
+                valInt.UtcTimestamp = DateTime.UtcNow.AddSeconds (-1 * DataGen.RandomInt (3600));
+                valInt.Tags.Add ("TestDate", today);
+                valInt.Tags.Add ("TestTime", now);
+                valInt.Fields.Add ("Intfield", DataGen.RandomInt ());
+                valInt.Fields.Add ("Intfield2", DataGen.RandomInt ());
                 valInt.MeasurementName = measurementName;
                 valInt.Precision = TimePrecision.Seconds;
-                points.Add(valInt);
+                points.Add (valInt);
             }
 
-            valDouble = new InfluxDatapoint<double>();
+            valDouble = new InfluxDatapoint<double> ();
             valDouble.UtcTimestamp = DateTime.UtcNow;
-            valDouble.Tags.Add("TestDate", today);
-            valDouble.Tags.Add("TestTime", now);
-            valDouble.Fields.Add("Doublefield", DataGen.RandomDouble());
-            valDouble.Fields.Add("Doublefield2", Double.NaN);
+            valDouble.Tags.Add ("TestDate", today);
+            valDouble.Tags.Add ("TestTime", now);
+            valDouble.Fields.Add ("Doublefield", DataGen.RandomDouble ());
+            valDouble.Fields.Add ("Doublefield2", Double.NaN);
             valDouble.MeasurementName = measurementName;
             valDouble.Precision = TimePrecision.Seconds;
-            points.Add(valDouble);
+            points.Add (valDouble);
 
-            var r = await client.PostPointsAsync(dbName, points);
-            Assert.IsTrue(r, "PostPointsAsync retunred false");
+
+            var r = await client.PostPointsAsync (dbName, points);
+            Assert.IsTrue (r, "PostPointsAsync retunred false");
 
         }
 
@@ -322,168 +318,208 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
         /// </summary>
         /// <returns></returns>
         [TestMethod]
-        public async Task TestPostPointsAsync_Batch()
+        public async Task TestPostPointsAsync_Batch ()
         {
             try
             {
-                var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+                var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
 
-                var points = new List<IInfluxDatapoint>();
+                var points = new List<IInfluxDatapoint> ();
 
-                var today = DateTime.Now.ToShortDateString();
-                var now = DateTime.Now.ToShortTimeString();
-                var start = DateTime.Now.AddDays(-5);
+                var today = DateTime.Now.ToShortDateString ();
+                var now = DateTime.Now.ToShortTimeString ();
+                var start = DateTime.Now.AddDays (-5);
                 var end = DateTime.Now;
 
                 for (int i = 0; i < 5000; i++)
                 {
-                    var valMixed = new InfluxDatapoint<InfluxValueField>();
-                    valMixed.UtcTimestamp = DataGen.RandomDate(start, end);
-                    valMixed.Tags.Add("TestDate", today);
-                    valMixed.Tags.Add("TestTime", now);
+                    var valMixed = new InfluxDatapoint<InfluxValueField> ();
+                    valMixed.UtcTimestamp = DataGen.RandomDate (start, end);
+                    valMixed.Tags.Add ("TestDate", today);
+                    valMixed.Tags.Add ("TestTime", now);
                     valMixed.UtcTimestamp = DateTime.UtcNow;
-                    valMixed.Fields.Add("Doublefield", new InfluxValueField(DataGen.RandomDouble()));
-                    valMixed.Fields.Add("Stringfield", new InfluxValueField(DataGen.RandomString()));
-                    valMixed.Fields.Add("Boolfield", new InfluxValueField(DateTime.Now.Ticks % 2 == 0));
-                    valMixed.Fields.Add("Int Field", new InfluxValueField(DataGen.RandomInt()));
+                    valMixed.Fields.Add ("Doublefield", new InfluxValueField (DataGen.RandomDouble ()));
+                    valMixed.Fields.Add ("Stringfield", new InfluxValueField (DataGen.RandomString ()));
+                    valMixed.Fields.Add ("Boolfield", new InfluxValueField (DateTime.Now.Ticks % 2 == 0));
+                    valMixed.Fields.Add ("Int Field", new InfluxValueField (DataGen.RandomInt ()));
                     valMixed.MeasurementName = measurementName;
-                    valMixed.Precision = (TimePrecision)(DataGen.RandomInt() % 6) + 1;
-                    points.Add(valMixed);
+                    valMixed.Precision = (TimePrecision) (DataGen.RandomInt () % 6) + 1;
+                    points.Add (valMixed);
                 }
 
-                var r = await client.PostPointsAsync(dbName, points);
-                Assert.IsTrue(points.TrueForAll(p => p.Saved == true), "PostPointsAsync did not save all points");
+                var r = await client.PostPointsAsync (dbName, points);
+                Assert.IsTrue (points.TrueForAll (p => p.Saved == true), "PostPointsAsync did not save all points");
 
             }
             catch (Exception e)
             {
 
-                Assert.Fail("Unexpected exception of type {0} caught: {1}",
-                            e.GetType(), e.Message);
+                Assert.Fail ($"Unexpected exception of type {e.GetType ()} caught: {e.Message}");
                 return;
             }
         }
 
         [TestMethod]
-        public async Task TestPostMixedPointAsync()
+        public async Task TestPostMixedPointAsync ()
         {
             try
             {
-                var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+                var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
                 var time = DateTime.Now;
-                var rand = new Random();
-                var valMixed = new InfluxDatapoint<InfluxValueField>();
+                var rand = new Random ();
+                var valMixed = new InfluxDatapoint<InfluxValueField> ();
                 valMixed.UtcTimestamp = DateTime.UtcNow;
-                valMixed.Tags.Add("TestDate", time.ToShortDateString());
-                valMixed.Tags.Add("TestTime", time.ToShortTimeString());
-                valMixed.Fields.Add("Doublefield", new InfluxValueField(rand.NextDouble()));
-                valMixed.Fields.Add("Stringfield", new InfluxValueField(DataGen.RandomString()));
-                valMixed.Fields.Add("Boolfield", new InfluxValueField(true));
-                valMixed.Fields.Add("Int Field", new InfluxValueField(rand.Next()));
+                valMixed.Tags.Add ("TestDate", time.ToShortDateString ());
+                valMixed.Tags.Add ("TestTime", time.ToShortTimeString ());
+                valMixed.Fields.Add ("Doublefield", new InfluxValueField (rand.NextDouble ()));
+                valMixed.Fields.Add ("Stringfield", new InfluxValueField (DataGen.RandomString ()));
+                valMixed.Fields.Add ("Boolfield", new InfluxValueField (true));
+                valMixed.Fields.Add ("Int Field", new InfluxValueField (rand.Next ()));
 
                 valMixed.MeasurementName = measurementName;
                 valMixed.Precision = TimePrecision.Seconds;
-                var r = await client.PostPointAsync(dbName, valMixed);
-                Assert.IsTrue(r, "PostPointAsync retunred false");
+                var r = await client.PostPointAsync (dbName, valMixed);
+                Assert.IsTrue (r, "PostPointAsync retunred false");
             }
             catch (Exception e)
             {
 
-                Assert.Fail("Unexpected exception of type {0} caught: {1}",
-                            e.GetType(), e.Message);
+                Assert.Fail ($"Unexpected exception of type {e.GetType ()} caught: {e.Message}");
                 return;
             }
         }
 
         [TestMethod]
-        public async Task TestPostPointAsyncNonDefaultRetention()
+        public async Task TestPostPointAsyncNonDefaultRetention ()
         {
             try
             {
-                var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+                var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
                 var time = DateTime.Now;
-                var rand = new Random();
-                var valMixed = new InfluxDatapoint<InfluxValueField>();
+                var rand = new Random ();
+                var valMixed = new InfluxDatapoint<InfluxValueField> ();
                 valMixed.UtcTimestamp = DateTime.UtcNow;
-                valMixed.Tags.Add("TestDate", time.ToShortDateString());
-                valMixed.Tags.Add("TestTime", time.ToShortTimeString());
-                valMixed.Fields.Add("Doublefield", new InfluxValueField(rand.NextDouble()));
-                valMixed.Fields.Add("Stringfield", new InfluxValueField(DataGen.RandomString()));
-                valMixed.Fields.Add("Boolfield", new InfluxValueField(true));
-                valMixed.Fields.Add("Int Field", new InfluxValueField(rand.Next()));
+                valMixed.Tags.Add ("TestDate", time.ToShortDateString ());
+                valMixed.Tags.Add ("TestTime", time.ToShortTimeString ());
+                valMixed.Fields.Add ("Doublefield", new InfluxValueField (rand.NextDouble ()));
+                valMixed.Fields.Add ("Stringfield", new InfluxValueField (DataGen.RandomString ()));
+                valMixed.Fields.Add ("Boolfield", new InfluxValueField (true));
+                valMixed.Fields.Add ("Int Field", new InfluxValueField (rand.Next ()));
 
                 valMixed.MeasurementName = measurementName;
                 valMixed.Precision = TimePrecision.Seconds;
-                valMixed.Retention = new InfluxRetentionPolicy() { Name = "Test2" };
+                valMixed.Retention = new InfluxRetentionPolicy () { Duration=TimeSpan.FromHours(6)};
 
-                var r = await client.PostPointAsync(dbName, valMixed);
-                Assert.IsTrue(r && valMixed.Saved, "PostPointAsync retunred false");
+                var r = await client.PostPointAsync (dbName, valMixed);
+                Assert.IsTrue (r && valMixed.Saved, "PostPointAsync retunred false");
             }
             catch (Exception e)
             {
 
-                Assert.Fail("Unexpected exception of type {0} caught: {1}",
-                            e.GetType(), e.Message);
+                Assert.Fail ($"Unexpected exception of type {e.GetType ()} caught: {e.Message}");
                 return;
             }
         }
 
         [TestMethod]
-        [ExpectedException(typeof(InfluxDBException))]
-        public async Task TestPostPointsAsyncDifferentTypeFailure()
+        [ExpectedException (typeof (InfluxDBException))]
+        public async Task TestPostPointsAsync_DifferentTypeFailure ()
         {
-            var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
 
-            var points = new List<IInfluxDatapoint>();
+            var points = new List<IInfluxDatapoint> ();
 
-            var firstPoint = new InfluxDatapoint<int>();
+            var firstPoint = new InfluxDatapoint<int> ();
             firstPoint.UtcTimestamp = DateTime.UtcNow;
-            firstPoint.Fields.Add("value", 1);
+            firstPoint.Fields.Add ("value", 1);
             firstPoint.MeasurementName = "SameKeyDifferentType";
             firstPoint.Precision = TimePrecision.Milliseconds;
-            points.Add(firstPoint);
+            points.Add (firstPoint);
 
 
-            var secondPoint = new InfluxDatapoint<double>();
+            var secondPoint = new InfluxDatapoint<double> ();
             secondPoint.UtcTimestamp = DateTime.UtcNow;
-            secondPoint.Fields.Add("value", 123.1234);
+            secondPoint.Fields.Add ("value", 123.1234);
             secondPoint.MeasurementName = "SameKeyDifferentType";
             secondPoint.Precision = TimePrecision.Milliseconds;
-            points.Add(secondPoint);
+            points.Add (secondPoint);
 
 
-            var r = await client.PostPointsAsync(dbName, points);
+            var r = await client.PostPointsAsync (dbName, points);
         }
 
-        [TestMethod()]
-        public async Task TestGetServerVersionAsync()
+        [TestMethod ()]
+        public async Task TestGetServerVersionAsync ()
         {
 
-            var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
-            var version = await client.GetServerVersionAsync();
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+            var version = await client.GetServerVersionAsync ();
 
-            Assert.IsFalse(String.IsNullOrWhiteSpace(version));
-            Assert.IsTrue(version != "Unknown");
+            Assert.IsFalse (String.IsNullOrWhiteSpace (version));
+            Assert.IsTrue (version != "Unknown");
         }
 
-        [TestMethod()]
-        public async Task TestGetRetentionPoliciesAsync()
+        [TestMethod ()]
+        public async Task TestGetRetentionPoliciesAsync ()
         {
-            var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
-            var policies = await client.GetRetentionPoliciesAsync(dbName);
-            Assert.IsNotNull(policies, "GetRetentionPoliciesAsync returned Null");
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+            var policies = await client.GetRetentionPoliciesAsync (dbName);
+            Assert.IsNotNull (policies, "GetRetentionPoliciesAsync returned Null");
         }
 
-        [TestMethod()]
-        public async Task TestCreateRetentionPolicy()
+        [TestMethod ()]
+        public async Task TestCreateRetentionPolicy ()
         {
-            var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
-            var p = new InfluxRetentionPolicy() { Name = "Test2", DBName = dbName, Duration = TimeSpan.FromMinutes(1150), IsDefault = false };
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+            var p = new InfluxRetentionPolicy () { Name = "Test2", DBName = dbName, Duration = TimeSpan.FromMinutes (1150), IsDefault = false };
 
-            var r = await client.CreateRetentionPolicyAsync(p);
-            Assert.IsTrue(p.Saved, "CreateRetentionPolicyAsync failed");
+            var r = await client.CreateRetentionPolicyAsync (p);
+            Assert.IsTrue (p.Saved, "CreateRetentionPolicyAsync failed");
         }
 
+        [TestMethod ()]
+        public async Task TestGetContinuousQueriesAsync ()
+        {
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+            var cqList = await client.GetContinuousQueriesAsync ();
+
+            Assert.IsNotNull (cqList, "GetContinuousQueriesAsync returned Null");
+
+        }
+
+        [TestMethod ()]
+        public async Task TestCreateContinuousQueryAsync ()
+        {
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+            var query = $"select mean(Doublefield) as Doublefield into cqMeasurement from {measurementName} group by time(1h),*";
+            var p = new InfluxContinuousQuery () { Name = "TestCQ", DBName = dbName, Query = query };
+
+            var r = await client.CreateContinuousQueryAsync (p);
+            Assert.IsTrue (p.Saved, "CreateContinuousQueryAsync failed");
+        }
+
+
+        [TestMethod ()]
+        public async Task TestCreateContinuousQueryAsync_WithResample ()
+        {
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+            var query = $"select mean(Intfield) as Intfield into cqMeasurement from {measurementName} group by time(1h),*";
+            var p = new InfluxContinuousQuery () { Name = "TestCQ1", DBName = dbName, Query = query, ResampleDuration = TimeSpan.FromHours (2), ResampleFrequency = TimeSpan.FromHours (0.5) };
+            var r = await client.CreateContinuousQueryAsync (p);
+            Assert.IsTrue (p.Saved, "CreateContinuousQueryAsync failed");
+        }
+
+        [TestMethod ()]
+        [ExpectedException (typeof (InfluxDBException))]
+        public async Task TestCreateContinuousQueryAsync_MissingGroupBy ()
+        {
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+            var query = $"select mean(Doublefield) as Doublefield into cqMeasurement from {measurementName} group by *";
+            var p = new InfluxContinuousQuery () { Name = "TestCQ2", DBName = dbName, Query = query };
+
+            var r = await client.CreateContinuousQueryAsync (p);
+            Assert.IsTrue (p.Saved, "CreateContinuousQueryAsync failed");
+        }
 
     }
 

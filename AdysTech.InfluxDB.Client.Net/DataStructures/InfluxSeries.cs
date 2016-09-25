@@ -10,6 +10,7 @@ namespace AdysTech.InfluxDB.Client.Net
     {
         public string SeriesName { get; internal set; }
         public Dictionary<string, string> Tags { get; internal set; }
+        public bool HasEntries { get; internal set; }
         public List<dynamic> Entries { get; internal set; }
     }
 }
