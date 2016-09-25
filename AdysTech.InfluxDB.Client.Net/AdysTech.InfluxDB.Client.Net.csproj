@@ -43,6 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Interfaces\IInfluxContinuousQuery.cs" />
+    <Compile Include="DataStructures\InfluxContinuousQuery.cs" />
     <Compile Include="Interfaces\IInfluxRetentionPolicy.cs" />
     <Compile Include="Interfaces\IInfluxDatabase.cs" />
     <Compile Include="Interfaces\IInfluxMeasurement.cs" />

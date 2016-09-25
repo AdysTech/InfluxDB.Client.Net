@@ -38,7 +38,7 @@ namespace AdysTech.InfluxDB.Client.Net
 
         public override string ToString()
         {
-            return String.Format("{0} : Fileds-{1}, Tags-{2}", Name, Fields.Count, Tags.Count);
+            return $"{Name} : Fileds-{Fields.Count}, Tags-{Tags.Count}";
         }
 
     }

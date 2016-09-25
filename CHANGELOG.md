@@ -1,3 +1,20 @@
+## v0.5.5 [9/25/2016]
+
+### Release Notes
+This version supports Continuous Queries. You can create a new CQ, or as well as query them. This version also has generic code changes to use new (well .Net 4.6 feaute, so quite old) string interpolation syntax to remove `String.Format("string {0}", interolatedValue)` instead use `"$string{interolatedValue}"`.
+Another chnage is to throw `InfluxDBException` for any query failures. Before there were few cases where `ArgumentException` was thrown.
+
+### Features
+
+- [#16](https://github.com/AdysTech/InfluxDB.Client.Net/issues/16): Create Continuous Query
+
+
+## v0.5.3 [9/15/2016]
+### Bugfixes
+
+- [#14](https://github.com/AdysTech/InfluxDB.Client.Net/issues/14): Regex for error extraction fails with type conflict errors. Thanks to @patHyatt for reporting and fixing it in #15
+
+
 ## v0.5.3 [7/8/2016]
 
 ### Release Notes
