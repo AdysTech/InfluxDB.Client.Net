@@ -1,8 +1,24 @@
+## v0.5.9 [10/25/2016]
+
+### Release Notes
+This version is a precursor to enable support for .Net Core.  This restructures the solution folders, makes the unit tests truly independent of each other. It also supports deleting Continuous Queries. As of now it still does not support the .NBet Core as there are few open issues (e.g. [#3199](https://github.com/dotnet/cli/issues/3199), [#147](https://github.com/aspnet/Tooling/issues/147)) which are rooted in .Net Core's dependency on `xproj` model. Once they move to `csproj` these issues will be resolved, and this library will support .Net Core as well via .Net Standard (1.6+) PCL. Final goal is to have same set of source files, which gets complied as normal .Net 4.5 class library, and a PCL for the Core.
+
+This version moves away from `JavaScriptSerializer` to [Json.NET](https://github.com/JamesNK/Newtonsoft.Json). Functionally this is a transparent chnage. But this is required as former is not supported in .Net Core.
+
+### Features
+
+- [#16](https://github.com/AdysTech/InfluxDB.Client.Net/issues/16): Create / Delete Continuous Query
+- QueryMultiSeriesAsync returns the time in a `DateTime` object if the series has one. The method also supports different epoch precisoins in query results now.
+
+
+###Breaking Change
+- `QueryDBAsync` has been deprecated and will be removed in next version. Please use `QueryMultiSeriesAsync` instead.
+
 ## v0.5.5 [9/25/2016]
 
 ### Release Notes
-This version supports Continuous Queries. You can create a new CQ, or as well as query them. This version also has generic code changes to use new (well .Net 4.6 feaute, so quite old) string interpolation syntax to remove `String.Format("string {0}", interolatedValue)` instead use `"$string{interolatedValue}"`.
-Another chnage is to throw `InfluxDBException` for any query failures. Before there were few cases where `ArgumentException` was thrown.
+This version supports Continuous Queries. You can create a new CQ, or as well as query them. This version also has generic code changes to use new (well .Net 4.6 feature, so quite old) string interpolation syntax to remove `String.Format("string {0}", interolatedValue)` instead use `"$string{interolatedValue}"`.
+Another change is to throw `InfluxDBException` for any query failures. Before there were few cases where `ArgumentException` was thrown.
 
 ### Features
 
@@ -23,7 +39,7 @@ Updated to handle default auto generated retention policy name other than "defau
 ## v0.5.1 [7/2/2016]
 
 ### Release Notes
-This is a minor update to revert to using .Net 4.5.1. Previous version was chnaged to use .Net 4.6 by mistake.
+This is a minor update to revert to using .Net 4.5.1. Previous version was changed to use .Net 4.6 by mistake.
 
 ## v0.5.0 [4/15/2016]
 
@@ -35,7 +51,7 @@ There is a breaking change to `GetInfluxDBStructureAsync`, which now returns a c
 
 - [#8](https://github.com/AdysTech/InfluxDB.Client.Net/pull/8): Add Nuget Package
 - [#10](https://github.com/AdysTech/InfluxDB.Client.Net/pull/10): Support for Retention Policy, query Influx Version
-- [#11](https://github.com/AdysTech/InfluxDB.Client.Net/pull/11): Enable AppVeyor integration for ci tests
+- [#11](https://github.com/AdysTech/InfluxDB.Client.Net/pull/11): Enable AppVeyor integration for CI tests
 
 ### Bugfixes
 

@@ -55,6 +55,8 @@ namespace AdysTech.InfluxDB.Client.Net
         /// </summary>
         public bool Saved { get; internal set; }
 
+        public bool Deleted { get; internal set; }
+
         internal string GetCreateSyntax ()
         {
             if (!String.IsNullOrWhiteSpace (DBName) && !String.IsNullOrWhiteSpace (Name) && !String.IsNullOrWhiteSpace (Query))
@@ -65,11 +67,24 @@ namespace AdysTech.InfluxDB.Client.Net
                     return $"CREATE CONTINUOUS QUERY \"{Name}\" ON \"{DBName}\" RESAMPLE EVERY {ResampleFrequency.TotalMinutes}m FOR {ResampleDuration.TotalMinutes}m BEGIN {Query} END";
                 else if (ResampleFrequency != TimeSpan.MinValue)
                     return $"CREATE CONTINUOUS QUERY \"{Name}\" ON \"{DBName}\" RESAMPLE EVERY {ResampleFrequency.TotalMinutes}m BEGIN {Query} END";
-                else if (ResampleDuration != TimeSpan.MinValue && ResampleFrequency != TimeSpan.MinValue)
+                else if (ResampleDuration != TimeSpan.MinValue)
                     return $"CREATE CONTINUOUS QUERY \"{Name}\" ON \"{DBName}\" RESAMPLE FOR {ResampleDuration.TotalMinutes}m BEGIN {Query} END";
             }
             else if (String.IsNullOrWhiteSpace (Query))
                 throw new ArgumentException ("Query part of CQ is not defined");
+            else if (String.IsNullOrWhiteSpace (Name))
+                throw new ArgumentException ("CQ Name not set");
+            else if (String.IsNullOrWhiteSpace (DBName))
+                throw new ArgumentException ("DBName for CQ is not set");
+            return null;
+        }
+
+        internal string GetDropSyntax ()
+        {
+            if (!String.IsNullOrWhiteSpace (DBName) && !String.IsNullOrWhiteSpace (Name))
+            {
+                return $"DROP CONTINUOUS QUERY \"{Name}\" ON \"{DBName}\"";
+            }
             else if (String.IsNullOrWhiteSpace (Name))
                 throw new ArgumentException ("CQ Name not set");
             else if (String.IsNullOrWhiteSpace (DBName))

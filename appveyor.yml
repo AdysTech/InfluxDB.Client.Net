@@ -6,6 +6,7 @@ branches:
   - master
 before_build:
 - set PATH="C:\Program Files (x86)\MSBuild\14.0\Bin";%PATH%
+- nuget restore
 build:
   verbosity: minimal
   publish_nuget: true
@@ -17,18 +18,5 @@ deploy:
     secure: nlBDuJJE7GoAtSvHKJDjdutExvlEQErL8Q9gFqmhURY4xUgFT946cs2mLeQ2Qezi
   on:
     branch: master
-test_script:
-- ps: >-
-    $source = "https://dl.influxdata.com/influxdb/nightlies/influxdb-nightly_windows_amd64.zip"
-
-    $destination = "$env:Temp\influxdb-nightly_windows_amd64.zip"
-
-    Invoke-WebRequest $source -OutFile $destination
-
-    $x = 7z e $destination -o"$env:Temp\influxdb"
-
-    Start-Process -FilePath "$env:Temp\influxdb\influxd.exe"
-
-    pwd
-
-    vstest.console /logger:Appveyor ".\AdysTech.InfluxDB.Client.Net.Test\bin\Debug\Tests.orderedtest"
+before_test:
+- ps: tests\InfluxDB.Client.Net.TestSetup.ps1

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,7 +30,7 @@ namespace AdysTech.InfluxDB.Client.Net
                 return Value.ToString();
             else if (DataType == typeof(double))
                 ////double has to have a . as decimal seperator for Influx
-                return String.Format(System.Globalization.CultureInfo.GetCultureInfo("en-US"), "{0}", (double)Value);
+                return String.Format(new CultureInfo("en-US"), "{0}", (double)Value);
             else
                 throw new ArgumentException(DataType + " is not supported by this library at this point");
 
