@@ -48,6 +48,12 @@ namespace AdysTech.InfluxDB.Client.Net
         /// if this object is saved to Influx DB
         /// </summary>
         bool Saved { get; }
+
+        /// <summary>
+        /// if this object has been already dropped from Influx DB
+        /// </summary>
+        bool Deleted { get; }
+
     }
 }
 

@@ -1,10 +1,10 @@
 ﻿using AdysTech.InfluxDB.Client.Net;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AdysTech.InfluxDB.Client.Net.Tests
 {
@@ -13,6 +13,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
     {
 
         const string dbName = "testDB";
+        const string internalDb = "_internal";
         const string measurementName = "TestMeasurement";
         const string invalidDbName = "test DB";
         const string dbUName = "admin";
@@ -22,20 +23,18 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
         const string invalidInfluxUrl = "http://localhost:8089";
 
 
-        [TestMethod]
-        [ExpectedException (typeof (ServiceUnavailableException))]
+        [TestMethod, TestCategory ("Get")]
         public async Task TestGetInfluxDBNamesAsync_ServiceUnavailable ()
         {
             var client = new InfluxDBClient (invalidInfluxUrl);
-            var r = await client.GetInfluxDBNamesAsync ();
+            var r = await AssertEx.ThrowsAsync<ServiceUnavailableException> (() => client.GetInfluxDBNamesAsync ());
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory ("Get")]
         public async Task TestGetInfluxDBNamesAsync ()
         {
             try
             {
-
                 var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
                 Stopwatch s = new Stopwatch ();
                 s.Start ();
@@ -43,7 +42,35 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
                 s.Stop ();
                 Debug.WriteLine (s.ElapsedMilliseconds);
 
-                Assert.IsTrue (r != null && r.Count > 0, "GetInfluxDBNamesAsync retunred null or empty collection");
+                Assert.IsTrue (r != null, "GetInfluxDBNamesAsync retunred null or empty collection");
+            }
+
+            catch (Exception e)
+            {
+                Assert.Fail ($"Unexpected exception of type {e.GetType ()} caught: {e.Message}");
+                return;
+            }
+        }
+
+        [TestMethod, TestCategory ("Create")]
+        public async Task TestCreateDatabaseAsync_InvalidName ()
+        {
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+            var r = await AssertEx.ThrowsAsync<InfluxDBException> (() => client.CreateDatabaseAsync (invalidDbName));
+        }
+
+        [TestMethod, TestCategory ("Create")]
+        public async Task TestCreateDatabaseAsync ()
+        {
+            try
+            {
+                var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+                var r = await client.CreateDatabaseAsync (dbName);
+                Assert.IsTrue (r, "CreateDatabaseAsync retunred false");
+            }
+            catch (InvalidOperationException e)
+            {
+                Assert.IsTrue (e.Message == "database already exists");
             }
             catch (Exception e)
             {
@@ -52,7 +79,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory ("Get")]
         public async Task TestGetInfluxDBStructureAsync_InvalidDB ()
         {
             try
@@ -68,12 +95,11 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory ("Get")]
         public async Task TestGetInfluxDBStructureAsync ()
         {
             try
             {
-
                 var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
                 Stopwatch s = new Stopwatch ();
                 s.Start ();
@@ -89,55 +115,8 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             }
         }
 
-        [TestMethod]
-        [ExpectedException (typeof (InfluxDBException))]
-        public async Task TestCreateDatabaseAsync_InvalidName ()
-        {
-            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
-            var r = await client.CreateDatabaseAsync (invalidDbName);
-        }
 
-        [TestMethod]
-        public async Task TestCreateDatabaseAsync ()
-        {
-            try
-            {
-
-                var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
-                var r = await client.CreateDatabaseAsync (dbName);
-                Assert.IsTrue (r, "CreateDatabaseAsync retunred false");
-            }
-            catch (InvalidOperationException e)
-            {
-                StringAssert.Equals (e.Message, "database already exists");
-            }
-            catch (Exception e)
-            {
-
-                Assert.Fail ($"Unexpected exception of type {e.GetType ()} caught: {e.Message}");
-                return;
-            }
-        }
-
-
-        [TestMethod]
-        public async Task TestQueryAsync ()
-        {
-            try
-            {
-
-                var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
-                var r = await client.QueryDBAsync (dbName, "show measurements");
-                Assert.IsTrue (r != null && r.Count > 0, "QueryDBAsync retunred null or invalid data");
-            }
-            catch (Exception e)
-            {
-                Assert.Fail ($"Unexpected exception of type {e.GetType ()} caught: {e.Message}");
-                return;
-            }
-        }
-
-        [TestMethod]
+        [TestMethod, TestCategory ("Query")]
         public async Task TestQueryMultiSeriesAsync ()
         {
             var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
@@ -153,7 +132,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
 
 
 
-        [TestMethod]
+        [TestMethod, TestCategory ("Post")]
         public async Task TestPostPointsAsync ()
         {
             try
@@ -236,8 +215,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
         }
 
 
-        [TestMethod]
-        [ExpectedException (typeof (InfluxDBException))]
+        [TestMethod, TestCategory ("Post")]
         public async Task TestPostPointAsync_InvalidReq ()
         {
             var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
@@ -254,14 +232,12 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             valDouble.MeasurementName = measurementName;
             valDouble.Precision = TimePrecision.Seconds;
 
-            var r = await client.PostPointAsync (dbName, valDouble);
-            Assert.IsTrue (r, "PostPointsAsync retunred false");
+            var r = await AssertEx.ThrowsAsync<InfluxDBException> (() => client.PostPointAsync (dbName, valDouble));
 
         }
 
 
-        [TestMethod]
-        [ExpectedException (typeof (InfluxDBException))]
+        [TestMethod, TestCategory ("Post")]
         public async Task TestPostPointsAsync_PartialWrite ()
         {
             var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
@@ -307,8 +283,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             points.Add (valDouble);
 
 
-            var r = await client.PostPointsAsync (dbName, points);
-            Assert.IsTrue (r, "PostPointsAsync retunred false");
+            var r = await AssertEx.ThrowsAsync<InfluxDBException> (() => client.PostPointsAsync (dbName, points));
 
         }
 
@@ -317,7 +292,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
         /// (e.g. you can have only point per hour at hour precision.
         /// </summary>
         /// <returns></returns>
-        [TestMethod]
+        [TestMethod, TestCategory ("Post")]
         public async Task TestPostPointsAsync_Batch ()
         {
             try
@@ -359,7 +334,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory ("Post")]
         public async Task TestPostMixedPointAsync ()
         {
             try
@@ -389,7 +364,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory ("Post")]
         public async Task TestPostPointAsyncNonDefaultRetention ()
         {
             try
@@ -408,7 +383,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
 
                 valMixed.MeasurementName = measurementName;
                 valMixed.Precision = TimePrecision.Seconds;
-                valMixed.Retention = new InfluxRetentionPolicy () { Duration=TimeSpan.FromHours(6)};
+                valMixed.Retention = new InfluxRetentionPolicy () { Duration = TimeSpan.FromHours (6) };
 
                 var r = await client.PostPointAsync (dbName, valMixed);
                 Assert.IsTrue (r && valMixed.Saved, "PostPointAsync retunred false");
@@ -421,8 +396,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             }
         }
 
-        [TestMethod]
-        [ExpectedException (typeof (InfluxDBException))]
+        [TestMethod, TestCategory ("Post")]
         public async Task TestPostPointsAsync_DifferentTypeFailure ()
         {
             var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
@@ -445,10 +419,10 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             points.Add (secondPoint);
 
 
-            var r = await client.PostPointsAsync (dbName, points);
+            var r = await AssertEx.ThrowsAsync<InfluxDBException> (() => client.PostPointsAsync (dbName, points));
         }
 
-        [TestMethod ()]
+        [TestMethod, TestCategory ("Get")]
         public async Task TestGetServerVersionAsync ()
         {
 
@@ -459,7 +433,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             Assert.IsTrue (version != "Unknown");
         }
 
-        [TestMethod ()]
+        [TestMethod, TestCategory ("Get")]
         public async Task TestGetRetentionPoliciesAsync ()
         {
             var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
@@ -467,7 +441,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             Assert.IsNotNull (policies, "GetRetentionPoliciesAsync returned Null");
         }
 
-        [TestMethod ()]
+        [TestMethod, TestCategory ("Create")]
         public async Task TestCreateRetentionPolicy ()
         {
             var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
@@ -477,7 +451,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             Assert.IsTrue (p.Saved, "CreateRetentionPolicyAsync failed");
         }
 
-        [TestMethod ()]
+        [TestMethod, TestCategory ("Get")]
         public async Task TestGetContinuousQueriesAsync ()
         {
             var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
@@ -487,7 +461,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
 
         }
 
-        [TestMethod ()]
+        [TestMethod, TestCategory ("Create")]
         public async Task TestCreateContinuousQueryAsync ()
         {
             var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
@@ -495,11 +469,11 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             var p = new InfluxContinuousQuery () { Name = "TestCQ", DBName = dbName, Query = query };
 
             var r = await client.CreateContinuousQueryAsync (p);
-            Assert.IsTrue (p.Saved, "CreateContinuousQueryAsync failed");
+            Assert.IsTrue (r && p.Saved, "CreateContinuousQueryAsync failed");
         }
 
 
-        [TestMethod ()]
+        [TestMethod, TestCategory ("Create")]
         public async Task TestCreateContinuousQueryAsync_WithResample ()
         {
             var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
@@ -509,18 +483,49 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             Assert.IsTrue (p.Saved, "CreateContinuousQueryAsync failed");
         }
 
-        [TestMethod ()]
-        [ExpectedException (typeof (InfluxDBException))]
+        [TestMethod, TestCategory ("Create")]
         public async Task TestCreateContinuousQueryAsync_MissingGroupBy ()
         {
             var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
             var query = $"select mean(Doublefield) as Doublefield into cqMeasurement from {measurementName} group by *";
             var p = new InfluxContinuousQuery () { Name = "TestCQ2", DBName = dbName, Query = query };
 
-            var r = await client.CreateContinuousQueryAsync (p);
-            Assert.IsTrue (p.Saved, "CreateContinuousQueryAsync failed");
+            var r = await AssertEx.ThrowsAsync<InfluxDBException> (() => client.CreateContinuousQueryAsync (p));
         }
 
-    }
+        [TestMethod, TestCategory ("Drop")]
+        public async Task TestDropContinuousQueryAsync ()
+        {
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+            var p = (await client.GetContinuousQueriesAsync ()).FirstOrDefault ();
+            if (p != null)
+            {
+                var r = await client.DropContinuousQueryAsync (p);
+                Assert.IsTrue (r && p.Deleted, "DropContinuousQueryAsync failed");
+            }
+        }
 
+        [TestMethod, TestCategory ("Drop")]
+        public async Task TestDropContinuousQueryAsync_NotSaved ()
+        {
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+            var p = new InfluxContinuousQuery () { Name = "TestCQ2", DBName = dbName };
+
+            var r = await AssertEx.ThrowsAsync<ArgumentException> (() => client.DropContinuousQueryAsync (p));
+        }
+
+        [TestMethod, TestCategory ("Query")]
+        public async Task TestQueryMultiSeriesAsync_Timeseries ()
+        {
+            var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+
+            Stopwatch s = new Stopwatch ();
+            s.Start ();
+            var r = await client.QueryMultiSeriesAsync (internalDb, "select * from runtime limit 10");
+
+            s.Stop ();
+            Debug.WriteLine ($"Elapsed{s.ElapsedMilliseconds}");
+            Assert.IsTrue (r != null && r.Count > 0, "QueryMultiSeriesAsync retunred null or invalid data");
+        }       
+    }
 }

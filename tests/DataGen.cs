@@ -66,4 +66,5 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             }
         }
     }
+  
 }

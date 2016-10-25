@@ -35,7 +35,7 @@ namespace AdysTech.InfluxDB.Client.Net
         /// </summary>
         /// <param name="dbName">Name of the database</param>
         /// <returns>Hierarchical structure, Database<Measurement<Tags,Fields>></returns>
-        Task<InfluxDatabase> GetInfluxDBStructureAsync (string dbName);
+        Task<IInfluxDatabase> GetInfluxDBStructureAsync (string dbName);
 
         /// <summary>
         /// Posts raw write request to Influx.
@@ -68,6 +68,51 @@ namespace AdysTech.InfluxDB.Client.Net
         Task<bool> PostPointsAsync (string dbName, IEnumerable<IInfluxDatapoint> points);
 
 
+         /// <summary>
+        /// Gets the list of retention policies present in a DB
+        /// </summary>
+        /// <param name="dbName">Name of the database</param>
+        /// <returns>List of InfluxRetentionPolicy objects</returns>
+        Task<List<IInfluxRetentionPolicy>> GetRetentionPoliciesAsync (string dbName);
+
+        /// <summary>
+        /// Creates a retention policy
+        /// </summary>
+        /// <param name="policy">An instance of the Retention Policy, DBName, Name and Duration must be set</param>
+        /// <returns>True: Success</returns>
+        Task<bool> CreateRetentionPolicyAsync (IInfluxRetentionPolicy policy);
+
+        /// <summary>
+        /// Queries Influx DB and gets a time series data back. Ideal for fetching measurement values.
+        /// The return list is of dynamics, and each element in there will have properties named after columns in series
+        /// </summary>
+        /// <param name="dbName">Name of the database</param>
+        /// <param name="measurementQuery">Query text, Supports multi series results</param>
+        /// <param name="precision">epoch precision of the data set</param>
+        /// <returns>List of InfluxSeries</returns>
+        Task<List<IInfluxSeries>> QueryMultiSeriesAsync (string dbName, string measurementQuery,TimePrecision precision = TimePrecision.Nanoseconds);
+
+        /// <summary>
+        /// Gets the list of Continuous Queries present in Influx Instance
+        /// </summary>
+        /// <returns>List of InfluxRetentionPolicy objects</returns>
+        Task<List<IInfluxContinuousQuery>> GetContinuousQueriesAsync ();
+
+        /// <summary>
+        /// Creates a Continuous Queries
+        /// </summary>
+        /// <param name="cq">An instance of the Continuous Query, DBName, Name, Query must be set</param>
+        /// <returns>True: Success</returns>
+        Task<bool> CreateContinuousQueryAsync (IInfluxContinuousQuery query);
+
+        /// <summary>
+        /// Drops a Continuous Queries
+        /// </summary>
+        /// <param name="cq">An instance of the Continuous Query, must be saved already</param>
+        /// <returns>True: Success</returns>
+        Task<bool> DropContinuousQueryAsync (IInfluxContinuousQuery query);
+
+
         /// <summary>
         /// Queries Influx DB and gets a time series data back. Ideal for fetching simple values.
         /// The return list is of dynamics, and each element in there will have properties named after columns in series
@@ -76,43 +121,8 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <param name="measurementQuery">Query text, Only results with single series are supported</param>
         /// <returns>List of ExpandoObjects (in the form of dynamic). 
         /// The objects will have columns as Peoperties with their current values</returns>
+        [Obsolete ("QueryDBAsync is deprecated, please use QueryMultiSeriesAsync instead.")]
         Task<List<dynamic>> QueryDBAsync (string dbName, string measurementQuery);
-
-        /// <summary>
-        /// Gets the list of retention policies present in a DB
-        /// </summary>
-        /// <param name="dbName">Name of the database</param>
-        /// <returns>List of InfluxRetentionPolicy objects</returns>
-        Task<List<InfluxRetentionPolicy>> GetRetentionPoliciesAsync (string dbName);
-
-        /// <summary>
-        /// Creates a retention policy
-        /// </summary>
-        /// <param name="policy">An instance of the Retention Policy, DBName, Name and Duration must be set</param>
-        /// <returns>True: Success</returns>
-        Task<bool> CreateRetentionPolicyAsync (InfluxRetentionPolicy policy);
-
-        /// <summary>
-        /// Queries Influx DB and gets a time series data back. Ideal for fetching measurement values.
-        /// The return list is of dynamics, and each element in there will have properties named after columns in series
-        /// </summary>
-        /// <param name="dbName">Name of the database</param>
-        /// <param name="measurementQuery">Query text, Supports multi series results</param>
-        /// <returns>List of InfluxSeries</returns>
-        Task<List<InfluxSeries>> QueryMultiSeriesAsync (string dbName, string measurementQuery);
-
-        /// <summary>
-        /// Gets the list of Continuous Queries present in Influx Instance
-        /// </summary>
-        /// <returns>List of InfluxRetentionPolicy objects</returns>
-        Task<List<InfluxContinuousQuery>> GetContinuousQueriesAsync ();
-
-        /// <summary>
-        /// Creates a Continuous Queries
-        /// </summary>
-        /// <param name="cq">An instance of the Continuous Query, DBName, Name, Query must be set</param>
-        /// <returns>True: Success</returns>
-        Task<bool> CreateContinuousQueryAsync (InfluxContinuousQuery query);
 
     }
 }

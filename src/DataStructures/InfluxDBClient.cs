@@ -10,8 +10,8 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
 using AdysTech.InfluxDB.Client.Net.DataContracts;
+using Newtonsoft.Json;
 
 namespace AdysTech.InfluxDB.Client.Net
 {
@@ -118,7 +118,7 @@ namespace AdysTech.InfluxDB.Client.Net
             }
             catch (HttpRequestException e)
             {
-                if (e.InnerException is WebException && e.InnerException.Message == "Unable to connect to the remote server")
+                if (e.InnerException.Message == "Unable to connect to the remote server" || e.InnerException.Message == "A connection with the server could not be established")
                     throw new ServiceUnavailableException ();
             }
             return null;
@@ -149,7 +149,7 @@ namespace AdysTech.InfluxDB.Client.Net
             }
             catch (HttpRequestException e)
             {
-                if (e.InnerException is WebException && e.InnerException.Message == "Unable to connect to the remote server")
+                if (e.InnerException.Message == "Unable to connect to the remote server")
                     throw new ServiceUnavailableException ();
             }
             return null;
@@ -233,13 +233,7 @@ namespace AdysTech.InfluxDB.Client.Net
             this._influxDBUserName = UserName;
             this._influxDBPassword = Password;
 
-            HttpClientHandler handler = new HttpClientHandler ();
-            handler.UseDefaultCredentials = true;
-            handler.PreAuthenticate = true;
-            handler.Proxy = WebRequest.DefaultWebProxy;
-            WebRequest.DefaultWebProxy.Credentials = CredentialCache.DefaultNetworkCredentials;
-
-            _client = new HttpClient (handler);
+            _client = new HttpClient ();
             if (!(String.IsNullOrWhiteSpace (InfluxDBUserName) && String.IsNullOrWhiteSpace (InfluxDBPassword)))
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue ("Basic",
                     Convert.ToBase64String (System.Text.ASCIIEncoding.ASCII.GetBytes ($"{InfluxDBUserName}:{InfluxDBPassword}")));
@@ -269,9 +263,9 @@ namespace AdysTech.InfluxDB.Client.Net
         {
             var dbNames = new List<String> ();
 
-            var dbs = await QueryDBAsync (null, "SHOW DATABASES");
+            var dbs = await QueryMultiSeriesAsync (null, "SHOW DATABASES");
 
-            foreach (var db in dbs)
+            foreach (var db in dbs.FirstOrDefault ()?.Entries)
                 dbNames.Add (db?.Name);
 
             return dbNames;
@@ -285,7 +279,7 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <returns>Hierarchical structure, Database<Measurement<Tags,Fields>></returns>
         ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
         ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
-        public async Task<InfluxDatabase> GetInfluxDBStructureAsync (string dbName)
+        public async Task<IInfluxDatabase> GetInfluxDBStructureAsync (string dbName)
         {
             var dbStructure = new InfluxDatabase (dbName);
             var fields = await QueryMultiSeriesAsync (dbName, "SHOW FIELD KEYS");
@@ -325,7 +319,7 @@ namespace AdysTech.InfluxDB.Client.Net
                     throw new InvalidOperationException ("database already exists");
                 return true;
             }
-            
+
             return false;
         }
 
@@ -346,50 +340,6 @@ namespace AdysTech.InfluxDB.Client.Net
                 return true;
             else
                 return false;
-        }
-
-        /// <summary>
-        /// Queries Influx DB and gets a time series data back. Ideal for fetching measurement values.
-        /// The return list is of dynamics, and each element in there will have properties named after columns in series
-        /// </summary>
-        /// <param name="dbName">Name of the database</param>
-        /// <param name="measurementQuery">Query text, Only results with single series are supported for now</param>
-        /// <returns>List of ExpandoObjects (in the form of dynamic). 
-        /// The objects will have columns as Peoperties with their current values</returns>
-        public async Task<List<dynamic>> QueryDBAsync (string dbName, string measurementQuery)
-        {
-            var response = await GetAsync (new Dictionary<string, string> () { { "db", dbName }, { "q", measurementQuery } });
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                //var content = await response.Content.ReadAsStreamAsync();
-                //DataContractJsonSerializer js = new DataContractJsonSerializer(typeof(InfluxResponse));
-                //var result = js.ReadObject(content) as InfluxResponse;
-
-                var result = new JavaScriptSerializer ().Deserialize<InfluxResponse> (await response.Content.ReadAsStringAsync ());
-
-                if (result?.Results?.Count > 1)
-                    throw new ArgumentException ("The query is resulting in Multi Series respone, which is not supported by this method");
-
-                if (result?.Results?[0].Series?.Count > 1)
-                    throw new ArgumentException ("The query is resulting in Multi Series respone, which is not supported by this method");
-
-                var series = result?.Results?[0].Series?[0];
-
-                var results = new List<dynamic> ();
-                for (var row = 0; row < series?.Values?.Count; row++)
-                {
-                    dynamic entry = new ExpandoObject ();
-                    results.Add (entry);
-                    for (var col = 0; col < series.Columns.Count; col++)
-                    {
-                        var header = char.ToUpper (series.Columns[col][0]) + series.Columns[col].Substring (1);
-
-                        ((IDictionary<string, object>) entry).Add (header, series.Values[row][col]);
-                    }
-                }
-                return results;
-            }
-            return null;
         }
 
         /// <summary>
@@ -494,7 +444,7 @@ namespace AdysTech.InfluxDB.Client.Net
             }
             catch (HttpRequestException e)
             {
-                if (e.InnerException is WebException && e.InnerException.Message == "Unable to connect to the remote server")
+                if (e.InnerException.Message == "Unable to connect to the remote server")
                     throw new ServiceUnavailableException ();
             }
             return "Unknown";
@@ -507,12 +457,12 @@ namespace AdysTech.InfluxDB.Client.Net
         /// </summary>
         /// <param name="dbName">Name of the database</param>
         /// <returns>List of InfluxRetentionPolicy objects</returns>
-        public async Task<List<InfluxRetentionPolicy>> GetRetentionPoliciesAsync (string dbName)
+        public async Task<List<IInfluxRetentionPolicy>> GetRetentionPoliciesAsync (string dbName)
         {
-            var rawpolicies = await QueryDBAsync (dbName, "show retention policies on " + dbName);
-            var policies = new List<InfluxRetentionPolicy> ();
+            var rawpolicies = await QueryMultiSeriesAsync (dbName, "show retention policies on " + dbName);
+            var policies = new List<IInfluxRetentionPolicy> ();
 
-            foreach (var policy in rawpolicies)
+            foreach (var policy in rawpolicies.FirstOrDefault ()?.Entries)
             {
                 var pol = new InfluxRetentionPolicy ()
                 {
@@ -540,15 +490,15 @@ namespace AdysTech.InfluxDB.Client.Net
         /// </summary>
         /// <param name="policy">An instance of the Retention Policy, DBName, Name and Duration must be set</param>
         /// <returns>True: Success</returns>
-        public async Task<bool> CreateRetentionPolicyAsync (InfluxRetentionPolicy policy)
+        public async Task<bool> CreateRetentionPolicyAsync (IInfluxRetentionPolicy policy)
         {
-            var query = policy.GetCreateSyntax ();
+            var query = (policy as InfluxRetentionPolicy).GetCreateSyntax ();
             if (query != null)
             {
                 var response = await GetAsync (new Dictionary<string, string> () { { "q", query } });
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    policy.Saved = true;
+                    (policy as InfluxRetentionPolicy).Saved = true;
                     return true;
                 }
             }
@@ -557,23 +507,20 @@ namespace AdysTech.InfluxDB.Client.Net
 
         /// <summary>
         /// Queries Influx DB and gets a time series data back. Ideal for fetching measurement values.
-        /// The return list is of dynamics, and each element in there will have properties named after columns in series
+        /// The return list is of InfluxSeries, and each element in there will have properties named after columns in series
         /// </summary>
         /// <param name="dbName">Name of the database</param>
         /// <param name="measurementQuery">Query text, Only results with single series are supported for now</param>
+        /// <param name="precision">epoch precision of the data set</param>
         /// <returns>List of InfluxSeries</returns>
-        public async Task<List<InfluxSeries>> QueryMultiSeriesAsync (string dbName, string measurementQuery)
+        /// <seealso cref="InfluxSeries"/>
+        public async Task<List<IInfluxSeries>> QueryMultiSeriesAsync (string dbName, string measurementQuery, TimePrecision precision = TimePrecision.Nanoseconds)
         {
-            var response = await GetAsync (new Dictionary<string, string> () { { "db", dbName }, { "q", measurementQuery } });
+            var response = await GetAsync (new Dictionary<string, string> () { { "db", dbName }, { "q", measurementQuery }, { "epoch", precisionLiterals[(int) precision] } });
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                var results = new List<InfluxSeries> ();
-
-                //var content = await response.Content.ReadAsStreamAsync();
-                //DataContractJsonSerializer js = new DataContractJsonSerializer(typeof(InfluxResponse));
-                //var rawResult = js.ReadObject(content) as InfluxResponse;
-
-                var rawResult = new JavaScriptSerializer ().Deserialize<InfluxResponse> (await response.Content.ReadAsStringAsync ());
+                var results = new List<IInfluxSeries> ();
+                var rawResult = JsonConvert.DeserializeObject<InfluxResponse> (await response.Content.ReadAsStringAsync ());
 
                 if (rawResult?.Results?.Count > 1)
                     throw new ArgumentException ("The query is resulting in a format, which is not supported by this method yet");
@@ -587,19 +534,23 @@ namespace AdysTech.InfluxDB.Client.Net
                         results.Add (result);
                         result.SeriesName = series.Name;
                         result.Tags = series.Tags;
-                        result.Entries = new List<dynamic> ();
+                        var entries = new List<dynamic> ();
                         for (var row = 0; row < series?.Values?.Count; row++)
                         {
                             result.HasEntries = true;
                             dynamic entry = new ExpandoObject ();
-                            result.Entries.Add (entry);
+                            entries.Add (entry);
                             for (var col = 0; col < series.Columns.Count; col++)
                             {
                                 var header = char.ToUpper (series.Columns[col][0]) + series.Columns[col].Substring (1);
 
-                                ((IDictionary<string, object>) entry).Add (header, series.Values[row][col]);
+                                if (header == "Time")
+                                    ((IDictionary<string, object>) entry).Add (header, EpochHelper.FromEpoch (series.Values[row][col], precision));
+                                else
+                                    ((IDictionary<string, object>) entry).Add (header, series.Values[row][col]);
                             }
                         }
+                        result.Entries = entries;
                     }
                 }
                 return results;
@@ -612,12 +563,12 @@ namespace AdysTech.InfluxDB.Client.Net
         /// Gets the list of Continuous Queries currently in efect
         /// </summary>
         /// <returns>List of InfluxContinuousQuery objects</returns>
-        public async Task<List<InfluxContinuousQuery>> GetContinuousQueriesAsync ()
+        public async Task<List<IInfluxContinuousQuery>> GetContinuousQueriesAsync ()
         {
             var cqPattern = new Regex (@"^CREATE CONTINUOUS QUERY (\S*) ON (\S*) (RESAMPLE (EVERY (\d\S)*)? ?(FOR (\d\S)*)?)? ?BEGIN ([\s\S]*GROUP BY time\((\d\S)\)[\s\S]*) END", RegexOptions.IgnoreCase | RegexOptions.Compiled, TimeSpan.FromSeconds (10));
             //Show Continous Queries runs at a global scope, not just for a given DB.
             var rawCQList = await QueryMultiSeriesAsync (null, "SHOW CONTINUOUS QUERIES");
-            var queries = new List<InfluxContinuousQuery> ();
+            var queries = new List<IInfluxContinuousQuery> ();
 
             foreach (var dbEntry in rawCQList.Where (cq => cq.HasEntries == true))
             {
@@ -641,9 +592,8 @@ namespace AdysTech.InfluxDB.Client.Net
                     catch (Exception e)
                     {
                         string query = rawCQ.Query.ToString ();
-                        var begin = query.IndexOf ("BEGIN", StringComparison.InvariantCultureIgnoreCase) + 5;
-                        cq.Query = query.Substring (begin, query.IndexOf (" END", StringComparison.InvariantCultureIgnoreCase));
-
+                        var begin = query.IndexOf ("BEGIN", StringComparison.CurrentCultureIgnoreCase) + 5;
+                        cq.Query = query.Substring (begin, query.IndexOf (" END", StringComparison.CurrentCultureIgnoreCase));
                     }
 
                     queries.Add (cq);
@@ -657,19 +607,51 @@ namespace AdysTech.InfluxDB.Client.Net
         /// </summary>
         /// <param name="cq">An instance of the Continuous Query, DBName, Name, Query must be set</param>
         /// <returns>True: Success</returns>
-        public async Task<bool> CreateContinuousQueryAsync (InfluxContinuousQuery cq)
+        public async Task<bool> CreateContinuousQueryAsync (IInfluxContinuousQuery cq)
         {
-            var query = cq.GetCreateSyntax ();
+            var query = (cq as InfluxContinuousQuery).GetCreateSyntax ();
             if (query != null)
             {
                 var response = await GetAsync (new Dictionary<string, string> () { { "q", query } });
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    cq.Saved = true;
+                    (cq as InfluxContinuousQuery).Saved = true;
                     return true;
                 }
             }
             return false;
+        }
+
+        public async Task<bool> DropContinuousQueryAsync (IInfluxContinuousQuery cq)
+        {
+            if (!cq.Saved)
+                throw new ArgumentException ("Continuous Query is not saved");
+            var query = (cq as InfluxContinuousQuery).GetDropSyntax ();
+            if (query != null)
+            {
+                var response = await GetAsync (new Dictionary<string, string> () { { "q", query } });
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    (cq as InfluxContinuousQuery).Saved = false;
+                    (cq as InfluxContinuousQuery).Deleted = true;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Queries Influx DB and gets a time series data back. Ideal for fetching measurement values.
+        /// The return list is of dynamics, and each element in there will have properties named after columns in series
+        /// </summary>
+        /// <param name="dbName">Name of the database</param>
+        /// <param name="measurementQuery">Query text, Only results with single series are supported for now</param>
+        /// <returns>List of ExpandoObjects (in the form of dynamic). 
+        /// The objects will have columns as Peoperties with their current values</returns>
+        [Obsolete ("QueryDBAsync is deprecated, please use QueryMultiSeriesAsync instead.")]
+        public async Task<List<dynamic>> QueryDBAsync (string dbName, string measurementQuery)
+        {
+            return (await QueryMultiSeriesAsync (dbName, measurementQuery)).FirstOrDefault ()?.Entries?.ToList ();
         }
 
     }

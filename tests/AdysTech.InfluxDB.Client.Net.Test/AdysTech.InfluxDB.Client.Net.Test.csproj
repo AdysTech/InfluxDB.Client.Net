@@ -52,20 +52,22 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="DataGen.cs" />
-    <Compile Include="InfluxDBClientTest.cs" />
+    <Compile Include="..\DataGen.cs">
+      <Link>DataGen.cs</Link>
+    </Compile>
+    <Compile Include="..\InfluxDBClientTest.cs">
+      <Link>InfluxDBClientTest.cs</Link>
+    </Compile>
+    <Compile Include="..\TestExtensions.cs">
+      <Link>TestExtensions.cs</Link>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AdysTech.InfluxDB.Client.Net\AdysTech.InfluxDB.Client.Net.csproj">
+    <ProjectReference Include="..\..\src\AdysTech.InfluxDB.Client.Net\AdysTech.InfluxDB.Client.Net.csproj">
       <Project>{31c6d4d4-86a6-4e76-9e54-f4c399140ce7}</Project>
       <Name>AdysTech.InfluxDB.Client.Net</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Tests.orderedtest">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

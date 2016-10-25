@@ -13,6 +13,7 @@ It currently supports
 7.  Post data to specific retention policies
 8.  Query for all Continuous Queries
 9.  Create a new Continuous Query
+10. Drop continuous queries
 
 To be added are
 
@@ -35,12 +36,12 @@ This returns a hierarchical structure of all measurements, and fields (but not t
 
 ####Create new database
 `CreateDatabaseAsync("<db name>");`
-Creates a new database in InfluxDB. Does not raise exceptions if teh DB already exists. 
+Creates a new database in InfluxDB. Does not raise exceptions if the DB already exists. 
 
 
 ####Type safe data points
 #####`InfluxDatapoint<T>`
-It represents a single Point (collection of fields) in a series. In InfluxDB each point is uniquely identified by its series and timestamp.
+It represents a single Point (collection of fields) in a series. In InfluxDB each point is uniquely identified by its series and timestamps.
 Currently this class (as well as InfluxDB as of 0.9) supports `Boolean`, `String`, `Integer` and `Double` (additionally `decimal` is supported in client, which gets stored as a double in InfluxDB) types for field values. 
 Multiple fields of same type are supported, as well as tags. 
 
@@ -67,19 +68,12 @@ A collection of points can be posted using `await client.PostPointsAsync (dbName
 	
 ####Query for data points
 
-#####Single series
+    var r = await client.QueryMultiSeriesAsync ("_internal", "select * from runtime limit 10");
+    var s = await client.QueryMultiSeriesAsync("_internal", "SHOW STATS");
 
-`await client.QueryDBAsync ("<db name>", "<query">);`
+`QueryMultiSeriesAsync` method returns `List<InfluxSeries>`, `InfluxSeries` is a custom object which will have a series name, set of tags (e.g. columns you used in `group by` clause. For the actual values, it will use dynamic object(`ExpandoObject` to be exact). The example #1 above will result in a single entry list, and the result can be used like `r.FirstOrDefault()?.Entries[0].time`. This also opens up a way to have an update mechanism as you can now query for data, change some values/tags etc, and write back. Since Influx uses combination of timestamp, tags as primary key, if you don't change tags, the values will be overwritten.
 
-This function uses dynamic object (`ExpandoObject` to be exact), so `var r = await client.QueryDBAsync ("stress", "select * from performance limit 10");` will result in list of objects, where each object has properties with its value set to measument value.
-So the result can be used like `r[0].time`. This also opens up a way to have an update mechanism as you can now query for data, change some values/tags etc, and write back. Since Influx uses combination of timestamp, tags as primary key, if you don't change tags, the values will be overwritten.
-
-#####Multiple series
-
-`await client.QueryMultiSeriesAsync("_internal", "SHOW STATS");`
-
-This function returns `List<InfluxSeries>`, `InfluxSeries` is a custom object which will have a series name, set of tags (e.g. columns you used in `group by` clause. For the actual values, it will use dynamic object.
-This allows to get data like `r.FirstOrDefault(x=>x.SeriesName=="queryExecutor").Entries[0].QueryDurationNs` kind of queries.
+Second example above will provide multiple series objects, and allows to get data like `r.FirstOrDefault(x=>x.SeriesName=="queryExecutor").Entries[0].QueryDurationNs`.
 
 ####Retention Policies
 This library uses a cutsom .Net object to represent the Influx Retention Policy. The `Duration` concept is nicely wraped in `TimeSpan`, so it can be easily manipulated using .Net code. It also supports `ShardDuration` concept introduced in recent versions of InfluxDB.
@@ -113,3 +107,7 @@ Similar to retention policy the library also creates a custom object to represen
                                 ResampleDuration = TimeSpan.FromHours (2),
                                 ResampleFrequency = TimeSpan.FromHours (0.5) };
     var r = await client.CreateContinuousQueryAsync (p);
+
+#####Drop a Continuous Query
+` var r = await client.DropContinuousQueryAsync (p);`
+`p` has to be an existing CQ, which is already saved. 
