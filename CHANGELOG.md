@@ -1,3 +1,14 @@
+## v0.5.9.1 [10/29/2016]
+Minor release to fix a blocking bug with data series with microsecond precision.
+
+###Breaking Change
+- `InfluxDBClient` now implements `IDispobale`, so plan to expect few warnings in your code. Similarly custom exceptions from this library are marked as `Serializable`
+
+### Bugfixes
+
+- [#21](https://github.com/AdysTech/InfluxDB.Client.Net/issues/21): Microsecond precision data is stored as epoch 0
+
+
 ## v0.5.9 [10/25/2016]
 
 ### Release Notes

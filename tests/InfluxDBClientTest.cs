@@ -526,6 +526,58 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             s.Stop ();
             Debug.WriteLine ($"Elapsed{s.ElapsedMilliseconds}");
             Assert.IsTrue (r != null && r.Count > 0, "QueryMultiSeriesAsync retunred null or invalid data");
-        }       
+        }
+
+
+        [TestMethod, TestCategory ("Post")]
+        public async Task TestPostPointsAsync_DifferentPrecisions ()
+        {
+            try
+            {
+                var client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+                var time = DateTime.Now;
+                var today = DateTime.Now.ToShortDateString ();
+                var now = DateTime.Now.ToShortTimeString ();
+
+                var points = new List<IInfluxDatapoint> ();
+
+                foreach (TimePrecision precision in Enum.GetValues (typeof (TimePrecision)))
+                {
+                    var point = new InfluxDatapoint<long> ();
+                    point.UtcTimestamp = DateTime.UtcNow;
+                    point.MeasurementName = $"Precision{precision.ToString ()}";
+                    point.Precision = precision;
+                    point.Tags.Add ("Precision", precision.ToString ());
+                    point.Fields.Add ("Ticks", point.UtcTimestamp.Ticks);
+                    points.Add (point);
+                }
+
+                var r = await client.PostPointsAsync (dbName, points);
+                Assert.IsTrue (r, "PostPointsAsync retunred false");
+
+                var values = await client.QueryMultiSeriesAsync (dbName, "select * from /Precision[A-Za-z]/");
+                foreach (var val in values)
+                {
+                    var x = val?.Entries?.FirstOrDefault ();
+                    var d = new DateTime (long.Parse (x.Ticks));
+                    TimeSpan t = d - x.Time;
+                    TimePrecision p = Enum.Parse (typeof (TimePrecision), x.Precision);
+                    switch (p)
+                    {
+                        case TimePrecision.Hours: Assert.IsTrue (t.TotalHours < 1); break;
+                        case TimePrecision.Minutes: Assert.IsTrue (t.TotalMinutes < 1); break;
+                        case TimePrecision.Seconds: Assert.IsTrue (t.TotalSeconds < 1); break;
+                        case TimePrecision.Milliseconds: Assert.IsTrue (t.TotalMilliseconds < 1); break;
+                        case TimePrecision.Microseconds: Assert.IsTrue (t.Ticks < (TimeSpan.TicksPerMillisecond / 1000)); break;
+                        case TimePrecision.Nanoseconds: Assert.IsTrue (t.Ticks < 1); break;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Assert.Fail ($"Unexpected exception of type {e.GetType ()} caught: {e.Message}");
+                return;
+            }
+        }
     }
 }

@@ -32,7 +32,7 @@ namespace AdysTech.InfluxDB.Client.Net
     /// <summary>
     /// Provides asynchronous interaction channel with InfluxDB engine
     /// </summary>
-    public class InfluxDBClient : IInfluxDBClient
+    public class InfluxDBClient : IInfluxDBClient, IDisposable
     {
         #region fields
         readonly string[] precisionLiterals = { "_", "h", "m", "s", "ms", "u", "n" };
@@ -403,7 +403,9 @@ namespace AdysTech.InfluxDB.Client.Net
                     {
                         result = await PostPointsAsync (dbName, group.Key.Precision, group.Key.Name, points);
                     }
+#pragma warning disable CS0168 // The variable 'ex' is declared but never used
                     catch (Exception ex)
+#pragma warning restore CS0168 // The variable 'ex' is declared but never used
                     {
                         throw;
                     }
@@ -589,7 +591,9 @@ namespace AdysTech.InfluxDB.Client.Net
                         cq.Query = queryParts.Groups[8].ToString ();
                         cq.GroupByInterval = StringHelper.ParseDuration (queryParts.Groups[9].ToString ());
                     }
+#pragma warning disable CS0168 // The variable 'e' is declared but never used
                     catch (Exception e)
+#pragma warning restore CS0168 // The variable 'e' is declared but never used
                     {
                         string query = rawCQ.Query.ToString ();
                         var begin = query.IndexOf ("BEGIN", StringComparison.CurrentCultureIgnoreCase) + 5;
@@ -654,6 +658,17 @@ namespace AdysTech.InfluxDB.Client.Net
             return (await QueryMultiSeriesAsync (dbName, measurementQuery)).FirstOrDefault ()?.Entries?.ToList ();
         }
 
-    }
+        public void Dispose ()
+        {
+            Dispose (true);
+            GC.SuppressFinalize (this);
+        }
+        // The bulk of the clean-up code is implemented in Dispose(bool)
+        protected virtual void Dispose (bool disposing)
+        {
+            _client?.Dispose ();
+            _client = null;
+        }
 
+    }
 }
