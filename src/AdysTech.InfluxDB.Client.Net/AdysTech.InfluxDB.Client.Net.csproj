@@ -110,6 +110,7 @@
     <Compile Include="..\Interfaces\IInfluxSeries.cs">
       <Link>Interfaces\IInfluxSeries.cs</Link>
     </Compile>
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
