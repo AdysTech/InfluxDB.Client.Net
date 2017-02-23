@@ -28,6 +28,15 @@ namespace AdysTech.InfluxDB.Client.Net
         Nanoseconds = 6
     }
 
+    /// <summary>
+    /// Represents user's Privileges
+    /// </summary>
+    public enum Privileges
+    {
+        Read,
+        Write,
+        All
+    }
 
     /// <summary>
     /// Provides asynchronous interaction channel with InfluxDB engine
@@ -346,6 +355,50 @@ namespace AdysTech.InfluxDB.Client.Net
 
             return false;
         }
+
+        /// <summary>
+        /// Grants privileges on db to username
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="dbname"></param>
+        /// <param name="privileges"></param>
+        /// <returns>True:success, Fail:Failed to grant privileges</returns>
+        ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
+        ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
+        public async Task<bool> GrantPrivilegesAsync(string username, string dbname, Privileges prigileges)
+        {
+            string priv;
+            switch (prigileges)
+            {
+                case Privileges.Read:
+                    priv = "READ";
+                    break;
+                case Privileges.Write:
+                    priv = "WRITE";
+                    break;
+                case Privileges.All:
+                    priv = "ALL";
+                    break;
+                default:
+                    return false;
+            }
+            var response = await GetAsync(new Dictionary<string, string>
+            {
+                { "q", $"GRANT {priv} ON \"{dbname}\" TO \"{username}\"" }
+            });
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                if (content.Contains("already exists"))
+                    throw new InvalidOperationException("user already exists");
+                return true;
+            }
+            else if (response.StatusCode == HttpStatusCode.BadRequest)
+                throw new ArgumentException("Invalid username or password");
+
+            return false;
+        }
+
 
         /// <summary>
         /// Posts raw write request to Influx.
