@@ -324,6 +324,30 @@ namespace AdysTech.InfluxDB.Client.Net
         }
 
         /// <summary>
+        /// Creates the specified user
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        /// <returns>True:success, Fail:Failed to create user</returns>
+        ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
+        ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
+        public async Task<bool> CreateUserAsync(string username, string password)
+        {
+            var response = await GetAsync(new Dictionary<string, string>() { { "q", $"CREATE USER {username} WITH PASSWORD '{password}'" } });
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                if (content.Contains("already exists"))
+                    throw new InvalidOperationException("user already exists");
+                return true;
+            }
+            else if (response.StatusCode == HttpStatusCode.BadRequest)
+                throw new ArgumentException("Invalid username or password");
+
+            return false;
+        }
+
+        /// <summary>
         /// Posts raw write request to Influx.
         /// </summary>
         /// <param name="dbName">Name of the Database</param>
