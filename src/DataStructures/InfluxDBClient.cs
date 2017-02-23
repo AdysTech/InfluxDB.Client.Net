@@ -357,6 +357,30 @@ namespace AdysTech.InfluxDB.Client.Net
         }
 
         /// <summary>
+        /// Sets the password for the specified user
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        /// <returns>True:success, Fail:Failed to set password</returns>
+        ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
+        ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
+        public async Task<bool> SetUserPasswordAsync(string username, string password)
+        {
+            var response = await GetAsync(new Dictionary<string, string>() { { "q", $"SET PASSWORD FOR \"{username}\" = '{password}'" } });
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                if (content.Contains("user not found")) //does not?
+                    throw new InvalidOperationException("user not found");
+                return true;
+            }
+            else if (response.StatusCode == HttpStatusCode.BadRequest)
+                throw new ArgumentException("Invalid username or password");
+
+            return false;
+        }
+
+        /// <summary>
         /// Grants privileges on db to username
         /// </summary>
         /// <param name="username"></param>
