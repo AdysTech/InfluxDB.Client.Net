@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.6</TargetFramework>
+    <Description>.Net client for InfluxDB</Description>
+    <Product>AdysTech.InfluxDB.Client.Net</Product>
+    <Company>AdysTech</Company>
+    <Authors>AdysTech;mvadu</Authors>
+    <Version>0.6.0.0</Version>
+    <PackageId>AdysTech.InfluxDB.Client.Net.Core</PackageId>
+    <Copyright>© AdysTech 2016-2017</Copyright>
+    <PackageProjectUrl>https://github.com/AdysTech/InfluxDB.Client.Net</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/AdysTech/InfluxDB.Client.Net</RepositoryUrl>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<Compile Include="..\DataContracts\InfluxJsonTypes.cs" Link="DataContracts\InfluxJsonTypes.cs" />
+	<Compile Include="..\DataStructures\InfluxContinuousQuery.cs" Link="DataStructures\InfluxContinuousQuery.cs" />
+	<Compile Include="..\DataStructures\InfluxDatabase.cs" Link="DataStructures\InfluxDatabase.cs" />
+	<Compile Include="..\DataStructures\InfluxDatapoint.cs" Link="DataStructures\InfluxDatapoint.cs" />
+	<Compile Include="..\DataStructures\InfluxDBClient.cs" Link="DataStructures\InfluxDBClient.cs" />
+	<Compile Include="..\DataStructures\InfluxDBException.cs" Link="DataStructures\InfluxDBException.cs" />
+	<Compile Include="..\DataStructures\InfluxMeasurement.cs" Link="DataStructures\InfluxMeasurement.cs" />
+	<Compile Include="..\DataStructures\InfluxRetentionPolicy.cs" Link="DataStructures\InfluxRetentionPolicy.cs" />
+	<Compile Include="..\DataStructures\InfluxSeries.cs" Link="DataStructures\InfluxSeries.cs" />
+	<Compile Include="..\DataStructures\InfluxValueField.cs" Link="DataStructures\InfluxValueField.cs" />
+	<Compile Include="..\DataStructures\ServiceUnavailableException.cs" Link="DataStructures\ServiceUnavailableException.cs" />
+	<Compile Include="..\Extensions\EpochHelper.cs" Link="Extensions\EpochHelper.cs" />
+	<Compile Include="..\Extensions\RegExHelper.cs" Link="Extensions\RegExHelper.cs" />
+	<Compile Include="..\Extensions\StringHelper.cs" Link="Extensions\StringHelper.cs" />
+	<Compile Include="..\Interfaces\IInfluxContinuousQuery.cs" Link="Interfaces\IInfluxContinuousQuery.cs" />
+	<Compile Include="..\Interfaces\IInfluxDatabase.cs" Link="Interfaces\IInfluxDatabase.cs" />
+	<Compile Include="..\Interfaces\IInfluxDatapoint.cs" Link="Interfaces\IInfluxDatapoint.cs" />
+	<Compile Include="..\Interfaces\IInfluxDBClient.cs" Link="Interfaces\IInfluxDBClient.cs" />
+	<Compile Include="..\Interfaces\IInfluxMeasurement.cs" Link="Interfaces\IInfluxMeasurement.cs" />
+	<Compile Include="..\Interfaces\IInfluxRetentionPolicy.cs" Link="Interfaces\IInfluxRetentionPolicy.cs" />
+	<Compile Include="..\Interfaces\IInfluxSeries.cs" Link="Interfaces\IInfluxSeries.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+  </ItemGroup>
+
+</Project>

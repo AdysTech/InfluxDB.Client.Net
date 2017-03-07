@@ -531,8 +531,10 @@ namespace AdysTech.InfluxDB.Client.Net
                 {
                     foreach (var series in rawResult?.Results[0]?.Series)
                     {
-                        var result = new InfluxSeries ();
-                        result.HasEntries = false;
+                        var result = new InfluxSeries()
+                        {
+                            HasEntries = false
+                        };
                         results.Add (result);
                         result.SeriesName = series.Name;
                         result.Tags = series.Tags;

@@ -1,16 +1,21 @@
 version: 0.{build}
+image: Visual Studio 2017
 pull_requests:
   do_not_increment_build_number: true
 branches:
   only:
   - master
 before_build:
-- set PATH="C:\Program Files (x86)\MSBuild\14.0\Bin";%PATH%
 - nuget restore
+- dotnet restore
 build:
   verbosity: minimal
   publish_nuget: true
   publish_nuget_symbols: true
+before_test:
+- ps: tests\InfluxDB.Client.Net.TestSetup.ps1
+after_test:
+- ps: Get-ChildItem -include "AdysTech.InfluxDB.Client.Net.Core*.nupkg" -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
 deploy:
 - provider: NuGet
   server: https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net
@@ -18,5 +23,3 @@ deploy:
     secure: nlBDuJJE7GoAtSvHKJDjdutExvlEQErL8Q9gFqmhURY4xUgFT946cs2mLeQ2Qezi
   on:
     branch: master
-before_test:
-- ps: tests\InfluxDB.Client.Net.TestSetup.ps1

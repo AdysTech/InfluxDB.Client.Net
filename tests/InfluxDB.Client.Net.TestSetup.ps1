@@ -4,27 +4,34 @@
 #executed before CreateDatabase test
 #
 ##################################################################################################
-
-	$source = "https://dl.influxdata.com/influxdb/nightlies/influxdb-nightly_windows_amd64.zip"
-	$destination = "$env:Temp\influxdb-nightly_windows_amd64.zip"
-	$influx = "$env:Temp\influxdb"
-	$influxdata = "$env:UserProfile\.influxdb"
+	$archive = if($IsLinux) { "influxdb-nightly_linux_amd64.tar.gz"} else {"influxdb-nightly_windows_amd64.zip"}
+	$source = "https://dl.influxdata.com/influxdb/nightlies/$archive"
+	$archivepath = "$HOME/$archive"
+	$influx = "$HOME/influxdb"
+	$influxdata = "$HOME/.influxdb"
 	
-	if(!(test-path $destination) -or ((Get-ItemProperty -Path $destination -Name LastWriteTime).lastwritetime -lt $(get-date).AddDays(-1)))
-	{	Invoke-WebRequest $source -OutFile $destination }
+	if(!(test-path $archivepath) -or ((Get-ItemProperty -Path $archivepath -Name LastWriteTime).lastwritetime -lt $(get-date).AddDays(-1)))
+	{	Invoke-WebRequest $source -OutFile $archivepath }
 	
 	if(test-path $influx)
-	{	rmdir -recurse $influx}
+	{	remove-item -recurse $influx}
 
-	Add-Type -As System.IO.Compression.FileSystem
-	[System.IO.Compression.ZipFile]::ExtractToDirectory($destination,$influx)
-	$influxd = Get-ChildItem $influx -File -filter "influxd.exe" -Recurse | % { $_.FullName }
+	#dependent on https://github.com/PowerShell/PowerShell/issues/2740
+	if($IsLinux){
+		mkdir $influx
+		tar xf $archivepath -C $influx
+		$influxd =  find $influx | grep bin/influxd
+	} else {
+		Expand-Archive -LiteralPath $archivepath -DestinationPath $influx -Force
+		$influxd = Get-ChildItem $influx -File -filter "influxd.exe" -Recurse | % { $_.FullName }
+	}
 	
-    #$x = 7z e $destination -o"$env:Temp\influxdb" -y
+    #$x = 7z e $archivepath -o"$env:Temp/influxdb" -y
 	if(test-path $influxdata)
-	{ rmdir -recurse "$env:UserProfile\.influxdb" }
+	{ remove-item -recurse $influxdata }
 	
-    Start-Process -FilePath $influxd
+    Start-Process -FilePath $influxd | Out-Null
+
 	#let the engine start
 	Start-Sleep -s 10
 	

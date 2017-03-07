@@ -1,15 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Security.Permissions;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace AdysTech.InfluxDB.Client.Net
 {
-    [Serializable]
     public class InfluxDBException : InvalidOperationException
     {
         static Regex _errorLinePattern = new Regex (@"{\""error\"":\""([\S\s]+): ([\S\s]+)\""}", RegexOptions.Compiled, TimeSpan.FromSeconds (5));
@@ -35,16 +28,7 @@ namespace AdysTech.InfluxDB.Client.Net
             FailedLine = line;
         }
 
-        [SecurityPermission (SecurityAction.Demand, SerializationFormatter = true)]
-        public override void GetObjectData (SerializationInfo info, StreamingContext context)
-        {
-            if (info == null)
-                throw new ArgumentNullException ("info");
-
-            info.AddValue ("Reason", Reason);
-            base.GetObjectData (info, context);
-        }
-
+    
         public static InfluxDBException ProcessInfluxDBError (string InfluxError)
         {
             var parts = _errorLinePattern.Match (InfluxError)?.Groups;
