@@ -11,6 +11,7 @@
     <Copyright>© AdysTech 2016-2017</Copyright>
     <PackageProjectUrl>https://github.com/AdysTech/InfluxDB.Client.Net</PackageProjectUrl>
     <RepositoryUrl>https://github.com/AdysTech/InfluxDB.Client.Net</RepositoryUrl>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
