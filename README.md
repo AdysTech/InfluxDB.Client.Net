@@ -1,5 +1,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/ryj9u8dpcasu1xur?svg=true)](https://ci.appveyor.com/project/AdysTech/influxdb-client-net)
 
+**Now supports .Net Core, run same .Net code in Windows and Linux**
+
 # InfluxDB.Client.Net
 [InfluxDB](http://influxdb.com) is new awesome open source time series database. But there is no official .Net client model for it. This is a feature rich .Net client for InfluxDB. All methods are exposed as Async methods, so that the calling thread will not be blocked. 
 It currently supports

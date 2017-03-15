@@ -1,3 +1,13 @@
+## v0.6.9 [10/25/2016]
+
+### Release Notes
+This version adds support for .Net Core.  
+
+### Features
+
+- [#17](https://github.com/AdysTech/InfluxDB.Client.Net/issues/17): Net Core Support
+- Travis CI integration
+
 ## v0.5.9.1 [10/29/2016]
 Minor release to fix a blocking bug with data series with microsecond precision.
 
