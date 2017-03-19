@@ -1,4 +1,6 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/ryj9u8dpcasu1xur?svg=true)](https://ci.appveyor.com/project/AdysTech/influxdb-client-net)
+#### Build Status
+1. AppVeyor [![Build status](https://ci.appveyor.com/api/projects/status/ryj9u8dpcasu1xur?svg=true)](https://ci.appveyor.com/project/AdysTech/influxdb-client-net)
+2. Travis CI [![Build status](https://travis-ci.org/AdysTech/InfluxDB.Client.Net.svg?branch=master)](https://travis-ci.org/AdysTech/InfluxDB.Client.Net.svg?branch=master)
 
 **Now supports .Net Core, run same .Net code in Windows and Linux**
 
@@ -20,36 +22,38 @@ It currently supports
 To be added are
 
 a.	Query for all tags, their unique values
-b.	Deleting data, currently drop queries can be fired to delete data
+b.  Chunking support for queries
+c.	Deleting data, currently drop queries can be fired to delete data
 
-####Nuget
-https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net
+####  Nuget
+1. .Net 4.5.1 > [AdysTech.InfluxDB.Client.Net](https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net)
+2. .Core 1.1 > [AdysTech.InfluxDB.Client.Net.Core](https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net.Core/)
 
-###Usage
-####Creating Client
+### Usage
+#### Creating Client
 `InfluxDBClient client = new InfluxDBClient (influxUrl, dbUName, dbpwd);`
 
-####Querying all DB names
+#### Querying all DB names
 `List<String> dbNames = await client.GetInfluxDBNamesAsync ();`
 
-####Querying DB structure
+#### Querying DB structure
 `Dictionary<string, List<String>> = await client.GetInfluxDBStructureAsync("<db name>");`
 This returns a hierarchical structure of all measurements, and fields (but not tags)!
 
-####Create new database
+#### Create new database
 `CreateDatabaseAsync("<db name>");`
 Creates a new database in InfluxDB. Does not raise exceptions if the DB already exists. 
 
 
-####Type safe data points
-#####`InfluxDatapoint<T>`
+#### Type safe data points
+##### `InfluxDatapoint<T>`
 It represents a single Point (collection of fields) in a series. In InfluxDB each point is uniquely identified by its series and timestamps.
 Currently this class (as well as InfluxDB as of 0.9) supports `Boolean`, `String`, `Integer` and `Double` (additionally `decimal` is supported in client, which gets stored as a double in InfluxDB) types for field values. 
 Multiple fields of same type are supported, as well as tags. 
 
 
 
-####Writing data points to DB
+#### Writing data points to DB
     
     var valMixed = new InfluxDatapoint<InfluxValueField>();
     valMixed.UtcTimestamp = DateTime.UtcNow;
@@ -68,7 +72,7 @@ Multiple fields of same type are supported, as well as tags.
 
 A collection of points can be posted using `await client.PostPointsAsync (dbName, points)`, where `points` can be collection of different types of `InfluxDatapoint`
 	
-####Query for data points
+#### Query for data points
 
     var r = await client.QueryMultiSeriesAsync ("_internal", "select * from runtime limit 10");
     var s = await client.QueryMultiSeriesAsync("_internal", "SHOW STATS");
@@ -77,13 +81,13 @@ A collection of points can be posted using `await client.PostPointsAsync (dbName
 
 Second example above will provide multiple series objects, and allows to get data like `r.FirstOrDefault(x=>x.SeriesName=="queryExecutor").Entries[0].QueryDurationNs`.
 
-####Retention Policies
+#### Retention Policies
 This library uses a cutsom .Net object to represent the Influx Retention Policy. The `Duration` concept is nicely wraped in `TimeSpan`, so it can be easily manipulated using .Net code. It also supports `ShardDuration` concept introduced in recent versions of InfluxDB.
 
-#####Get all Retention Policies from DB
+##### Get all Retention Policies from DB
 `var policies = await client.GetRetentionPoliciesAsync (dbName);`
 
-#####Create Retention Policy and Write points to a specific retention policy
+##### Create Retention Policy and Write points to a specific retention policy
 The code below will create a new retention policy with a retention period of 6 hours, and write a point to that policy.
  
     var rp = new InfluxRetentionPolicy () { Name = "Test2", DBName = dbName, Duration = TimeSpan.FromHours (6), IsDefault = false };
@@ -96,13 +100,13 @@ The code below will create a new retention policy with a retention period of 6 h
     var r = await client.PostPointAsync (dbName, valMixed);
 
 
-####Continuous Queries
+#### Continuous Queries
 Similar to retention policy the library also creates a custom object to represent the `Continuous Queries`. Because the queries can be very complex, the actual query part of the CQ is exposed as just a string. But the timing part of [CQ](https://docs.influxdata.com/influxdb/v1.0/query_language/continuous_queries) specifically <intervals> given in `[RESAMPLE [EVERY <interval>] [FOR <interval>]]` are exposed as `TimeSpan` objects. Since the `GROUP BY time(<interval>)` is mandated for CQs this interval again is exposed as `TimeSpan`. This allows you to run LINQ code on collection of CQs.
 
-#####Get all Continuous Queries present in DB
+##### Get all Continuous Queries present in DB
 `var cqList = await client.GetContinuousQueriesAsync ();`
 
-#####Create a new Continuous Query
+##### Create a new Continuous Query
     var p = new InfluxContinuousQuery () { Name = "TestCQ1",
                                 DBName = dbName,
                                 Query = "select mean(Intfield) as Intfield into cqMeasurement from testMeasurement group by time(1h),*",
@@ -110,6 +114,6 @@ Similar to retention policy the library also creates a custom object to represen
                                 ResampleFrequency = TimeSpan.FromHours (0.5) };
     var r = await client.CreateContinuousQueryAsync (p);
 
-#####Drop a Continuous Query
+##### Drop a Continuous Query
 ` var r = await client.DropContinuousQueryAsync (p);`
 `p` has to be an existing CQ, which is already saved. 
