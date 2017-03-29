@@ -1,4 +1,23 @@
-## v0.6.9 [10/25/2016]
+## v0.6.1 [3/28/2017]
+
+### Release Notes
+
+This version adds Chunking support available in InfluxDB. Currently there is a open [issue #8212](https://github.com/influxdata/influxdb/issues/8212) on Influxdb side, which is been handled with code, which needs to be removed once the issue is fixed.
+
+### Bugfixes
+
+- [#28](https://github.com/AdysTech/InfluxDB.Client.Net/issues/28): Service Unavailable exception not thrown for unknown host
+
+### Features
+
+- [#23](https://github.com/AdysTech/InfluxDB.Client.Net/issues/23): Chunking Support 
+
+
+### Breaking Change
+- `QueryDBAsync` which was deprecated has been removed. Please use `QueryMultiSeriesAsync` instead.
+
+
+## v0.6.0 [3/14/2017]
 
 ### Release Notes
 This version adds support for .Net Core.  
@@ -11,7 +30,7 @@ This version adds support for .Net Core.
 ## v0.5.9.1 [10/29/2016]
 Minor release to fix a blocking bug with data series with microsecond precision.
 
-###Breaking Change
+### Breaking Change
 - `InfluxDBClient` now implements `IDispobale`, so plan to expect few warnings in your code. Similarly custom exceptions from this library are marked as `Serializable`
 
 ### Bugfixes
@@ -32,7 +51,7 @@ This version moves away from `JavaScriptSerializer` to [Json.NET](https://github
 - QueryMultiSeriesAsync returns the time in a `DateTime` object if the series has one. The method also supports different epoch precisoins in query results now.
 
 
-###Breaking Change
+### Breaking Change
 - `QueryDBAsync` has been deprecated and will be removed in next version. Please use `QueryMultiSeriesAsync` instead.
 
 ## v0.5.5 [9/25/2016]

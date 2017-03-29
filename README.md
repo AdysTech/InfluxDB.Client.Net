@@ -4,8 +4,6 @@
 
 **Now supports .Net Core, run same .Net code in Windows and Linux**
 
-**Now supports .Net Core, run same .Net code in Windows and Linux**
-
 # InfluxDB.Client.Net
 [InfluxDB](http://influxdb.com) is new awesome open source time series database. But there is no official .Net client model for it. This is a feature rich .Net client for InfluxDB. All methods are exposed as Async methods, so that the calling thread will not be blocked. 
 It currently supports
@@ -20,12 +18,12 @@ It currently supports
 8.  Query for all Continuous Queries
 9.  Create a new Continuous Query
 10. Drop continuous queries
+11. Chunked queries
 
 To be added are
 
-a.	Query for all tags, their unique values
-b.  Chunking support for queries
-c.	Deleting data, currently drop queries can be fired to delete data
+1.	Query for all tags, their unique values
+2.	Deleting data, currently drop queries can be fired to delete data
 
 ####  Nuget
 1. .Net 4.5.1 > [AdysTech.InfluxDB.Client.Net](https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net)
@@ -78,10 +76,13 @@ A collection of points can be posted using `await client.PostPointsAsync (dbName
 
     var r = await client.QueryMultiSeriesAsync ("_internal", "select * from runtime limit 10");
     var s = await client.QueryMultiSeriesAsync("_internal", "SHOW STATS");
+    var rc = await client.QueryMultiSeriesAsync ("_internal", "select * from runtime limit 100",10);
 
 `QueryMultiSeriesAsync` method returns `List<InfluxSeries>`, `InfluxSeries` is a custom object which will have a series name, set of tags (e.g. columns you used in `group by` clause. For the actual values, it will use dynamic object(`ExpandoObject` to be exact). The example #1 above will result in a single entry list, and the result can be used like `r.FirstOrDefault()?.Entries[0].time`. This also opens up a way to have an update mechanism as you can now query for data, change some values/tags etc, and write back. Since Influx uses combination of timestamp, tags as primary key, if you don't change tags, the values will be overwritten.
 
 Second example above will provide multiple series objects, and allows to get data like `r.FirstOrDefault(x=>x.SeriesName=="queryExecutor").Entries[0].QueryDurationNs`.
+
+The last example above makes InfluxDB to split the selected points (100 limited by `limit` clause) to multiple series, each having 10 points as given by `chunk` size.
 
 #### Retention Policies
 This library uses a cutsom .Net object to represent the Influx Retention Policy. The `Duration` concept is nicely wraped in `TimeSpan`, so it can be easily manipulated using .Net code. It also supports `ShardDuration` concept introduced in recent versions of InfluxDB.

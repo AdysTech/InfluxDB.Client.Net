@@ -18,13 +18,23 @@ namespace AdysTech.InfluxDB.Client.Net.DataContracts
         [DataMember(Name = "values")]
         public List<List<string>> Values { get; set; }
 
+        [DataMember(Name = "partial")]
+        public bool Partial { get; set; }
+
     }
 
     [DataContract]
     public class Result
     {
+        [DataMember(Name = "statement_id")]
+        public int StatementID { get; set; }
+
         [DataMember(Name = "series")]
         public List<Series> Series { get; set; }
+
+        [DataMember(Name = "partial")]
+        public bool Partial { get; set; }
+
     }
 
     [DataContract]
