@@ -111,18 +111,5 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <param name="cq">An instance of the Continuous Query, must be saved already</param>
         /// <returns>True: Success</returns>
         Task<bool> DropContinuousQueryAsync (IInfluxContinuousQuery query);
-
-
-        /// <summary>
-        /// Queries Influx DB and gets a time series data back. Ideal for fetching simple values.
-        /// The return list is of dynamics, and each element in there will have properties named after columns in series
-        /// </summary>
-        /// <param name="dbName">Name of the database</param>
-        /// <param name="measurementQuery">Query text, Only results with single series are supported</param>
-        /// <returns>List of ExpandoObjects (in the form of dynamic). 
-        /// The objects will have columns as Peoperties with their current values</returns>
-        [Obsolete ("QueryDBAsync is deprecated, please use QueryMultiSeriesAsync instead.")]
-        Task<List<dynamic>> QueryDBAsync (string dbName, string measurementQuery);
-
     }
 }

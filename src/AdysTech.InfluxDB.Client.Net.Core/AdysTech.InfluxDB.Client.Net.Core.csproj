@@ -2,16 +2,29 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard1.6</TargetFramework>
-    <Description>.Net client for InfluxDB</Description>
+    <Description>.Net client for InfluxDB. Supports all InfluxDB version from 0.9 onwards. Supports both .Net 4.5.1+ and .Net Core.</Description>
     <Product>AdysTech.InfluxDB.Client.Net</Product>
     <Company>AdysTech</Company>
     <Authors>AdysTech;mvadu</Authors>
-    <Version>0.6.0.0</Version>
+    <Version>0.6.1.0</Version>
     <PackageId>AdysTech.InfluxDB.Client.Net.Core</PackageId>
     <Copyright>© AdysTech 2016-2017</Copyright>
     <PackageProjectUrl>https://github.com/AdysTech/InfluxDB.Client.Net</PackageProjectUrl>
     <RepositoryUrl>https://github.com/AdysTech/InfluxDB.Client.Net</RepositoryUrl>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageReleaseNotes>This is a feature rich .Net client for InfluxDB. All methods are exposed as Async methods, so that the calling thread will not be blocked. 
+It currently supports 
+
+1. Connecting using credentials 
+2. Querying all existing databases 
+3. Creating new database 
+4. Querying for the whole DB structure (hierarchical structure of all measurements, and fields) 
+5. Writing single, multiple values to db 
+6.  Retention policy management 
+7.  Post data to specific retention policies 
+8.  Query for all Continuous Queries 
+9.  Create/Drop Continuous Queries 
+10. Chunking Support in queries</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,7 +52,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.1" />
   </ItemGroup>
 
 </Project>
