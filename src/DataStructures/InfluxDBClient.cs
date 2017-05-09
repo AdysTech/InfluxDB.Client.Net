@@ -342,7 +342,7 @@ namespace AdysTech.InfluxDB.Client.Net
         ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
         public async Task<bool> CreateUserAsync(string username, string password)
         {
-            var response = await GetAsync(new Dictionary<string, string>() { { "q", $"CREATE USER {username} WITH PASSWORD '{password}'" } });
+            var response = await GetAsync(new Dictionary<string, string>() { { "q", $"CREATE USER \"{username}\" WITH PASSWORD '{password}'" } });
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 var content = await response.Content.ReadAsStringAsync();
