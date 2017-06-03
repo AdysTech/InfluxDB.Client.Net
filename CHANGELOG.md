@@ -1,7 +1,7 @@
 ## v0.6.1 [6/03/2017]
 
 ### Release Notes
-Allow points to be passed without explictly setting time or precision.
+Allow points to be passed without explictly setting time or precision. It also fixes an issue with previopus implementation of the chunking support.
 
 
 ### Bugfixes
