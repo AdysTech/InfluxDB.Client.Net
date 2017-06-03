@@ -1,3 +1,22 @@
+## v0.6.1 [6/03/2017]
+
+### Release Notes
+Allow points to be passed without explictly setting time or precision.
+
+
+### Bugfixes
+
+- [#31](https://github.com/AdysTech/InfluxDB.Client.Net/issues/31): IndexOutOfRangeException thrown for partial writes
+
+### Features
+
+- [#30](https://github.com/AdysTech/InfluxDB.Client.Net/issues/30): Use NanoSeconds as default precision
+
+
+### Breaking Change
+- Library will silently drop points older than retention period. This is similar to InfluDB behavios where it will reject those points with an `{"error":"partial write: points beyond retention policy dropped=225"}`
+
+
 ## v0.6.1 [3/28/2017]
 
 ### Release Notes

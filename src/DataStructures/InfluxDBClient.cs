@@ -169,9 +169,10 @@ namespace AdysTech.InfluxDB.Client.Net
             line.Remove(line.Length - 1, 1);
 
             ByteArrayContent requestContent = new ByteArrayContent(Encoding.UTF8.GetBytes(line.ToString()));
-            var endPoint = new Dictionary<string, string>() {
-                { "db", dbName },
-                { "precision", precisionLiterals[(int)precision] } };
+            var endPoint = new Dictionary<string, string>() { { "db", dbName } };
+            if (precision > 0)
+                endPoint.Add("precision", precisionLiterals[(int)precision]);
+
             if (!String.IsNullOrWhiteSpace(retention))
                 endPoint.Add("rp", retention);
             HttpResponseMessage response = await PostAsync(endPoint, requestContent);
@@ -195,10 +196,17 @@ namespace AdysTech.InfluxDB.Client.Net
                         else
                             parts = oneLinePattern.Matches(content.Substring(content.IndexOf("partial write:\\n") + 16)).ToList();
 
+                        if (parts.Count == 0)
+                            throw new InfluxDBException("Partial Write", new Regex(@"\""error\"":\""(.*?)\""").Match(content).Groups[1].Value);
+
                         if (parts[1].Contains("\\n"))
                             l = parts[1].Substring(0, parts[1].IndexOf("\\n")).Unescape();
                         else
                             l = parts[1].Unescape();
+                    }
+                    catch (InfluxDBException e)
+                    {
+                        throw e;
                     }
                     catch (Exception)
                     {
@@ -393,7 +401,7 @@ namespace AdysTech.InfluxDB.Client.Net
         {
             int maxBatchSize = 255;
             bool finalResult = true, result;
-            foreach (var group in Points.GroupBy(p => new { p.Precision, p.Retention?.Name }))
+            foreach (var group in Points.Where(p => p.Retention == null || p.UtcTimestamp > DateTime.UtcNow - p.Retention.Duration).GroupBy(p => new { p.Precision, p.Retention?.Name }))
             {
 
                 var pointsGroup = group.AsEnumerable().Select((point, index) => new { Index = index, Point = point })//get the index of each point
