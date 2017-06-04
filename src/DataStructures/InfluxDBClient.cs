@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AdysTech.InfluxDB.Client.Net.DataContracts;
 using Newtonsoft.Json;
+using System.IO;
 
 namespace AdysTech.InfluxDB.Client.Net
 {
@@ -89,7 +90,7 @@ namespace AdysTech.InfluxDB.Client.Net
 
         #region private methods
 
-        private async Task<HttpResponseMessage> GetAsync(Dictionary<string, string> Query)
+        private async Task<HttpResponseMessage> GetAsync(Dictionary<string, string> Query, HttpCompletionOption completion = HttpCompletionOption.ResponseContentRead)
         {
             var querybaseUrl = new Uri($"{InfluxUrl}/query?");
             var builder = new UriBuilder(querybaseUrl);
@@ -102,7 +103,7 @@ namespace AdysTech.InfluxDB.Client.Net
 
             try
             {
-                HttpResponseMessage response = await _client.GetAsync(builder.Uri);
+                HttpResponseMessage response = await _client.GetAsync(builder.Uri, completion);
 
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
@@ -169,9 +170,10 @@ namespace AdysTech.InfluxDB.Client.Net
             line.Remove(line.Length - 1, 1);
 
             ByteArrayContent requestContent = new ByteArrayContent(Encoding.UTF8.GetBytes(line.ToString()));
-            var endPoint = new Dictionary<string, string>() {
-                { "db", dbName },
-                { "precision", precisionLiterals[(int)precision] } };
+            var endPoint = new Dictionary<string, string>() { { "db", dbName } };
+            if (precision > 0)
+                endPoint.Add("precision", precisionLiterals[(int)precision]);
+
             if (!String.IsNullOrWhiteSpace(retention))
                 endPoint.Add("rp", retention);
             HttpResponseMessage response = await PostAsync(endPoint, requestContent);
@@ -195,10 +197,17 @@ namespace AdysTech.InfluxDB.Client.Net
                         else
                             parts = oneLinePattern.Matches(content.Substring(content.IndexOf("partial write:\\n") + 16)).ToList();
 
+                        if (parts.Count == 0)
+                            throw new InfluxDBException("Partial Write", new Regex(@"\""error\"":\""(.*?)\""").Match(content).Groups[1].Value);
+
                         if (parts[1].Contains("\\n"))
                             l = parts[1].Substring(0, parts[1].IndexOf("\\n")).Unescape();
                         else
                             l = parts[1].Unescape();
+                    }
+                    catch (InfluxDBException e)
+                    {
+                        throw e;
                     }
                     catch (Exception)
                     {
@@ -393,7 +402,7 @@ namespace AdysTech.InfluxDB.Client.Net
         {
             int maxBatchSize = 255;
             bool finalResult = true, result;
-            foreach (var group in Points.GroupBy(p => new { p.Precision, p.Retention?.Name }))
+            foreach (var group in Points.Where(p => p.Retention == null || p.UtcTimestamp > DateTime.UtcNow - p.Retention.Duration).GroupBy(p => new { p.Precision, p.Retention?.Name }))
             {
 
                 var pointsGroup = group.AsEnumerable().Select((point, index) => new { Index = index, Point = point })//get the index of each point
@@ -563,26 +572,32 @@ namespace AdysTech.InfluxDB.Client.Net
                 { "q", measurementQuery },
                 {"chunked", "true" },
                 {"chunk_size", ChunkSize.ToString() },
-                { "epoch", precisionLiterals[(int)precision] } });
+                { "epoch", precisionLiterals[(int)precision] } }, HttpCompletionOption.ResponseHeadersRead);
             if (response == null) throw new ServiceUnavailableException();
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 var results = new List<IInfluxSeries>();
-                //Hack for https://github.com/influxdata/influxdb/issues/8212
-                foreach (var str in (await response.Content.ReadAsStringAsync()).Split('\n'))
-                {
-                    var rawResult = JsonConvert.DeserializeObject<InfluxResponse>(str);
-                    if (rawResult?.Results[0]?.Series != null)
-                    {
-                        foreach (var series in rawResult?.Results[0]?.Series)
-                        {
-                            InfluxSeries result = GetInfluxSeries(precision, series);
-                            results.Add(result);
-                        }
-                    }
-                    if (!rawResult.Results[0].Partial) break;
-                }
 
+                var stream = await response.Content.ReadAsStreamAsync();
+
+                using (var reader = new StreamReader(stream))
+                {
+                    do
+                    {
+                        var str = await reader.ReadLineAsync();
+                        var rawResult = JsonConvert.DeserializeObject<InfluxResponse>(str);
+                        if (rawResult?.Results[0]?.Series != null)
+                        {
+                            foreach (var series in rawResult?.Results[0]?.Series)
+                            {
+                                InfluxSeries result = GetInfluxSeries(precision, series);
+                                results.Add(result);
+                            }
+                        }
+                        if (!rawResult.Results[0].Partial) break;
+                    } while (!reader.EndOfStream);
+
+                }
                 return results;
             }
             return null;

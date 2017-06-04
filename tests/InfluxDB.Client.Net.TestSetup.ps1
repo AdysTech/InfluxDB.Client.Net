@@ -41,7 +41,7 @@
 		throw "Unable to create DB"
 	}
 	
-	$r = Invoke-WebRequest -Method Post -Uri http://localhost:8086/write?db=prereq -Body "test,date=$($(get-date).ToString('yyyyMMdd')),time=$($(get-date).ToString('hhmm')) value=1234"
+	$r = Invoke-WebRequest -Method Post -Uri http://localhost:8086/write?db=prereq -Body "test,TestDate=$($(get-date).ToString('yyyyMMdd')),TestTime=$($(get-date).ToString('hhmm')) value=1234"
 	if($r.StatusCode -ne 204)
 	{
 		throw "Unable to create Measurement"
