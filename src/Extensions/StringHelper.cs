@@ -46,6 +46,9 @@ namespace AdysTech.InfluxDB.Client.Net
                 val = val.Replace(" ", "\\ ");
             if (val.Contains('\n'))
                 val = val.Replace(" ", "\\n");
+            // escape double quotes
+            if (val.Contains(""))
+                val = val.Replace("\"", "\\\"");
             if (escapeEqualSign && val.Contains('='))
                 val = val.Replace("=", "\\=");
             //edge case, which will trigger Unbalanced Quotes exception in InfluxDB
