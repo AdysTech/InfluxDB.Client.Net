@@ -6,7 +6,7 @@
     <Product>AdysTech.InfluxDB.Client.Net</Product>
     <Company>AdysTech</Company>
     <Authors>AdysTech;mvadu</Authors>
-    <Version>0.6.1.0</Version>
+    <Version>0.6.7.0</Version>
     <PackageId>AdysTech.InfluxDB.Client.Net.Core</PackageId>
     <Copyright>© AdysTech 2016-2017</Copyright>
     <PackageProjectUrl>https://github.com/AdysTech/InfluxDB.Client.Net</PackageProjectUrl>
@@ -25,6 +25,8 @@ It currently supports
 8.  Query for all Continuous Queries 
 9.  Create/Drop Continuous Queries 
 10. Chunking Support in queries</PackageReleaseNotes>
+    <AssemblyVersion>0.6.7.0</AssemblyVersion>
+    <FileVersion>0.6.7.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -52,7 +54,7 @@ It currently supports
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
   </ItemGroup>
 
 </Project>

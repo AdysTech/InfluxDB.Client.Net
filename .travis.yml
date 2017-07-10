@@ -15,9 +15,9 @@ addons:
     packages:
     - dotnet-dev-1.0.1
 install:
-  - bash <(curl -fsSL https://raw.githubusercontent.com/PowerShell/PowerShell/v6.0.0-alpha.16/tools/download.sh)
+  - bash <(curl -fsSL https://raw.githubusercontent.com/PowerShell/PowerShell/master/tools/download.sh)
   - powershell -noprofile -c '$PSVersionTable'
-  - sudo powershell ./tests/InfluxDB.Client.Net.TestSetup.ps1 &>/dev/null
+  - sudo powershell ./tests/InfluxDB.Client.Net.TestSetup.ps1
 before_script:
   - dotnet restore "./src/AdysTech.InfluxDB.Client.Net.Core/AdysTech.InfluxDB.Client.Net.Core.csproj"
   - dotnet restore "./tests/AdysTech.InfluxDB.Client.Net.Core.Test/AdysTech.InfluxDB.Client.Net.Core.Test.csproj"

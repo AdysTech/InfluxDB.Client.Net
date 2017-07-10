@@ -17,7 +17,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
         const string measurementName = "TestMeasurement";
         const string invalidDbName = "test DB";
         const string dbUName = "admin";
-        const string dbpwd = "admin";
+        const string dbpwd = "test123€€€üöä§";
         const string invalidUName = "invalid";
         const string influxUrl = "http://localhost:8086";
         const string invalidInfluxUrl = "http://xyzerty:8089";
@@ -555,21 +555,27 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
                 var r = await client.PostPointsAsync(dbName, points);
                 Assert.IsTrue(r, "PostPointsAsync retunred false");
 
-                var values = await client.QueryMultiSeriesAsync(dbName, "select * from /Precision[A-Za-z]/");
+                var values = await client.QueryMultiSeriesAsync(dbName, "select * from /Precision[A-Za-z]s/");
                 foreach (var val in values)
                 {
                     var x = val?.Entries?.FirstOrDefault();
-                    var d = new DateTime(long.Parse(x.Ticks));
-                    TimeSpan t = d - x.Time;
-                    TimePrecision p = Enum.Parse(typeof(TimePrecision), x.Precision);
-                    switch (p)
+                    try
                     {
-                        case TimePrecision.Hours: Assert.IsTrue(t.TotalHours < 1); break;
-                        case TimePrecision.Minutes: Assert.IsTrue(t.TotalMinutes < 1); break;
-                        case TimePrecision.Seconds: Assert.IsTrue(t.TotalSeconds < 1); break;
-                        case TimePrecision.Milliseconds: Assert.IsTrue(t.TotalMilliseconds < 1); break;
-                        case TimePrecision.Microseconds: Assert.IsTrue(t.Ticks < (TimeSpan.TicksPerMillisecond / 1000)); break;
-                        case TimePrecision.Nanoseconds: Assert.IsTrue(t.Ticks < 1); break;
+                        var d = new DateTime(long.Parse(x.Ticks));
+                        TimeSpan t = d - x.Time;
+                        TimePrecision p = Enum.Parse(typeof(TimePrecision), x.Precision);
+                        switch (p)
+                        {
+                            case TimePrecision.Hours: Assert.IsTrue(t.TotalHours < 1); break;
+                            case TimePrecision.Minutes: Assert.IsTrue(t.TotalMinutes < 1); break;
+                            case TimePrecision.Seconds: Assert.IsTrue(t.TotalSeconds < 1); break;
+                            case TimePrecision.Milliseconds: Assert.IsTrue(t.TotalMilliseconds < 1); break;
+                            case TimePrecision.Microseconds: Assert.IsTrue(t.Ticks < (TimeSpan.TicksPerMillisecond / 1000)); break;
+                            case TimePrecision.Nanoseconds: Assert.IsTrue(t.Ticks < 1); break;
+                        }
+                    }
+                    catch (Exception e)
+                    {
                     }
                 }
             }
@@ -720,7 +726,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
                 {
                     await Task.Delay(1);
                     var point = new InfluxDatapoint<long>();
-                    point.MeasurementName = "PrecisionTest";
+                    point.MeasurementName = "DefaultPrecisionTest";
                     point.Tags.Add("TestDate", TestDate);
                     point.Tags.Add("TestTime", TestTime);
                     point.Fields.Add("Val", i);

@@ -245,9 +245,9 @@ namespace AdysTech.InfluxDB.Client.Net
             this._influxDBPassword = Password;
 
             _client = new HttpClient();
-            if (!(String.IsNullOrWhiteSpace(InfluxDBUserName) && String.IsNullOrWhiteSpace(InfluxDBPassword)))
-                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic",
-                    Convert.ToBase64String(System.Text.ASCIIEncoding.ASCII.GetBytes($"{InfluxDBUserName}:{InfluxDBPassword}")));
+           //if (!(String.IsNullOrWhiteSpace(InfluxDBUserName) && String.IsNullOrWhiteSpace(InfluxDBPassword)))
+           //    _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic",
+           //        Convert.ToBase64String(Encoding.GetEncoding("iso-8859-1").GetBytes($"{InfluxDBUserName}:{InfluxDBPassword}")));
             _client.DefaultRequestHeaders.ConnectionClose = false;
         }
 
