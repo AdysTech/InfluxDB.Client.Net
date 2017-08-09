@@ -1,3 +1,13 @@
+## v0.6.7 [7/09/2017]
+
+### Release Notes
+Allow non ASCII passwords, escape double quotes (Thanks to [@siavelis](https://github.com/siavelis) for #37) 
+
+### Bugfixes
+
+- [#38](https://github.com/AdysTech/InfluxDB.Client.Net/issues/38): Authentication attempts fail if password contains non-ASCII chars
+- [#36](https://github.com/AdysTech/InfluxDB.Client.Net/issues/36): PostPointAsync() fails with fields containing double quotes
+
 ## v0.6.1 [6/03/2017]
 
 ### Release Notes
