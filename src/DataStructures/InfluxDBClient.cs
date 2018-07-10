@@ -94,11 +94,12 @@ namespace AdysTech.InfluxDB.Client.Net
         {
             var querybaseUrl = new Uri($"{InfluxUrl}/query?");
             var builder = new UriBuilder(querybaseUrl);
-
+            /*
             if (InfluxDBUserName != null && !Query.ContainsKey("u"))
                 Query.Add("u", InfluxDBUserName);
             if (InfluxDBPassword != null && !Query.ContainsKey("p"))
                 Query.Add("p", InfluxDBPassword);
+            */
             builder.Query = await new FormUrlEncodedContent(Query).ReadAsStringAsync();
 
             try
@@ -133,11 +134,12 @@ namespace AdysTech.InfluxDB.Client.Net
 
             var querybaseUrl = new Uri($"{InfluxUrl}/write?");
             var builder = new UriBuilder(querybaseUrl);
-
+            /*
             if (!EndPoint.ContainsKey("u"))
                 EndPoint.Add("u", InfluxDBUserName);
             if (!EndPoint.ContainsKey("p"))
                 EndPoint.Add("p", InfluxDBPassword);
+            */
             builder.Query = await new FormUrlEncodedContent(EndPoint).ReadAsStringAsync();
 
 
@@ -238,18 +240,35 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <param name="InfluxUrl">Url for the Inflex Server, e.g. http://localhost:8086</param>
         /// <param name="UserName">User name to authenticate InflexDB</param>
         /// <param name="Password">password</param>
-        public InfluxDBClient(string InfluxUrl, string UserName, string Password)
-        {
-            this._influxUrl = InfluxUrl;
-            this._influxDBUserName = UserName;
-            this._influxDBPassword = Password;
-
-            _client = new HttpClient();
-           //if (!(String.IsNullOrWhiteSpace(InfluxDBUserName) && String.IsNullOrWhiteSpace(InfluxDBPassword)))
-           //    _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic",
-           //        Convert.ToBase64String(Encoding.GetEncoding("iso-8859-1").GetBytes($"{InfluxDBUserName}:{InfluxDBPassword}")));
-            _client.DefaultRequestHeaders.ConnectionClose = false;
+        public InfluxDBClient(string InfluxUrl, string UserName, string Password) :
+            this(InfluxUrl, UserName, Password, null)
+        {            
         }
+
+        public InfluxDBClient(string InfluxUrl, string UserName, string Password, HttpClientHandler httpClientHandler)
+        {
+            try
+            {                               
+                this._influxUrl = InfluxUrl;
+                this._influxDBUserName = UserName;
+                this._influxDBPassword = Password;                
+
+                if (httpClientHandler != null)                               
+                    _client = new HttpClient(httpClientHandler, true);                
+                else
+                    _client = new HttpClient();
+
+                if (!(String.IsNullOrWhiteSpace(InfluxDBUserName) && String.IsNullOrWhiteSpace(InfluxDBPassword)))
+                    _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic",
+                        Convert.ToBase64String(Encoding.GetEncoding("iso-8859-1").GetBytes($"{InfluxDBUserName}:{InfluxDBPassword}")));
+
+                _client.DefaultRequestHeaders.ConnectionClose = false;
+            }
+            catch (Exception ex)
+            {
+                throw new InfluxDBException("Failed in ctor of InfluxDBClient", ex.ToString());
+            }
+        }        
 
         /// <summary>
         /// Creates the InfluxDB Client
