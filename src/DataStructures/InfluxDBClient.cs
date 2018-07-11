@@ -93,8 +93,8 @@ namespace AdysTech.InfluxDB.Client.Net
         private async Task<HttpResponseMessage> GetAsync(Dictionary<string, string> Query, HttpCompletionOption completion = HttpCompletionOption.ResponseContentRead)
         {
             var querybaseUrl = new Uri($"{InfluxUrl}/query?");
-            var builder = new UriBuilder(querybaseUrl);
-            /*
+            var builder = new UriBuilder(querybaseUrl);           
+             /*
             if (InfluxDBUserName != null && !Query.ContainsKey("u"))
                 Query.Add("u", InfluxDBUserName);
             if (InfluxDBPassword != null && !Query.ContainsKey("p"))
@@ -134,6 +134,7 @@ namespace AdysTech.InfluxDB.Client.Net
 
             var querybaseUrl = new Uri($"{InfluxUrl}/write?");
             var builder = new UriBuilder(querybaseUrl);
+         
             /*
             if (!EndPoint.ContainsKey("u"))
                 EndPoint.Add("u", InfluxDBUserName);
@@ -257,10 +258,10 @@ namespace AdysTech.InfluxDB.Client.Net
                     _client = new HttpClient(httpClientHandler, true);                
                 else
                     _client = new HttpClient();
-
+                
                 if (!(String.IsNullOrWhiteSpace(InfluxDBUserName) && String.IsNullOrWhiteSpace(InfluxDBPassword)))
-                    _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic",
-                        Convert.ToBase64String(Encoding.GetEncoding("iso-8859-1").GetBytes($"{InfluxDBUserName}:{InfluxDBPassword}")));
+                    _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic",                        
+                        Convert.ToBase64String(Encoding.UTF8.GetBytes($"{InfluxDBUserName}:{InfluxDBPassword}")));
 
                 _client.DefaultRequestHeaders.ConnectionClose = false;
             }
