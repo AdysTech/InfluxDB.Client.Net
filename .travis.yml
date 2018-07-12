@@ -2,7 +2,7 @@ language: csharp
 sudo: required
 dist: trusty
 mono: none
-dotnet: 1.0.0-preview2-003121
+dotnet: 1.1.5 #2.1.200 # Latest 2.0 Runtime
 
 branches:
   only:
@@ -15,9 +15,21 @@ addons:
     packages:
     - dotnet-dev-1.0.1
 install:
-  - bash <(curl -fsSL https://raw.githubusercontent.com/PowerShell/PowerShell/master/tools/download.sh)
-  - powershell -noprofile -c '$PSVersionTable'
-  - sudo powershell ./tests/InfluxDB.Client.Net.TestSetup.ps1
+    # Import the public repository GPG keys
+  - curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+
+    # Register the Microsoft Ubuntu repository
+  - curl https://packages.microsoft.com/config/ubuntu/14.04/prod.list | sudo tee /etc/apt/sources.list.d/microsoft.list
+
+    # Update the list of products
+  - sudo apt-get update
+
+    # Install PowerShell
+  - sudo apt-get install -y powershell
+
+  - bash <(curl -fsSL https://raw.githubusercontent.com/PowerShell/PowerShell/master/tools/install-powershell.sh)
+  - pwsh -noprofile -c '$PSVersionTable'
+  - sudo pwsh ./tests/InfluxDB.Client.Net.TestSetup.ps1
 before_script:
   - dotnet restore "./src/AdysTech.InfluxDB.Client.Net.Core/AdysTech.InfluxDB.Client.Net.Core.csproj"
   - dotnet restore "./tests/AdysTech.InfluxDB.Client.Net.Core.Test/AdysTech.InfluxDB.Client.Net.Core.Test.csproj"
