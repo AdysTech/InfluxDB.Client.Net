@@ -342,7 +342,7 @@ namespace AdysTech.InfluxDB.Client.Net
         ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
         public async Task<bool> CreateDatabaseAsync(string dbName)
         {
-            var response = await GetAsync(new Dictionary<string, string>() { { "q", $"CREATE DATABASE {dbName}" } });
+            var response = await GetAsync(new Dictionary<string, string>() { { "q", $"CREATE DATABASE \"{dbName}\"" } });
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 var content = await response.Content.ReadAsStringAsync();

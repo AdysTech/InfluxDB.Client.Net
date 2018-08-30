@@ -51,7 +51,7 @@ namespace AdysTech.InfluxDB.Client.Net
         internal string GetCreateSyntax ()
         {
             if (!String.IsNullOrWhiteSpace (DBName) && !String.IsNullOrWhiteSpace (Name) && Duration >= TimeSpan.FromMinutes (60))
-                return $"CREATE RETENTION POLICY {Name} ON {DBName} DURATION {Duration.TotalMinutes}m REPLICATION {ReplicaN} {(IsDefault ? " DEFAULT" : "")}";
+                return $"CREATE RETENTION POLICY {Name} ON \"{DBName}\" DURATION {Duration.TotalMinutes}m REPLICATION {ReplicaN} {(IsDefault ? " DEFAULT" : "")}";
             else if (Duration < TimeSpan.FromMinutes (60))
                 throw new ArgumentException ("Minimum retention duration is 1 hour");
             else if (String.IsNullOrWhiteSpace (Name))
