@@ -155,7 +155,9 @@ namespace AdysTech.InfluxDB.Client.Net
             }
             catch (HttpRequestException e)
             {
-                if (e.InnerException.Message == "Unable to connect to the remote server")
+                if (e.InnerException.Message == "Unable to connect to the remote server" ||
+                    e.InnerException.Message == "A connection with the server could not be established" ||
+                    e.InnerException.Message.StartsWith("The remote name could not be resolved:"))
                     throw new ServiceUnavailableException();
             }
             return null;
@@ -341,8 +343,8 @@ namespace AdysTech.InfluxDB.Client.Net
         ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
         ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
         public async Task<bool> CreateDatabaseAsync(string dbName)
-        {
-            var response = await GetAsync(new Dictionary<string, string>() { { "q", $"CREATE DATABASE {dbName}" } });
+        {            
+            var response = await GetAsync(new Dictionary<string, string>() { { "q", $"CREATE DATABASE \"{dbName}\"" } });
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 var content = await response.Content.ReadAsStringAsync();

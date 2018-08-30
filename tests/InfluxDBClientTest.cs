@@ -15,7 +15,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
         const string dbName = "testDB";
         const string internalDb = "_internal";
         const string measurementName = "TestMeasurement";
-        const string invalidDbName = "test DB";
+        const string invalidDbName = @"test \DB";
         const string dbUName = "admin";
         const string dbpwd = "test123€€€üöä§";
         const string invalidUName = "invalid";

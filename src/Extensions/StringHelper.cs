@@ -35,7 +35,7 @@ namespace AdysTech.InfluxDB.Client.Net
                 ix = jx + 2;
             }
 
-            return retval.ToString();
+            return retval.Replace("\\ ", " ").ToString();
         }
 
         public static string EscapeChars(this string val, bool escapeEqualSign = true)
