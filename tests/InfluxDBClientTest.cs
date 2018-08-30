@@ -1,4 +1,4 @@
-﻿using AdysTech.InfluxDB.Client.Net;
+using AdysTech.InfluxDB.Client.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
         const string measurementName = "TestMeasurement";
         const string invalidDbName = @"test \DB";
         const string dbUName = "admin";
-        const string dbpwd = "test123€€€üöä§";
+        const string dbpwd = "test123$€₹#₳₷ȅ";
         const string invalidUName = "invalid";
         const string influxUrl = "http://localhost:8086";
         const string invalidInfluxUrl = "http://xyzerty:8089";
@@ -127,7 +127,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
 
             s.Stop();
             Debug.WriteLine($"Elapsed{s.ElapsedMilliseconds}");
-            Assert.IsTrue(r != null && r.Count > 0, "QueryMultiSeriesAsync retunred null or invalid data");
+            Assert.IsTrue(r != null, "QueryMultiSeriesAsync retunred null or invalid data");
         }
 
 
@@ -521,7 +521,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
 
             Stopwatch s = new Stopwatch();
             s.Start();
-            var r = await client.QueryMultiSeriesAsync(internalDb, "select * from runtime limit 10");
+            var r = await client.QueryMultiSeriesAsync(internalDb, "show stats");
 
             s.Stop();
             Debug.WriteLine($"Elapsed{s.ElapsedMilliseconds}");

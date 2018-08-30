@@ -1,3 +1,8 @@
+## v0.6.8 [7/18/2018]
+
+### Release Notes
+Add support for communicating via Proxy server. Update Basic Authentication to UTF-8. Thanks to @hadamarda for adding it in #43
+
 ## v0.6.7 [7/09/2017]
 
 ### Release Notes
