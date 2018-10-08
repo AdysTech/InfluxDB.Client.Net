@@ -31,22 +31,31 @@ To be added are
 
 ### Usage
 #### Creating Client
-`InfluxDBClient client = new InfluxDBClient (influxUrl, dbUName, dbpwd);`
+```Csharp
+InfluxDBClient client = new InfluxDBClient (influxUrl, dbUName, dbpwd);
+```
 
 #### Querying all DB names
-`List<String> dbNames = await client.GetInfluxDBNamesAsync ();`
+```Csharp
+List<String> dbNames = await client.GetInfluxDBNamesAsync ();
+```
 
 #### Querying DB structure
-`Dictionary<string, List<String>> = await client.GetInfluxDBStructureAsync("<db name>");`
+```Csharp
+Dictionary<string, List<String>> = await client.GetInfluxDBStructureAsync("<db name>");
+```
 This returns a hierarchical structure of all measurements, and fields (but not tags)!
 
 #### Create new database
-`CreateDatabaseAsync("<db name>");`
+```Csharp
+CreateDatabaseAsync("<db name>");
+```
 Creates a new database in InfluxDB. Does not raise exceptions if the DB already exists. 
 
 
 #### Type safe data points
 ##### `InfluxDatapoint<T>`
+
 It represents a single Point (collection of fields) in a series. In InfluxDB each point is uniquely identified by its series and timestamps.
 Currently this class (as well as InfluxDB as of 0.9) supports `Boolean`, `String`, `Integer` and `Double` (additionally `decimal` is supported in client, which gets stored as a double in InfluxDB) types for field values. 
 Multiple fields of same type are supported, as well as tags. 
@@ -54,30 +63,30 @@ Multiple fields of same type are supported, as well as tags.
 
 
 #### Writing data points to DB
+```Csharp    
+var valMixed = new InfluxDatapoint<InfluxValueField>();
+valMixed.UtcTimestamp = DateTime.UtcNow;
+valMixed.Tags.Add("TestDate", time.ToShortDateString());
+valMixed.Tags.Add("TestTime", time.ToShortTimeString());
+valMixed.Fields.Add("Doublefield", new InfluxValueField(rand.NextDouble()));
+valMixed.Fields.Add("Stringfield", new InfluxValueField(DataGen.RandomString()));
+valMixed.Fields.Add("Boolfield", new InfluxValueField(true));
+valMixed.Fields.Add("Int Field", new InfluxValueField(rand.Next()));
     
-    var valMixed = new InfluxDatapoint<InfluxValueField>();
-    valMixed.UtcTimestamp = DateTime.UtcNow;
-    valMixed.Tags.Add("TestDate", time.ToShortDateString());
-    valMixed.Tags.Add("TestTime", time.ToShortTimeString());
-    valMixed.Fields.Add("Doublefield", new InfluxValueField(rand.NextDouble()));
-    valMixed.Fields.Add("Stringfield", new InfluxValueField(DataGen.RandomString()));
-    valMixed.Fields.Add("Boolfield", new InfluxValueField(true));
-    valMixed.Fields.Add("Int Field", new InfluxValueField(rand.Next()));
+valMixed.MeasurementName = measurementName;
+valMixed.Precision = TimePrecision.Seconds;
+valMixed.Retention = new InfluxRetentionPolicy() { Name = "Test2" };
     
-    valMixed.MeasurementName = measurementName;
-    valMixed.Precision = TimePrecision.Seconds;
-    valMixed.Retention = new InfluxRetentionPolicy() { Name = "Test2" };
-    
-    var r = await client.PostPointAsync(dbName, valMixed);
-
+var r = await client.PostPointAsync(dbName, valMixed);
+```
 A collection of points can be posted using `await client.PostPointsAsync (dbName, points)`, where `points` can be collection of different types of `InfluxDatapoint`
 	
 #### Query for data points
-
-    var r = await client.QueryMultiSeriesAsync ("_internal", "select * from runtime limit 10");
-    var s = await client.QueryMultiSeriesAsync("_internal", "SHOW STATS");
-    var rc = await client.QueryMultiSeriesAsync ("_internal", "select * from runtime limit 100",10);
-
+```Csharp
+var r = await client.QueryMultiSeriesAsync ("_internal", "select * from runtime limit 10");
+var s = await client.QueryMultiSeriesAsync("_internal", "SHOW STATS");
+var rc = await client.QueryMultiSeriesAsync ("_internal", "select * from runtime limit 100",10);
+```
 `QueryMultiSeriesAsync` method returns `List<InfluxSeries>`, `InfluxSeries` is a custom object which will have a series name, set of tags (e.g. columns you used in `group by` clause. For the actual values, it will use dynamic object(`ExpandoObject` to be exact). The example #1 above will result in a single entry list, and the result can be used like `r.FirstOrDefault()?.Entries[0].time`. This also opens up a way to have an update mechanism as you can now query for data, change some values/tags etc, and write back. Since Influx uses combination of timestamp, tags as primary key, if you don't change tags, the values will be overwritten.
 
 Second example above will provide multiple series objects, and allows to get data like `r.FirstOrDefault(x=>x.SeriesName=="queryExecutor").Entries[0].QueryDurationNs`.
@@ -88,35 +97,43 @@ The last example above makes InfluxDB to split the selected points (100 limited 
 This library uses a cutsom .Net object to represent the Influx Retention Policy. The `Duration` concept is nicely wraped in `TimeSpan`, so it can be easily manipulated using .Net code. It also supports `ShardDuration` concept introduced in recent versions of InfluxDB.
 
 ##### Get all Retention Policies from DB
-`var policies = await client.GetRetentionPoliciesAsync (dbName);`
+```Csharp
+var policies = await client.GetRetentionPoliciesAsync (dbName);
+```
 
 ##### Create Retention Policy and Write points to a specific retention policy
 The code below will create a new retention policy with a retention period of 6 hours, and write a point to that policy.
- 
-    var rp = new InfluxRetentionPolicy () { Name = "Test2", DBName = dbName, Duration = TimeSpan.FromHours (6), IsDefault = false };
-    if (!await client.CreateRetentionPolicyAsync (rp))
-    	throw new InvalidOperationException ("Unable to create Retention Policy");
-              
-    valMixed.MeasurementName = measurementName;
-    valMixed.Precision = TimePrecision.Seconds;
-    valMixed.Retention = new InfluxRetentionPolicy () { Name = "Test2"}; //or you can just assign this to rp   
-    var r = await client.PostPointAsync (dbName, valMixed);
 
+```Csharp
+var rp = new InfluxRetentionPolicy () { Name = "Test2", DBName = dbName, Duration = TimeSpan.FromHours (6), IsDefault = false };
+if (!await client.CreateRetentionPolicyAsync (rp))
+    throw new InvalidOperationException ("Unable to create Retention Policy");
+              
+valMixed.MeasurementName = measurementName;
+valMixed.Precision = TimePrecision.Seconds;
+valMixed.Retention = new InfluxRetentionPolicy () { Name = "Test2"}; //or you can just assign this to rp   
+var r = await client.PostPointAsync (dbName, valMixed);
+```
 
 #### Continuous Queries
 Similar to retention policy the library also creates a custom object to represent the `Continuous Queries`. Because the queries can be very complex, the actual query part of the CQ is exposed as just a string. But the timing part of [CQ](https://docs.influxdata.com/influxdb/v1.0/query_language/continuous_queries) specifically <intervals> given in `[RESAMPLE [EVERY <interval>] [FOR <interval>]]` are exposed as `TimeSpan` objects. Since the `GROUP BY time(<interval>)` is mandated for CQs this interval again is exposed as `TimeSpan`. This allows you to run LINQ code on collection of CQs.
 
 ##### Get all Continuous Queries present in DB
-`var cqList = await client.GetContinuousQueriesAsync ();`
+```Csharp
+var cqList = await client.GetContinuousQueriesAsync ();
+```
 
 ##### Create a new Continuous Query
-    var p = new InfluxContinuousQuery () { Name = "TestCQ1",
-                                DBName = dbName,
-                                Query = "select mean(Intfield) as Intfield into cqMeasurement from testMeasurement group by time(1h),*",
-                                ResampleDuration = TimeSpan.FromHours (2),
-                                ResampleFrequency = TimeSpan.FromHours (0.5) };
-    var r = await client.CreateContinuousQueryAsync (p);
-
+```Csharp
+var p = new InfluxContinuousQuery () { Name = "TestCQ1",
+                            DBName = dbName,
+                            Query = "select mean(Intfield) as Intfield into cqMeasurement from testMeasurement group by time(1h),*",
+                            ResampleDuration = TimeSpan.FromHours (2),
+                            ResampleFrequency = TimeSpan.FromHours (0.5) };
+var r = await client.CreateContinuousQueryAsync (p);
+```
 ##### Drop a Continuous Query
-` var r = await client.DropContinuousQueryAsync (p);`
+```Csharp
+var r = await client.DropContinuousQueryAsync (p);
+```
 `p` has to be an existing CQ, which is already saved. 
