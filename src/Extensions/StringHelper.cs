@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace AdysTech.InfluxDB.Client.Net
 {
- 
+
     public static class StringHelper
     {
         public static string Unescape(this string txt)
@@ -38,19 +38,40 @@ namespace AdysTech.InfluxDB.Client.Net
             return retval.Replace("\\ ", " ").ToString();
         }
 
-        public static string EscapeChars(this string val, bool escapeEqualSign = true)
+        /// <summary>
+        /// Escapes the special charecters in string to match InfluxDB line protocol.
+        /// For tag keys, tag values, and field keys always use a backslash character \ to escape: commas equal signs spaces
+        /// For measurements always use a backslash character \ to escape: commas  spaces
+        /// For string field values use a backslash character \ to escape: double quotes
+        /// </summary>  
+        /// <ref>https://docs.influxdata.com/influxdb/v1.6/write_protocols/line_protocol_reference/#special-characters
+        /// </ref>
+        /// <param name="val"></param>
+        /// <param name="comma">ignore comma</param>
+        /// <param name="equalSign">ignore Equal sign</param>
+        /// <param name="doubleQuote">ignore  double quote</param>
+        /// <param name="space">ignore space</param>
+        /// <returns></returns>
+        public static string EscapeChars(this string val, bool comma = false, bool equalSign = false, bool doubleQuote = false, bool space = false)
         {
-            if (val.Contains(','))
+            // escape comma
+            if (comma && val.Contains(','))
                 val = val.Replace(",", "\\,");
-            if (val.Contains(' '))
+
+            // escape space
+            if (space && val.Contains(' '))
                 val = val.Replace(" ", "\\ ");
+
+            // escape double quotes
+            if (doubleQuote && val.Contains('"'))
+                val = val.Replace("\"", "\\\"");
+
+            // escape equal sign
+            if (equalSign && val.Contains('='))
+                val = val.Replace("=", "\\=");
+
             if (val.Contains('\n'))
                 val = val.Replace(" ", "\\n");
-            // escape double quotes
-            if (val.Contains(""))
-                val = val.Replace("\"", "\\\"");
-            if (escapeEqualSign && val.Contains('='))
-                val = val.Replace("=", "\\=");
             //edge case, which will trigger Unbalanced Quotes exception in InfluxDB
             if (val.EndsWith("\\"))
                 val = val.Substring(0, val.Length - 1);

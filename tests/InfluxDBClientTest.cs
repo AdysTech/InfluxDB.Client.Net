@@ -743,5 +743,16 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             }
         }
 
+        [TestMethod]
+        public void TestInfluxEscape()
+        {
+            var strPoint = new InfluxDatapoint<string>();
+            strPoint.UtcTimestamp = DateTime.UtcNow;           
+            strPoint.MeasurementName = "\"measurement with quo⚡️es and emoji\"";
+            strPoint.Tags.Add("tag key with sp🚀ces", "tag,value,with\"commas\",");
+            strPoint.Fields.Add("field_k\\ey", "string field value, only \" need be esc🍭ped");
+            strPoint.Precision = TimePrecision.Milliseconds;
+            Assert.IsTrue(strPoint.ConvertToInfluxLineProtocol().StartsWith("\"measurement\\ with\\ quo⚡️es\\ and\\ emoji\",tag\\ key\\ with\\ sp🚀ces=tag\\,value\\,with\"commas\"\\, field_k\\ey=\"string field value, only \\\" need be esc🍭ped\""));
+        }
     }
 }
