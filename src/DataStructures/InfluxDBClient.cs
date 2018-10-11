@@ -1,8 +1,9 @@
-﻿//Copyright: Adarsha@AdysTech
-
+﻿using AdysTech.InfluxDB.Client.Net.DataContracts;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -10,9 +11,6 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using AdysTech.InfluxDB.Client.Net.DataContracts;
-using Newtonsoft.Json;
-using System.IO;
 
 namespace AdysTech.InfluxDB.Client.Net
 {
@@ -29,17 +27,18 @@ namespace AdysTech.InfluxDB.Client.Net
         Nanoseconds = 6
     }
 
-
     /// <summary>
     /// Provides asynchronous interaction channel with InfluxDB engine
     /// </summary>
     public class InfluxDBClient : IInfluxDBClient, IDisposable
     {
         #region fields
-        readonly string[] precisionLiterals = { "_", "h", "m", "s", "ms", "u", "n" };
+
+        private readonly string[] precisionLiterals = { "_", "h", "m", "s", "ms", "u", "n" };
         private readonly string _influxUrl;
-        HttpClient _client;
-        #endregion
+        private HttpClient _client;
+
+        #endregion fields
 
         /// <summary>
         /// URL for InfluxDB Engine, include complete URL with http/s and port number
@@ -50,6 +49,7 @@ namespace AdysTech.InfluxDB.Client.Net
         }
 
         private readonly string _influxDBUserName;
+
         /// <summary>
         /// User Name for InfluxDB if it requires authentication
         /// </summary>
@@ -59,6 +59,7 @@ namespace AdysTech.InfluxDB.Client.Net
         }
 
         private readonly string _influxDBPassword;
+
         /// <summary>
         /// Password for InfluxDB if it requires authentication
         /// </summary>
@@ -87,7 +88,6 @@ namespace AdysTech.InfluxDB.Client.Net
             }
         }
 
-
         #region private methods
 
         private async Task<HttpResponseMessage> GetAsync(Dictionary<string, string> Query, HttpCompletionOption completion = HttpCompletionOption.ResponseContentRead)
@@ -110,7 +110,6 @@ namespace AdysTech.InfluxDB.Client.Net
                 {
                     throw InfluxDBException.ProcessInfluxDBError(await response.Content.ReadAsStringAsync());
                 }
-
             }
             catch (HttpRequestException e)
             {
@@ -122,13 +121,10 @@ namespace AdysTech.InfluxDB.Client.Net
             return null;
         }
 
-
         private async Task<HttpResponseMessage> PostAsync(Dictionary<string, string> EndPoint, ByteArrayContent requestContent)
         {
-
             var querybaseUrl = new Uri($"{InfluxUrl}/write?");
             var builder = new UriBuilder(querybaseUrl);
-
 
             builder.Query = await new FormUrlEncodedContent(EndPoint).ReadAsStringAsync();
             //if (requestContent.Headers.ContentType == null)
@@ -207,7 +203,6 @@ namespace AdysTech.InfluxDB.Client.Net
                     }
                     catch (Exception)
                     {
-
                     }
 
                     var point = points.Where(p => p.ConvertToInfluxLineProtocol() == l).FirstOrDefault();
@@ -226,7 +221,8 @@ namespace AdysTech.InfluxDB.Client.Net
             else
                 return false;
         }
-        #endregion
+
+        #endregion private methods
 
         /// <summary>
         /// Creates the InfluxDB Client
@@ -278,10 +274,7 @@ namespace AdysTech.InfluxDB.Client.Net
         public InfluxDBClient(string InfluxUrl)
                 : this(InfluxUrl, null, null)
         {
-
         }
-
-
 
         /// <summary>
         /// Queries and Gets list of all existing databases in the Influx server instance
@@ -301,7 +294,6 @@ namespace AdysTech.InfluxDB.Client.Net
 
             return dbNames;
         }
-
 
         /// <summary>
         /// Gets the whole DB structure for the given databse in Influx.
@@ -380,10 +372,9 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <param name="point">Influx data point to be written</param>
         /// <returns>True:Success, False:Failure</returns>
         ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
-        ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>   
+        ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
         public async Task<bool> PostPointAsync(string dbName, IInfluxDatapoint point)
         {
-
             ByteArrayContent requestContent = new ByteArrayContent(Encoding.UTF8.GetBytes(point.ConvertToInfluxLineProtocol()));
             var endPoint = new Dictionary<string, string>() {
                { "db", dbName },
@@ -408,7 +399,6 @@ namespace AdysTech.InfluxDB.Client.Net
             }
         }
 
-
         /// <summary>
         /// Posts series of InfluxDataPoints to given measurement, in batches of 255
         /// </summary>
@@ -417,14 +407,13 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <returns>True:Success, False:Failure, or partial failure</returns>
         /// Sets Saved property on InfluxDatapoint to true to successful points
         ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
-        ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>   
+        ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
         public async Task<bool> PostPointsAsync(string dbName, IEnumerable<IInfluxDatapoint> Points)
         {
             int maxBatchSize = 255;
             bool finalResult = true, result;
             foreach (var group in Points.Where(p => p.Retention == null || p.UtcTimestamp > DateTime.UtcNow - p.Retention.Duration).GroupBy(p => new { p.Precision, p.Retention?.Name }))
             {
-
                 var pointsGroup = group.AsEnumerable().Select((point, index) => new { Index = index, Point = point })//get the index of each point
                           .GroupBy(x => x.Index / maxBatchSize) //chunk into smaller batches
                           .Select(x => x.Select(v => v.Point)); //get the points
@@ -446,14 +435,10 @@ namespace AdysTech.InfluxDB.Client.Net
                         points.ToList().ForEach(p => p.Saved = true);
                     }
                 }
-
-
-
             }
 
             return finalResult;
         }
-
 
         /// <summary>
         /// InfluxDB engine version
@@ -473,7 +458,6 @@ namespace AdysTech.InfluxDB.Client.Net
                 }
                 else if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.BadGateway || (response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error")) //502 Connection refused
                     throw new UnauthorizedAccessException("InfluxDB needs authentication. Check uname, pwd parameters");
-
             }
             catch (HttpRequestException e)
             {
@@ -482,8 +466,6 @@ namespace AdysTech.InfluxDB.Client.Net
             }
             return "Unknown";
         }
-
-
 
         /// <summary>
         /// Gets the list of retention policies present in a DB
@@ -515,7 +497,6 @@ namespace AdysTech.InfluxDB.Client.Net
                 policies.Add(pol);
             }
             return policies;
-
         }
 
         /// <summary>
@@ -572,11 +553,10 @@ namespace AdysTech.InfluxDB.Client.Net
             return null;
         }
 
-
         /// <summary>
         /// Queries Influx DB and gets a time series data back. Ideal for fetching measurement values.
         /// The return list is of InfluxSeries, and each element in there will have properties named after columns in series
-        /// THis uses Chunking support from InfluxDB. It returns results in streamed batches rather than as a single response 
+        /// THis uses Chunking support from InfluxDB. It returns results in streamed batches rather than as a single response
         /// Responses will be chunked by series or by every ChunkSize points, whichever occurs first.
         /// </summary>
         /// <param name="dbName">Name of the database</param>
@@ -616,7 +596,6 @@ namespace AdysTech.InfluxDB.Client.Net
                         }
                         if (!rawResult.Results[0].Partial) break;
                     } while (!reader.EndOfStream);
-
                 }
                 return results;
             }
@@ -628,8 +607,9 @@ namespace AdysTech.InfluxDB.Client.Net
         /// </summary>
         /// <param name="precision"></param>
         /// <param name="series"></param>
+        /// <param name="SafePropertyNames">If true the first letter of each property name will be Capital, making them safer to use in C#</param>
         /// <returns></returns>
-        private static InfluxSeries GetInfluxSeries(TimePrecision precision, Series series)
+        private static InfluxSeries GetInfluxSeries(TimePrecision precision, Series series,bool SafePropertyNames = true)
         {
             var result = new InfluxSeries()
             {
@@ -646,9 +626,12 @@ namespace AdysTech.InfluxDB.Client.Net
                 entries.Add(entry);
                 for (var col = 0; col < series.Columns.Count; col++)
                 {
-                    var header = char.ToUpper(series.Columns[col][0]) + series.Columns[col].Substring(1);
-
-                    if (header == "Time")
+                    string header;
+                    if (SafePropertyNames) 
+                        header = char.ToUpper(series.Columns[col][0]) + series.Columns[col].Substring(1);
+                    else
+                        header = series.Columns[col];
+                    if (String.Equals(header, "Time", StringComparison.OrdinalIgnoreCase))
                         ((IDictionary<string, object>)entry).Add(header, EpochHelper.FromEpoch(series.Values[row][col], precision));
                     else
                         ((IDictionary<string, object>)entry).Add(header, series.Values[row][col]);
@@ -657,7 +640,6 @@ namespace AdysTech.InfluxDB.Client.Net
             result.Entries = entries;
             return result;
         }
-
 
         /// <summary>
         /// Gets the list of Continuous Queries currently in efect
@@ -702,8 +684,8 @@ namespace AdysTech.InfluxDB.Client.Net
                 }
             }
             return queries;
-
         }
+
         /// <summary>
         /// Creates a Continuous Queries
         /// </summary>
@@ -747,12 +729,12 @@ namespace AdysTech.InfluxDB.Client.Net
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+
         // The bulk of the clean-up code is implemented in Dispose(bool)
         protected virtual void Dispose(bool disposing)
         {
             _client?.Dispose();
             _client = null;
         }
-
     }
 }

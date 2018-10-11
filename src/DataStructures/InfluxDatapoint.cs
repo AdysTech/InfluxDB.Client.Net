@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Globalization;
 
 namespace AdysTech.InfluxDB.Client.Net
 {
     /// <summary>
-    /// Represents a single Point (collection of fields) in a series. 
+    /// Represents a single Point (collection of fields) in a series.
     /// Each point is uniquely identified by its series and timestamp.
     /// </summary>
     /// <typeparam name="T">Type of the filed value, Allowed - boolean, string, integer, decimal and double </typeparam>
@@ -25,7 +24,7 @@ namespace AdysTech.InfluxDB.Client.Net
         public Dictionary<string, string> Tags { get; private set; }
 
         /// <summary>
-        /// The key-value pair in InfluxDB’s data structure that records metadata and the actual data value. 
+        /// The key-value pair in InfluxDB’s data structure that records metadata and the actual data value.
         /// Fields are required in InfluxDB’s data structure and they are not indexed.
         /// </summary>
         public Dictionary<string, T> Fields { get; private set; }
@@ -47,24 +46,24 @@ namespace AdysTech.InfluxDB.Client.Net
 
         public IInfluxRetentionPolicy Retention { get; set; }
 
-        public InfluxDatapoint ()
+        public InfluxDatapoint()
         {
-            Type itemType = typeof (T);
-            if (itemType == typeof (long) ||
-                itemType == typeof (decimal) ||
-                itemType == typeof (double) ||
-                itemType == typeof (int) ||
-                itemType == typeof (bool) ||
-                itemType == typeof (string) ||
-                itemType == typeof (InfluxValueField))
+            Type itemType = typeof(T);
+            if (itemType == typeof(long) ||
+                itemType == typeof(decimal) ||
+                itemType == typeof(double) ||
+                itemType == typeof(int) ||
+                itemType == typeof(bool) ||
+                itemType == typeof(string) ||
+                itemType == typeof(InfluxValueField))
             {
-                Tags = new Dictionary<string, string> ();
-                Fields = new Dictionary<string, T> ();
+                Tags = new Dictionary<string, string>();
+                Fields = new Dictionary<string, T>();
                 Saved = false;
             }
             else
             {
-                throw new ArgumentException (itemType.Name + " is not supported by InfluxDB!");
+                throw new ArgumentException(itemType.Name + " is not supported by InfluxDB!");
             }
         }
 
@@ -73,18 +72,18 @@ namespace AdysTech.InfluxDB.Client.Net
         /// </summary>
         /// <param name="tags">Dictionary of tag/value pairs</param>
         /// <returns>True:Success, False:Failure</returns>
-        public bool InitializeTags (IDictionary<string, string> tags)
+        public bool InitializeTags(IDictionary<string, string> tags)
         {
             if (Tags.Count > 0)
-                throw new InvalidOperationException ("Tags can be initialized only when the collection is empty");
+                throw new InvalidOperationException("Tags can be initialized only when the collection is empty");
             try
             {
-                Tags = new Dictionary<string, string> (tags);
+                Tags = new Dictionary<string, string>(tags);
                 return true;
             }
             catch (Exception)
             {
-                Tags = new Dictionary<string, string> ();
+                Tags = new Dictionary<string, string>();
                 return false;
             }
         }
@@ -94,18 +93,18 @@ namespace AdysTech.InfluxDB.Client.Net
         /// </summary>
         /// <param name="fields">Dictionary of Field/Value pairs</param>
         /// <returns>True:Success, False:Failure</returns>
-        public bool InitializeFields (IDictionary<string, T> fields)
+        public bool InitializeFields(IDictionary<string, T> fields)
         {
             if (Fields.Count > 0)
-                throw new InvalidOperationException ("Fields can be initialized only when the collection is empty");
+                throw new InvalidOperationException("Fields can be initialized only when the collection is empty");
             try
             {
-                Fields = new Dictionary<string, T> (fields);
+                Fields = new Dictionary<string, T>(fields);
                 return true;
             }
             catch (Exception)
             {
-                Fields = new Dictionary<string, T> ();
+                Fields = new Dictionary<string, T>();
                 return false;
             }
         }
@@ -115,44 +114,42 @@ namespace AdysTech.InfluxDB.Client.Net
         /// </summary>
         /// <returns></returns>
         /// <see cref="https://docs.influxdata.com/influxdb/v0.12/write_protocols/line/"/>
-        public string ConvertToInfluxLineProtocol ()
+        public string ConvertToInfluxLineProtocol()
         {
             if (Fields.Count == 0)
-                throw new InvalidOperationException ("InfluxDB needs atleast one field in a line");
-            if (String.IsNullOrWhiteSpace (MeasurementName))
-                throw new InvalidOperationException ("InfluxDB needs a measurement name to accept a point");
+                throw new InvalidOperationException("InfluxDB needs atleast one field in a line");
+            if (String.IsNullOrWhiteSpace(MeasurementName))
+                throw new InvalidOperationException("InfluxDB needs a measurement name to accept a point");
 
-            var line = new StringBuilder ();
-            line.AppendFormat ("{0}", MeasurementName);
+            var line = new StringBuilder();
+            line.AppendFormat("{0}", MeasurementName.EscapeChars(comma: true, space: true));
 
             if (Tags.Count > 0)
-                line.AppendFormat (",{0}", String.Join (",", Tags.Select (t => new StringBuilder ().AppendFormat ("{0}={1}", t.Key.EscapeChars (), t.Value.EscapeChars ()))));
+                line.AppendFormat(",{0}", String.Join(",", Tags.Select(t => new StringBuilder().AppendFormat("{0}={1}", t.Key.EscapeChars(comma: true, equalSign: true, space: true), t.Value.EscapeChars(comma: true, equalSign: true, space: true)))));
 
-            var tType = typeof (T);
+            var tType = typeof(T);
             string fields;
 
-            if (tType == typeof (string))
+            if (tType == typeof(string))
                 //string needs escaping, but = is allowed in value
-                fields = String.Join (",", Fields.Select (v => new StringBuilder ().AppendFormat ("{0}=\"{1}\"", v.Key.EscapeChars (), v.Value.ToString ().EscapeChars (false))));
-            else if (tType == typeof (long) || tType == typeof (int))
+                fields = String.Join(",", Fields.Select(v => new StringBuilder().AppendFormat("{0}=\"{1}\"", v.Key.EscapeChars(comma: true, equalSign: true, space: true), v.Value.ToString().EscapeChars(doubleQuote: true))));
+            else if (tType == typeof(long) || tType == typeof(int))
                 //int needs i suffix
-                fields = String.Join (",", Fields.Select (v => new StringBuilder ().AppendFormat ("{0}={1}i", v.Key.EscapeChars (), v.Value)));
-            else if (tType == typeof (bool))
+                fields = String.Join(",", Fields.Select(v => new StringBuilder().AppendFormat("{0}={1}i", v.Key.EscapeChars(comma: true, equalSign: true, space: true), v.Value)));
+            else if (tType == typeof(bool))
                 //bool is okay with True or False
-                fields = String.Join (",", Fields.Select (v => new StringBuilder ().AppendFormat ("{0}={1}", v.Key.EscapeChars (), v.Value)));
-            else if (tType == typeof (double))
+                fields = String.Join(",", Fields.Select(v => new StringBuilder().AppendFormat("{0}={1}", v.Key.EscapeChars(comma: true, equalSign: true, space: true), v.Value)));
+            else if (tType == typeof(double))
                 ////double has to have a . as decimal seperator for Influx
-                fields = String.Join (",", Fields.Select (v => new StringBuilder ().AppendFormat ("{0}={1}", v.Key.EscapeChars (), String.Format (new CultureInfo ("en-US"), "{0}", v.Value))));
-            else if (tType == typeof (InfluxValueField))
-                fields = String.Join (",", Fields.Select (v => new StringBuilder ().AppendFormat ("{0}={1}", v.Key.EscapeChars (), v.Value.ToString ())));
+                fields = String.Join(",", Fields.Select(v => new StringBuilder().AppendFormat("{0}={1}", v.Key.EscapeChars(comma: true, equalSign: true, space: true), String.Format(new CultureInfo("en-US"), "{0}", v.Value))));
+            else if (tType == typeof(InfluxValueField))
+                fields = String.Join(",", Fields.Select(v => new StringBuilder().AppendFormat("{0}={1}", v.Key.EscapeChars(comma: true, equalSign: true, space: true), v.Value.ToString())));
             else
-                throw new ArgumentException (tType + " is not supported by this library at this point");
+                throw new ArgumentException(tType + " is not supported by this library at this point");
 
-            line.AppendFormat (" {0} {1}", fields, UtcTimestamp != DateTime.MinValue ? UtcTimestamp.ToEpoch (Precision) : DateTime.UtcNow.ToEpoch (Precision));
+            line.AppendFormat(" {0} {1}", fields, UtcTimestamp != DateTime.MinValue ? UtcTimestamp.ToEpoch(Precision) : DateTime.UtcNow.ToEpoch(Precision));
 
-            return line.ToString ();
+            return line.ToString();
         }
-
     }
-
 }

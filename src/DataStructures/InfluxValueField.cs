@@ -21,7 +21,7 @@ namespace AdysTech.InfluxDB.Client.Net
         {
             if (DataType == typeof (string))
                 //string needs escaping, but = is allowed in value
-                return new StringBuilder ().AppendFormat ("\"{0}\"", Value.ToString ().EscapeChars (false)).ToString ();
+                return new StringBuilder ().AppendFormat ("\"{0}\"", Value.ToString ().EscapeChars (doubleQuote:true)).ToString ();
             else if (DataType == typeof (long) || DataType == typeof (int))
                 //int needs i suffix
                 return new StringBuilder ().AppendFormat ("{0}i", Value.ToString ()).ToString ();

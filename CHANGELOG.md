@@ -1,3 +1,14 @@
+## v0.6.9 [10/10/2018]
+
+### Release Notes
+Fix escape sequence to match InfluxDB documentation
+
+### Bugfixes
+
+- [#42](https://github.com/AdysTech/InfluxDB.Client.Net/issues/42): Stop chnaging column header case to Camel case
+- [#48](https://github.com/AdysTech/InfluxDB.Client.Net/issues/48): Incorrect escape sequence for string values with space
+- [#50](https://github.com/AdysTech/InfluxDB.Client.Net/issues/50): Missing quotes for retention policy name
+
 ## v0.6.8 [7/18/2018]
 
 ### Release Notes
