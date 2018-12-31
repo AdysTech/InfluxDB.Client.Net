@@ -4,6 +4,11 @@
 
 **Now supports .Net Core, run same .Net code in Windows and Linux**
 
+####  Nuget
+1. .Net 4.5.1 > [AdysTech.InfluxDB.Client.Net](https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net)
+2. .Core 1.1 > [AdysTech.InfluxDB.Client.Net.Core](https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net.Core/)
+
+
 # InfluxDB.Client.Net
 [InfluxDB](http://influxdb.com) is new awesome open source time series database. But there is no official .Net client model for it. This is a feature rich .Net client for InfluxDB. All methods are exposed as Async methods, so that the calling thread will not be blocked. 
 It currently supports
@@ -25,9 +30,6 @@ To be added are
 1.	Query for all tags, their unique values
 2.	Deleting data, currently drop queries can be fired to delete data
 
-####  Nuget
-1. .Net 4.5.1 > [AdysTech.InfluxDB.Client.Net](https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net)
-2. .Core 1.1 > [AdysTech.InfluxDB.Client.Net.Core](https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net.Core/)
 
 ### Usage
 #### Creating Client

@@ -19,7 +19,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.travis.yml = .travis.yml
 		appveyor.yml = appveyor.yml
 		CHANGELOG.md = CHANGELOG.md
-		merge_nupkg.ps1 = merge_nupkg.ps1
 		README.md = README.md
 	EndProjectSection
 EndProject
@@ -94,5 +93,8 @@ Global
 		{C76424F8-1563-4699-9019-A36B74FA7FF5} = {5BE0A558-B9AC-465E-AB91-54918A5BF960}
 		{CB002653-660F-4C84-A4C9-47FE81E78BEC} = {A7F31D08-7599-4CBD-8F3C-F36AA7270CF2}
 		{32B3A952-1962-4E8E-AF8E-9DDDB4F7C7E7} = {5BE0A558-B9AC-465E-AB91-54918A5BF960}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F7BD084D-1CD3-47A4-88DC-D2254DB667E8}
 	EndGlobalSection
 EndGlobal

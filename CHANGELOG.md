@@ -1,3 +1,12 @@
+## v0.7.0 [12/31/2018]
+
+### Release Notes
+Fix posting to autogen (default) retention policies.
+
+### Bugfixes
+
+- [#52](https://github.com/AdysTech/InfluxDB.Client.Net/issues/52): PostPointsAsync does not post any points if AutoGen retention policy is used
+
 ## v0.6.9 [10/10/2018]
 
 ### Release Notes

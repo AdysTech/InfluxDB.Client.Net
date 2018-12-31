@@ -674,6 +674,45 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
         }
 
         [TestMethod, TestCategory("Post")]
+        public async Task TestPostPointsAsync_AutogenRetention()
+        {
+            try
+            {
+                var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+                var time = DateTime.Now;
+                var TestDate = time.ToShortDateString();
+                var TestTime = time.ToShortTimeString();
+                var points = new List<IInfluxDatapoint>();
+                var retention = new InfluxRetentionPolicy() { Name = "autogen", DBName = dbName, Duration = TimeSpan.FromMinutes(0), IsDefault = true};
+
+                for (var i = 0; i < 10; i++)
+                {
+                    await Task.Delay(1);
+                    var point = new InfluxDatapoint<long>();
+                    point.Retention = retention;
+                    point.UtcTimestamp = DateTime.UtcNow.AddDays(-i);
+                    point.MeasurementName = "RetentionTest";
+                    point.Precision = TimePrecision.Nanoseconds;
+                    point.Tags.Add("TestDate", TestDate);
+                    point.Tags.Add("TestTime", TestTime);
+                    point.Fields.Add("Val", i);
+                    points.Add(point);
+                }
+
+                var r = await client.PostPointsAsync(dbName, points);
+                Assert.IsTrue(r, "PostPointsAsync retunred false");
+
+                Assert.IsTrue(points.Count(p => p.Saved) == 10, "PostPointsAsync failed with autogen default retention policy");
+            }
+
+            catch (Exception e)
+            {
+                Assert.Fail($"Unexpected exception of type {e.GetType()} caught: {e.Message}");
+                return;
+            }
+        }
+
+        [TestMethod, TestCategory("Post")]
         public async Task TestPostPointsAsync_OlderthanRetention()
         {
             try
