@@ -412,7 +412,7 @@ namespace AdysTech.InfluxDB.Client.Net
         {
             int maxBatchSize = 255;
             bool finalResult = true, result;
-            foreach (var group in Points.Where(p => p.Retention == null || p.UtcTimestamp > DateTime.UtcNow - p.Retention.Duration).GroupBy(p => new { p.Precision, p.Retention?.Name }))
+            foreach (var group in Points.Where(p => p.Retention == null || p.Retention.Duration.TotalMinutes == 0 || p.UtcTimestamp > DateTime.UtcNow - p.Retention.Duration).GroupBy(p => new { p.Precision, p.Retention?.Name }))
             {
                 var pointsGroup = group.AsEnumerable().Select((point, index) => new { Index = index, Point = point })//get the index of each point
                           .GroupBy(x => x.Index / maxBatchSize) //chunk into smaller batches
