@@ -92,9 +92,9 @@ namespace AdysTech.InfluxDB.Client.Net
 
         private async Task<HttpResponseMessage> GetAsync(Dictionary<string, string> Query, HttpCompletionOption completion = HttpCompletionOption.ResponseContentRead)
         {
-            var querybaseUrl = new Uri($"{InfluxUrl}/query?");
+            var querybaseUrl = new Uri(InfluxUrl);
             var builder = new UriBuilder(querybaseUrl);
-
+            builder.Path = "query";
             builder.Query = await new FormUrlEncodedContent(Query).ReadAsStringAsync();
             try
             {
@@ -123,8 +123,9 @@ namespace AdysTech.InfluxDB.Client.Net
 
         private async Task<HttpResponseMessage> PostAsync(Dictionary<string, string> EndPoint, ByteArrayContent requestContent)
         {
-            var querybaseUrl = new Uri($"{InfluxUrl}/write?");
+            var querybaseUrl = new Uri(InfluxUrl);
             var builder = new UriBuilder(querybaseUrl);
+            builder.Path = "write";
 
             builder.Query = await new FormUrlEncodedContent(EndPoint).ReadAsStringAsync();
             //if (requestContent.Headers.ContentType == null)
@@ -445,9 +446,9 @@ namespace AdysTech.InfluxDB.Client.Net
         /// </summary>
         public async Task<string> GetServerVersionAsync()
         {
-            var querybaseUrl = new Uri($"{InfluxUrl}/ping");
+            var querybaseUrl = new Uri(InfluxUrl);
             var builder = new UriBuilder(querybaseUrl);
-
+            builder.Path = "ping";
             try
             {
                 HttpResponseMessage response = await _client.GetAsync(builder.Uri);
