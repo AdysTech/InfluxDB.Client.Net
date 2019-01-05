@@ -1,3 +1,12 @@
+## v0.7.1 [1/5/2018]
+
+### Release Notes
+Handle trailing slash in InfluxUrl
+
+### Bugfixes
+
+- [#54](https://github.com/AdysTech/InfluxDB.Client.Net/issues/54): InfluxUrl with trailing slash "/" result in error 
+
 ## v0.7.0 [12/31/2018]
 
 ### Release Notes

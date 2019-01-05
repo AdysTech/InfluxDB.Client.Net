@@ -19,7 +19,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
         const string dbUName = "admin";
         const string dbpwd = "test123$€₹#₳₷ȅ";
         const string invalidUName = "invalid";
-        const string influxUrl = "http://localhost:8086";
+        const string influxUrl = "http://localhost:8086/";
         const string invalidInfluxUrl = "http://xyzerty:8089";
 
 
