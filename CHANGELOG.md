@@ -1,3 +1,12 @@
+## v0.7.2 [2/7/2019]
+
+### Release Notes
+Handle InfluxUrl with paths
+
+### Bugfixes
+
+- [#57](https://github.com/AdysTech/InfluxDB.Client.Net/issues/57): API does not support URLs including a path 
+
 ## v0.7.1 [1/5/2018]
 
 ### Release Notes
