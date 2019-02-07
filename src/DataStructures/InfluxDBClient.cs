@@ -94,7 +94,7 @@ namespace AdysTech.InfluxDB.Client.Net
         {
             var querybaseUrl = new Uri(InfluxUrl);
             var builder = new UriBuilder(querybaseUrl);
-            builder.Path = "query";
+            builder.Path += "query";
             builder.Query = await new FormUrlEncodedContent(Query).ReadAsStringAsync();
             try
             {
@@ -125,7 +125,7 @@ namespace AdysTech.InfluxDB.Client.Net
         {
             var querybaseUrl = new Uri(InfluxUrl);
             var builder = new UriBuilder(querybaseUrl);
-            builder.Path = "write";
+            builder.Path += "write";
 
             builder.Query = await new FormUrlEncodedContent(EndPoint).ReadAsStringAsync();
             //if (requestContent.Headers.ContentType == null)
@@ -448,7 +448,7 @@ namespace AdysTech.InfluxDB.Client.Net
         {
             var querybaseUrl = new Uri(InfluxUrl);
             var builder = new UriBuilder(querybaseUrl);
-            builder.Path = "ping";
+            builder.Path += "ping";
             try
             {
                 HttpResponseMessage response = await _client.GetAsync(builder.Uri);
