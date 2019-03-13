@@ -409,9 +409,8 @@ namespace AdysTech.InfluxDB.Client.Net
         /// Sets Saved property on InfluxDatapoint to true to successful points
         ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
         ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
-        public async Task<bool> PostPointsAsync(string dbName, IEnumerable<IInfluxDatapoint> Points)
+        public async Task<bool> PostPointsAsync(string dbName, IEnumerable<IInfluxDatapoint> Points, int maxBatchSize = 255;)
         {
-            int maxBatchSize = 255;
             bool finalResult = true, result;
             foreach (var group in Points.Where(p => p.Retention == null || p.Retention.Duration.TotalMinutes == 0 || p.UtcTimestamp > DateTime.UtcNow - p.Retention.Duration).GroupBy(p => new { p.Precision, p.Retention?.Name }))
             {
