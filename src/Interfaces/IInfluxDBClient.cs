@@ -57,15 +57,16 @@ namespace AdysTech.InfluxDB.Client.Net
         ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>   
         Task<bool> PostPointAsync (string dbName, IInfluxDatapoint point);
 
-        /// <summary>
-        /// Posts series of InfluxDataPoints to given measurement, in batches of 255
-        /// </summary>
-        /// <param name="dbName">InfluxDB database name</param>
-        /// <param name="Points">Collection of Influx data points to be written</param>
-        /// <returns>True:Success, False:Failure</returns>
-        ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
-        ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>   
-        Task<bool> PostPointsAsync (string dbName, IEnumerable<IInfluxDatapoint> points);
+		/// <summary>
+		/// Posts series of InfluxDataPoints to given measurement, in batches of 255
+		/// </summary>
+		/// <param name="dbName">InfluxDB database name</param>
+		/// <param name="Points">Collection of Influx data points to be written</param>
+		/// <param name="maxBatchSize">Maximal size of Influx batch to be written</param>
+		/// <returns>True:Success, False:Failure</returns>
+		///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
+		///<exception cref="HttpRequestException">all other HTTP exceptions</exception>   
+		Task<bool> PostPointsAsync (string dbName, IEnumerable<IInfluxDatapoint> points, int maxBatchSize = 255);
 
 
          /// <summary>

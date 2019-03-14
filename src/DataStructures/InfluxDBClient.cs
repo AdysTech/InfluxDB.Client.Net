@@ -400,18 +400,18 @@ namespace AdysTech.InfluxDB.Client.Net
             }
         }
 
-        /// <summary>
-        /// Posts series of InfluxDataPoints to given measurement, in batches of 255
-        /// </summary>
-        /// <param name="dbName">InfluxDB database name</param>
-        /// <param name="Points">Collection of Influx data points to be written</param>
-        /// <returns>True:Success, False:Failure, or partial failure</returns>
-        /// Sets Saved property on InfluxDatapoint to true to successful points
-        ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
-        ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
-        public async Task<bool> PostPointsAsync(string dbName, IEnumerable<IInfluxDatapoint> Points)
+		/// <summary>
+		/// Posts series of InfluxDataPoints to given measurement, in batches of 255
+		/// </summary>
+		/// <param name="dbName">InfluxDB database name</param>
+		/// <param name="Points">Collection of Influx data points to be written</param>
+		/// <param name="maxBatchSize">Maximal size of Influx batch to be written</param>
+		/// <returns>True:Success, False:Failure, or partial failure</returns>
+		/// Sets Saved property on InfluxDatapoint to true to successful points
+		///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
+		///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
+		public async Task<bool> PostPointsAsync(string dbName, IEnumerable<IInfluxDatapoint> Points, int maxBatchSize = 255)
         {
-            int maxBatchSize = 255;
             bool finalResult = true, result;
             foreach (var group in Points.Where(p => p.Retention == null || p.Retention.Duration.TotalMinutes == 0 || p.UtcTimestamp > DateTime.UtcNow - p.Retention.Duration).GroupBy(p => new { p.Precision, p.Retention?.Name }))
             {
