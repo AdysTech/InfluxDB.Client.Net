@@ -25,8 +25,8 @@ It currently supports
 8.  Query for all Continuous Queries 
 9.  Create/Drop Continuous Queries 
 10. Chunking Support in queries</PackageReleaseNotes>
-    <AssemblyVersion>0.7.2.0</AssemblyVersion>
-    <FileVersion>0.7.2.0</FileVersion>
+    <AssemblyVersion>0.7.3.0</AssemblyVersion>
+    <FileVersion>0.7.3.0</FileVersion>
     <PackageTags>InfluxDB Influx TSDB TimeSeries InfluxData Chunking retention RetentionPolicy</PackageTags>
   </PropertyGroup>
 
