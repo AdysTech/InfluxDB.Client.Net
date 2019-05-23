@@ -198,9 +198,9 @@ namespace AdysTech.InfluxDB.Client.Net
                         else
                             l = parts[1].Unescape();
                     }
-                    catch (InfluxDBException e)
+                    catch (InfluxDBException)
                     {
-                        throw e;
+                        throw;
                     }
                     catch (Exception)
                     {
