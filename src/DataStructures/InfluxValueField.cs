@@ -1,54 +1,82 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace AdysTech.InfluxDB.Client.Net
 {
-    public class InfluxValueField : IComparable, IComparable<InfluxValueField>
+    public class InfluxValueField : IInfluxValueField
     {
-        public Type DataType { get { return Value.GetType (); } }
-        public IComparable Value { get; private set; }
+        public Type DataType => Value.GetType();
 
-        public InfluxValueField (IComparable val)
+        public IComparable Value { get; }
+
+        public InfluxValueField(IComparable val)
         {
             Value = val;
         }
 
-        public override string ToString ()
+        public override string ToString()
         {
-            if (DataType == typeof (string))
-                //string needs escaping, but = is allowed in value
-                return new StringBuilder ().AppendFormat ("\"{0}\"", Value.ToString ().EscapeChars (doubleQuote:true)).ToString ();
-            else if (DataType == typeof (long) || DataType == typeof (int))
-                //int needs i suffix
-                return new StringBuilder ().AppendFormat ("{0}i", Value.ToString ()).ToString ();
-            else if (DataType == typeof (bool))
-                //bool is okay with True or False
-                return Value.ToString ();
-            else if (DataType == typeof (double))
-                ////double has to have a . as decimal seperator for Influx
-                return String.Format (new CultureInfo ("en-US"), "{0}", (double) Value);
-            else
-                return ($"{ DataType } is not supported by this library at this point");
+            Type dataType = DataType;
 
+            if (Value is string strValue)
+            {
+                // string needs escaping, but = is allowed in value --> Length limit 64KB.
+                return new StringBuilder().AppendFormat("\"{0}\"", strValue.EscapeChars(doubleQuote: true)).ToString();
+            }
+            else if (dataType == typeof(long) || dataType == typeof(int) || dataType == typeof(uint) || dataType == typeof(short) || dataType == typeof(ushort))
+            {
+                // Signed 64-bit integers (-9223372036854775808 to 9223372036854775807). Specify an integer with a trailing i on the number. Example: 1i.
+                return new StringBuilder().AppendFormat("{0}i", Value.ToString()).ToString();
+            }
+            else if (Value is bool bValue)
+            {
+                // bool is okay with True or False
+                return bValue.ToString();
+            }
+            else if (Value is double dblValue)
+            {
+                // double has to have a . as decimal seperator for Influx
+                return String.Format(new CultureInfo("en-US"), "{0}", dblValue);
+            }
+            else if (Value is float flValue)
+            {
+                // double has to have a . as decimal seperator for Influx
+                return String.Format(new CultureInfo("en-US"), "{0}", flValue);
+            }
+            else if (Value is DateTime dtValue)
+            {
+                // Unix nanosecond timestamp. Specify alternative precisions with the HTTP API. The minimum valid timestamp is -9223372036854775806 or 1677-09-21T00:12:43.145224194Z. The maximum valid timestamp is 9223372036854775806 or 2262-04-11T23:47:16.854775806Z.
+                // InfluxDb does not support a datetime type for fields or tags
+                // Convert datetime to UNIX long
+                return dtValue.ToEpoch(TimePrecision.Milliseconds).ToString();
+            }
+            else if (Value is TimeSpan tsValue)
+            {
+                return new StringBuilder().AppendFormat("{0}i", tsValue.TotalMilliseconds).ToString();
+            }
+
+            return ($"{dataType} is not supported by this library at this point");
         }
 
-        public int CompareTo (object obj)
+        public int CompareTo(object obj)
         {
-            if (!(obj is InfluxValueField))
-                throw new ArgumentException ("Not comparable");
-            return CompareTo (obj as InfluxValueField);
+            if (obj is IInfluxValueField value)
+            {
+                return CompareTo(value);
+            }
 
+            throw new ArgumentException("Not comparable");
         }
 
-        public int CompareTo (InfluxValueField other)
+        public int CompareTo(IInfluxValueField other)
         {
-            if (other.DataType != DataType)
-                throw new ArgumentException ("Not comparable");
-            return Value.CompareTo (other.Value);
+            if (other.DataType == DataType)
+            {
+                return Value.CompareTo(other.Value);
+            }
+
+            throw new ArgumentException("Not comparable");
         }
     }
 }

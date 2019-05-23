@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace AdysTech.InfluxDB.Client.Net
@@ -55,7 +56,12 @@ namespace AdysTech.InfluxDB.Client.Net
                 itemType == typeof(int) ||
                 itemType == typeof(bool) ||
                 itemType == typeof(string) ||
-                itemType == typeof(InfluxValueField))
+#if NETSTANDARD1_6
+                typeof(IInfluxValueField).GetTypeInfo().IsAssignableFrom(itemType.GetTypeInfo())
+#else
+                typeof(IInfluxValueField).IsAssignableFrom(itemType)
+#endif
+                )
             {
                 Tags = new Dictionary<string, string>();
                 Fields = new Dictionary<string, T>();
@@ -142,7 +148,11 @@ namespace AdysTech.InfluxDB.Client.Net
             else if (tType == typeof(double))
                 ////double has to have a . as decimal seperator for Influx
                 fields = String.Join(",", Fields.Select(v => new StringBuilder().AppendFormat("{0}={1}", v.Key.EscapeChars(comma: true, equalSign: true, space: true), String.Format(new CultureInfo("en-US"), "{0}", v.Value))));
-            else if (tType == typeof(InfluxValueField))
+#if NETSTANDARD1_6
+            else if (typeof(IInfluxValueField).GetTypeInfo().IsAssignableFrom(tType.GetTypeInfo()))
+#else
+            else if (typeof(IInfluxValueField).IsAssignableFrom(tType))
+#endif
                 fields = String.Join(",", Fields.Select(v => new StringBuilder().AppendFormat("{0}={1}", v.Key.EscapeChars(comma: true, equalSign: true, space: true), v.Value.ToString())));
             else
                 throw new ArgumentException(tType + " is not supported by this library at this point");

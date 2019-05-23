@@ -76,6 +76,9 @@
     <Compile Include="..\DataStructures\InfluxValueField.cs">
       <Link>DataStructures\InfluxValueField.cs</Link>
     </Compile>
+    <Compile Include="..\DataStructures\IInfluxValueField.cs">
+      <Link>DataStructures\IInfluxValueField.cs</Link>
+    </Compile>
     <Compile Include="..\DataStructures\ServiceUnavailableException.cs">
       <Link>DataStructures\ServiceUnavailableException.cs</Link>
     </Compile>
