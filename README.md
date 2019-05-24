@@ -5,8 +5,8 @@
 **Now supports .Net Core, run same .Net code in Windows and Linux**
 
 ####  Nuget
-1. .Net 4.5.1 > [AdysTech.InfluxDB.Client.Net](https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net)
-2. .Core 1.1 > [AdysTech.InfluxDB.Client.Net.Core](https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net.Core/)
+1. .Net Standard 2.0 > [AdysTech.InfluxDB.Client.Net.Core](https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net.Core/) _(this is the preferred version)_
+2. .Net 4.5.1 > [AdysTech.InfluxDB.Client.Net](https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net)
 
 
 # InfluxDB.Client.Net
