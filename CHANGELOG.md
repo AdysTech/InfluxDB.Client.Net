@@ -1,3 +1,8 @@
+## v0.8.0 [3/14/2019]
+
+### Release Notes
+Requires now .Net Standard 2.0 instead of 1.6. New Interface IInfluxValueField and extended support of basic types in InfluxValueField when `InfluxDbClient.PostPointsAsync`.
+
 ## v0.7.3 [3/14/2019]
 
 ### Release Notes
