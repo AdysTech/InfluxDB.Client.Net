@@ -50,7 +50,7 @@ This returns a hierarchical structure of all measurements, and fields (but not t
 
 #### Create new database
 ```Csharp
-CreateDatabaseAsync("<db name>");
+bool success = await client.CreateDatabaseAsync("<db name>");
 ```
 Creates a new database in InfluxDB. Does not raise exceptions if the DB already exists. 
 
