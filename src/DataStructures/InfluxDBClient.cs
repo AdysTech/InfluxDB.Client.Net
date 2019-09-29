@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -121,7 +122,7 @@ namespace AdysTech.InfluxDB.Client.Net
             return null;
         }
 
-        private async Task<HttpResponseMessage> PostAsync(Dictionary<string, string> EndPoint, ByteArrayContent requestContent)
+        private async Task<HttpResponseMessage> PostAsync(Dictionary<string, string> EndPoint, byte[] requestContent)
         {
             var querybaseUrl = new Uri(InfluxUrl);
             var builder = new UriBuilder(querybaseUrl);
@@ -136,12 +137,23 @@ namespace AdysTech.InfluxDB.Client.Net
 
             try
             {
-                HttpResponseMessage response = await _client.PostAsync(builder.Uri, requestContent);
+                using (var outStream = new MemoryStream())
+                {
+                    using (var gZipStream = new GZipStream(outStream, CompressionMode.Compress, true))
+                    {
+                        using (var byeteArrayStream = new MemoryStream(requestContent))
+                            await byeteArrayStream.CopyToAsync(gZipStream);
+                    }
+                    var zippedByteArrayContent = new ByteArrayContent(outStream.ToArray());
+                    zippedByteArrayContent.Headers.ContentEncoding.Add("gzip");
+                    HttpResponseMessage response = await _client.PostAsync(builder.Uri, zippedByteArrayContent);
 
-                if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.BadGateway || (response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error")) //502 Connection refused
-                    throw new UnauthorizedAccessException("InfluxDB needs authentication. Check uname, pwd parameters");
+                    if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.BadGateway || (response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error")) //502 Connection refused
+                        throw new UnauthorizedAccessException("InfluxDB needs authentication. Check uname, pwd parameters");
 
-                return response;
+                    return response;
+                }
+
             }
             catch (HttpRequestException e)
             {
@@ -162,14 +174,13 @@ namespace AdysTech.InfluxDB.Client.Net
             //remove last \n
             line.Remove(line.Length - 1, 1);
 
-            ByteArrayContent requestContent = new ByteArrayContent(Encoding.UTF8.GetBytes(line.ToString()));
             var endPoint = new Dictionary<string, string>() { { "db", dbName } };
             if (precision > 0)
                 endPoint.Add("precision", precisionLiterals[(int)precision]);
 
             if (!String.IsNullOrWhiteSpace(retention))
                 endPoint.Add("rp", retention);
-            HttpResponseMessage response = await PostAsync(endPoint, requestContent);
+            HttpResponseMessage response = await PostAsync(endPoint, Encoding.UTF8.GetBytes(line.ToString()));
 
             if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.BadGateway || (response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error")) //502 Connection refused
                 throw new UnauthorizedAccessException("InfluxDB needs authentication. Check uname, pwd parameters");
@@ -357,8 +368,8 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <returns>true:success, false:failure</returns>
         public async Task<bool> PostRawValueAsync(string dbName, TimePrecision precision, string content)
         {
-            ByteArrayContent requestContent = new ByteArrayContent(Encoding.UTF8.GetBytes(content));
-            HttpResponseMessage response = await PostAsync(new Dictionary<string, string>() { { "db", dbName }, { "precision", precisionLiterals[(int)precision] } }, requestContent);
+
+            HttpResponseMessage response = await PostAsync(new Dictionary<string, string>() { { "db", dbName }, { "precision", precisionLiterals[(int)precision] } }, Encoding.UTF8.GetBytes(content));
 
             if (response.StatusCode == HttpStatusCode.NoContent)
                 return true;
@@ -376,13 +387,13 @@ namespace AdysTech.InfluxDB.Client.Net
         ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
         public async Task<bool> PostPointAsync(string dbName, IInfluxDatapoint point)
         {
-            ByteArrayContent requestContent = new ByteArrayContent(Encoding.UTF8.GetBytes(point.ConvertToInfluxLineProtocol()));
+
             var endPoint = new Dictionary<string, string>() {
                { "db", dbName },
                { "precision", precisionLiterals[(int)point.Precision] }};
             if (!String.IsNullOrWhiteSpace(point.Retention?.Name))
                 endPoint.Add("rp", point.Retention?.Name);
-            HttpResponseMessage response = await PostAsync(endPoint, requestContent);
+            HttpResponseMessage response = await PostAsync(endPoint, Encoding.UTF8.GetBytes(point.ConvertToInfluxLineProtocol()));
 
             if (response.StatusCode == HttpStatusCode.BadRequest)
             {
@@ -400,17 +411,17 @@ namespace AdysTech.InfluxDB.Client.Net
             }
         }
 
-		/// <summary>
-		/// Posts series of InfluxDataPoints to given measurement, in batches of 255
-		/// </summary>
-		/// <param name="dbName">InfluxDB database name</param>
-		/// <param name="Points">Collection of Influx data points to be written</param>
-		/// <param name="maxBatchSize">Maximal size of Influx batch to be written</param>
-		/// <returns>True:Success, False:Failure, or partial failure</returns>
-		/// Sets Saved property on InfluxDatapoint to true to successful points
-		///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
-		///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
-		public async Task<bool> PostPointsAsync(string dbName, IEnumerable<IInfluxDatapoint> Points, int maxBatchSize = 255)
+        /// <summary>
+        /// Posts series of InfluxDataPoints to given measurement, in batches of 255
+        /// </summary>
+        /// <param name="dbName">InfluxDB database name</param>
+        /// <param name="Points">Collection of Influx data points to be written</param>
+        /// <param name="maxBatchSize">Maximal size of Influx batch to be written</param>
+        /// <returns>True:Success, False:Failure, or partial failure</returns>
+        /// Sets Saved property on InfluxDatapoint to true to successful points
+        ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
+        ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
+        public async Task<bool> PostPointsAsync(string dbName, IEnumerable<IInfluxDatapoint> Points, int maxBatchSize = 255)
         {
             bool finalResult = true, result;
             foreach (var group in Points.Where(p => p.Retention == null || p.Retention.Duration.TotalMinutes == 0 || p.UtcTimestamp > DateTime.UtcNow - p.Retention.Duration).GroupBy(p => new { p.Precision, p.Retention?.Name }))
@@ -610,7 +621,7 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <param name="series"></param>
         /// <param name="SafePropertyNames">If true the first letter of each property name will be Capital, making them safer to use in C#</param>
         /// <returns></returns>
-        private static InfluxSeries GetInfluxSeries(TimePrecision precision, Series series,bool SafePropertyNames = true)
+        private static InfluxSeries GetInfluxSeries(TimePrecision precision, Series series, bool SafePropertyNames = true)
         {
             var result = new InfluxSeries()
             {
@@ -628,7 +639,7 @@ namespace AdysTech.InfluxDB.Client.Net
                 for (var col = 0; col < series.Columns.Count; col++)
                 {
                     string header;
-                    if (SafePropertyNames) 
+                    if (SafePropertyNames)
                         header = char.ToUpper(series.Columns[col][0]) + series.Columns[col].Substring(1);
                     else
                         header = series.Columns[col];
