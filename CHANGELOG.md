@@ -1,3 +1,12 @@
+## v0.9.0 [10/1/2019]
+
+### Release Notes
+Add batch size variable in InfluxDbClient.PostPointsAsync method
+
+### Bugfixes
+
+- [#72](https://github.com/AdysTech/InfluxDB.Client.Net/issues/72): Performance improvements
+
 ## v0.8.0 [3/14/2019]
 
 ### Release Notes

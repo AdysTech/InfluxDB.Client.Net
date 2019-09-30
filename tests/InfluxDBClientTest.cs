@@ -683,7 +683,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
                 var TestDate = time.ToShortDateString();
                 var TestTime = time.ToShortTimeString();
                 var points = new List<IInfluxDatapoint>();
-                var retention = new InfluxRetentionPolicy() { Name = "autogen", DBName = dbName, Duration = TimeSpan.FromMinutes(0), IsDefault = true};
+                var retention = new InfluxRetentionPolicy() { Name = "autogen", DBName = dbName, Duration = TimeSpan.FromMinutes(0), IsDefault = true };
 
                 for (var i = 0; i < 10; i++)
                 {
@@ -786,12 +786,61 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
         public void TestInfluxEscape()
         {
             var strPoint = new InfluxDatapoint<string>();
-            strPoint.UtcTimestamp = DateTime.UtcNow;           
+            strPoint.UtcTimestamp = DateTime.UtcNow;
             strPoint.MeasurementName = "\"measurement with quo⚡️es and emoji\"";
             strPoint.Tags.Add("tag key with sp🚀ces", "tag,value,with\"commas\",");
             strPoint.Fields.Add("field_k\\ey", "string field value, only \" need be esc🍭ped");
             strPoint.Precision = TimePrecision.Milliseconds;
             Assert.IsTrue(strPoint.ConvertToInfluxLineProtocol().StartsWith("\"measurement\\ with\\ quo⚡️es\\ and\\ emoji\",tag\\ key\\ with\\ sp🚀ces=tag\\,value\\,with\"commas\"\\, field_k\\ey=\"string field value, only \\\" need be esc🍭ped\""));
         }
+
+        [TestMethod, TestCategory("Perf")]
+        public async Task TestPerformance()
+        {
+            try
+            {
+                var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+
+                var points = new List<IInfluxDatapoint>();
+
+                var today = DateTime.Now.ToShortDateString();
+                var now = DateTime.Now.ToShortTimeString();
+                var start = DateTime.Now.AddDays(-5);
+                var end = DateTime.Now;
+                var measurement = "Perftest";
+
+                for (int i = 0; i < 1000000; i++)
+                {
+                    var valMixed = new InfluxDatapoint<InfluxValueField>();
+                    valMixed.Tags.Add("TestDate", today);
+                    valMixed.Tags.Add("TestTime", now);
+                    valMixed.UtcTimestamp = DateTime.UtcNow;
+                    valMixed.Fields.Add("Open", new InfluxValueField(DataGen.RandomDouble()));
+                    valMixed.Fields.Add("High", new InfluxValueField(DataGen.RandomDouble()));
+                    valMixed.Fields.Add("Low", new InfluxValueField(DataGen.RandomDouble()));
+                    valMixed.Fields.Add("Close", new InfluxValueField(DataGen.RandomDouble()));
+                    valMixed.Fields.Add("Volume", new InfluxValueField(DataGen.RandomDouble()));
+
+                    valMixed.MeasurementName = measurement;
+                    valMixed.Precision = TimePrecision.Nanoseconds;
+                    points.Add(valMixed);
+                }
+                Stopwatch s = new Stopwatch();
+                s.Start();
+
+                var r = await client.PostPointsAsync(dbName, points, 10000);
+                s.Stop();
+                Debug.WriteLine($"Elapsed{s.ElapsedMilliseconds}");
+                Assert.IsTrue(points.TrueForAll(p => p.Saved == true), "PostPointsAsync did not save all points");
+                Assert.IsTrue(s.Elapsed.TotalSeconds < 120, "PostPointsAsync took more than 120 sec");
+            }
+            catch (Exception e)
+            {
+
+                Assert.Fail($"Unexpected exception of type {e.GetType()} caught: {e.Message}");
+                return;
+            }
+        }
+
     }
 }

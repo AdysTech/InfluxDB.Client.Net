@@ -117,40 +117,87 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <see cref="https://docs.influxdata.com/influxdb/v0.12/write_protocols/line/"/>
         public string ConvertToInfluxLineProtocol()
         {
+            var line = new StringBuilder();
+            ConvertToInfluxLineProtocol(line);
+            return line.ToString();
+        }
+
+        public void ConvertToInfluxLineProtocol(StringBuilder line)
+
+        {
             if (Fields.Count == 0)
                 throw new InvalidOperationException("InfluxDB needs atleast one field in a line");
             if (String.IsNullOrWhiteSpace(MeasurementName))
                 throw new InvalidOperationException("InfluxDB needs a measurement name to accept a point");
 
-            var line = new StringBuilder();
+
             line.AppendFormat("{0}", MeasurementName.EscapeChars(comma: true, space: true));
 
             if (Tags.Count > 0)
-                line.AppendFormat(",{0}", String.Join(",", Tags.Select(t => new StringBuilder().AppendFormat("{0}={1}", t.Key.EscapeChars(comma: true, equalSign: true, space: true), t.Value.EscapeChars(comma: true, equalSign: true, space: true)))));
+            {
+                Tags.ToList().ForEach(t =>
+                {
+                    line.AppendFormat(",{0}={1}", t.Key.EscapeChars(comma: true, equalSign: true, space: true), t.Value.EscapeChars(comma: true, equalSign: true, space: true));
+                });
+            }
 
             var tType = typeof(T);
             string fields;
+            line.Append(" ");
 
             if (tType == typeof(string))
+            {
                 //string needs escaping, but = is allowed in value
-                fields = String.Join(",", Fields.Select(v => new StringBuilder().AppendFormat("{0}=\"{1}\"", v.Key.EscapeChars(comma: true, equalSign: true, space: true), v.Value.ToString().EscapeChars(doubleQuote: true))));
+                Fields.ToList().ForEach(v =>
+                {
+                    line.AppendFormat("{0}=\"{1}\",", v.Key.EscapeChars(comma: true, equalSign: true, space: true), v.Value.ToString().EscapeChars(doubleQuote: true));
+                });
+                line.Remove(line.Length - 1, 1);
+            }
             else if (tType == typeof(long) || tType == typeof(int))
+            {
                 //int needs i suffix
-                fields = String.Join(",", Fields.Select(v => new StringBuilder().AppendFormat("{0}={1}i", v.Key.EscapeChars(comma: true, equalSign: true, space: true), v.Value)));
+                Fields.ToList().ForEach(v =>
+                {
+                    line.AppendFormat("{0}={1}i,", v.Key.EscapeChars(comma: true, equalSign: true, space: true), v.Value);
+                });
+                line.Remove(line.Length - 1, 1);
+            }
+
             else if (tType == typeof(bool))
+            {
                 //bool is okay with True or False
-                fields = String.Join(",", Fields.Select(v => new StringBuilder().AppendFormat("{0}={1}", v.Key.EscapeChars(comma: true, equalSign: true, space: true), v.Value)));
+                Fields.ToList().ForEach(v =>
+                {
+                    line.AppendFormat("{0}={1},", v.Key.EscapeChars(comma: true, equalSign: true, space: true), v.Value);
+                });
+                line.Remove(line.Length - 1, 1);
+            }
+
             else if (tType == typeof(double))
-                ////double has to have a . as decimal seperator for Influx
-                fields = String.Join(",", Fields.Select(v => new StringBuilder().AppendFormat("{0}={1}", v.Key.EscapeChars(comma: true, equalSign: true, space: true), String.Format(new CultureInfo("en-US"), "{0}", v.Value))));
+            {
+                //double has to have a . as decimal seperator for Influx
+                Fields.ToList().ForEach(v =>
+                {
+                    line.AppendFormat("{0}={1},", v.Key.EscapeChars(comma: true, equalSign: true, space: true), String.Format(new CultureInfo("en-US"), "{0}", v.Value));
+                });
+                line.Remove(line.Length - 1, 1);
+            }
             else if (typeof(IInfluxValueField).IsAssignableFrom(tType))
-                fields = String.Join(",", Fields.Select(v => new StringBuilder().AppendFormat("{0}={1}", v.Key.EscapeChars(comma: true, equalSign: true, space: true), v.Value.ToString())));
+            {
+                //fields = String.Join(",", Fields.Select(v => new StringBuilder().AppendFormat("{0}={1}", v.Key.EscapeChars(comma: true, equalSign: true, space: true), v.Value.ToString())));
+                Fields.ToList().ForEach(v =>
+                {
+                    line.AppendFormat("{0}={1},", v.Key.EscapeChars(comma: true, equalSign: true, space: true), v.Value.ToString());
+                });
+                line.Remove(line.Length - 1, 1);
+            }
+
             else
                 throw new ArgumentException(tType + " is not supported by this library at this point");
 
-            line.AppendFormat(" {0} {1}", fields, UtcTimestamp != DateTime.MinValue ? UtcTimestamp.ToEpoch(Precision) : DateTime.UtcNow.ToEpoch(Precision));
+            line.AppendFormat(" {0}", UtcTimestamp != DateTime.MinValue ? UtcTimestamp.ToEpoch(Precision) : DateTime.UtcNow.ToEpoch(Precision));
 
-            return line.ToString();
         }
     }
 }

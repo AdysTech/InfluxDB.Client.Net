@@ -168,9 +168,14 @@ namespace AdysTech.InfluxDB.Client.Net
             Regex multiLinePattern = new Regex(@"([\P{Cc}].*?) '([\P{Cc}].*?)':([\P{Cc}].*?)\\n", RegexOptions.Compiled, TimeSpan.FromSeconds(5));
             Regex oneLinePattern = new Regex(@"{\""error"":""([9\P{Cc}]+) '([\P{Cc}]+)':([a-zA-Z0-9 ]+)", RegexOptions.Compiled, TimeSpan.FromSeconds(5));
 
-            var line = new StringBuilder();
+            //allocate minimum of 128 bytes per point, reducing future allocation and resize costs
+            var line = new StringBuilder(points.Count() * 128);
             foreach (var point in points)
-                line.AppendFormat("{0}\n", point.ConvertToInfluxLineProtocol());
+            {
+                point.ConvertToInfluxLineProtocol(line);
+                line.Append("\n");
+            }
+
             //remove last \n
             line.Remove(line.Length - 1, 1);
 

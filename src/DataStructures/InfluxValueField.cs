@@ -22,12 +22,12 @@ namespace AdysTech.InfluxDB.Client.Net
             if (Value is string strValue)
             {
                 // string needs escaping, but = is allowed in value --> Length limit 64KB.
-                return new StringBuilder().AppendFormat("\"{0}\"", strValue.EscapeChars(doubleQuote: true)).ToString();
+                return strValue.EscapeChars(doubleQuote: true);
             }
             else if (dataType == typeof(long) || dataType == typeof(int) || dataType == typeof(uint) || dataType == typeof(short) || dataType == typeof(ushort))
             {
                 // Signed 64-bit integers (-9223372036854775808 to 9223372036854775807). Specify an integer with a trailing i on the number. Example: 1i.
-                return new StringBuilder().AppendFormat("{0}i", Value.ToString()).ToString();
+                return $"{Value}i";
             }
             else if (Value is bool bValue)
             {
@@ -53,7 +53,7 @@ namespace AdysTech.InfluxDB.Client.Net
             }
             else if (Value is TimeSpan tsValue)
             {
-                return new StringBuilder().AppendFormat("{0}i", tsValue.TotalMilliseconds).ToString();
+                return $"{tsValue.TotalMilliseconds}i";
             }
 
             return ($"{dataType} is not supported by this library at this point");
