@@ -22,7 +22,7 @@ namespace AdysTech.InfluxDB.Client.Net
             if (Value is string strValue)
             {
                 // string needs escaping, but = is allowed in value --> Length limit 64KB.
-                return strValue.EscapeChars(doubleQuote: true);
+                return $"\"{strValue.EscapeChars(doubleQuote: true)}\"";
             }
             else if (dataType == typeof(long) || dataType == typeof(int) || dataType == typeof(uint) || dataType == typeof(short) || dataType == typeof(ushort))
             {
