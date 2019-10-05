@@ -322,23 +322,36 @@ namespace AdysTech.InfluxDB.Client.Net
         public async Task<IInfluxDatabase> GetInfluxDBStructureAsync(string dbName)
         {
             var dbStructure = new InfluxDatabase(dbName);
-            var fields = await QueryMultiSeriesAsync(dbName, "SHOW FIELD KEYS");
-            foreach (var s in fields)
+            var retentionPolicies = await GetRetentionPoliciesAsync(dbName);
+            foreach (var policy in retentionPolicies)
             {
-                var measurement = new InfluxMeasurement(s.SeriesName);
-                foreach (var e in s.Entries)
-                    measurement.Fields.Add(e.FieldKey);
-                dbStructure.Measurements.Add(measurement);
-            }
+                dbStructure.MeasurementHierarchy.Add(policy, new HashSet<IInfluxMeasurement>());
 
-            var tags = await QueryMultiSeriesAsync(dbName, "SHOW TAG KEYS");
-            foreach (var t in tags)
-            {
-                var measurement = dbStructure.Measurements.FirstOrDefault(x => x.Name == t.SeriesName);
-                foreach (var e in t.Entries)
-                    measurement.Tags.Add(e.TagKey);
-            }
+                var fields = await QueryMultiSeriesAsync(dbName: dbName, retentionPolicy: policy.Name, measurementQuery: "SHOW FIELD KEYS");
+                foreach (var s in fields)
+                {
+                    var measurement = new InfluxMeasurement(s.SeriesName);
+                    dbStructure.Measurements.Add(measurement);
+                    dbStructure.MeasurementHierarchy[policy].Add(measurement);
 
+                    foreach (var e in s.Entries)
+                        measurement.Fields.Add(e.FieldKey);
+
+                    measurement.SeriesCount = (await QueryMultiSeriesAsync(dbName: dbName, retentionPolicy: policy.Name, measurementQuery: "SHOW SERIES")).FirstOrDefault().Entries?.Count() ?? -1;
+
+                    var points = (IDictionary<string, object>)(await QueryMultiSeriesAsync(dbName: dbName, retentionPolicy: policy.Name, measurementQuery: $"select count(*) from {s.SeriesName}")).FirstOrDefault().Entries?.FirstOrDefault();
+                    //influx returns point counts for each of the fields. Pick the larget of them as total points in the measurement
+                    measurement.PointsCount = measurement.Fields.Select(f => int.Parse(points[$"Count_{f}"].ToString())).Max();
+                }
+
+                var tags = await QueryMultiSeriesAsync(dbName: dbName, retentionPolicy: policy.Name, measurementQuery: "SHOW TAG KEYS");
+                foreach (var t in tags)
+                {
+                    var measurement = dbStructure.Measurements.FirstOrDefault(x => x.Name == t.SeriesName);
+                    foreach (var e in t.Entries)
+                        measurement.Tags.Add(e.TagKey);
+                }
+            }
             return dbStructure;
         }
 
@@ -494,7 +507,7 @@ namespace AdysTech.InfluxDB.Client.Net
             var rawpolicies = await QueryMultiSeriesAsync(dbName, "show retention policies on " + dbName);
             var policies = new List<IInfluxRetentionPolicy>();
 
-            foreach (var policy in rawpolicies.FirstOrDefault()?.Entries)
+            foreach (var policy in rawpolicies.FirstOrDefault()?.Entries ?? Enumerable.Empty<dynamic>())
             {
                 var pol = new InfluxRetentionPolicy()
                 {
@@ -545,9 +558,16 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <param name="precision">epoch precision of the data set</param>
         /// <returns>List of InfluxSeries</returns>
         /// <seealso cref="InfluxSeries"/>
-        public async Task<List<IInfluxSeries>> QueryMultiSeriesAsync(string dbName, string measurementQuery, TimePrecision precision = TimePrecision.Nanoseconds)
+        public async Task<List<IInfluxSeries>> QueryMultiSeriesAsync(string dbName, string measurementQuery, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds)
         {
-            var response = await GetAsync(new Dictionary<string, string>() { { "db", dbName }, { "q", measurementQuery }, { "epoch", precisionLiterals[(int)precision] } });
+            var endPoint = new Dictionary<string, string>() { { "db", dbName }, { "q", measurementQuery }, { "epoch", precisionLiterals[(int)precision] } };
+
+            if (retentionPolicy != null)
+            {
+                endPoint.Add("rp", retentionPolicy);
+            }
+            var response = await GetAsync(endPoint, HttpCompletionOption.ResponseHeadersRead);
+
             if (response == null) throw new ServiceUnavailableException();
             if (response.StatusCode == HttpStatusCode.OK)
             {
@@ -582,14 +602,19 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <param name="precision">epoch precision of the data set</param>
         /// <returns>List of InfluxSeries</returns>
         /// <seealso cref="InfluxSeries"/>
-        public async Task<List<IInfluxSeries>> QueryMultiSeriesAsync(string dbName, string measurementQuery, int ChunkSize, TimePrecision precision = TimePrecision.Nanoseconds)
+        public async Task<List<IInfluxSeries>> QueryMultiSeriesAsync(string dbName, string measurementQuery, int ChunkSize, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds)
         {
-            var response = await GetAsync(new Dictionary<string, string>() {
+            var endPoint = new Dictionary<string, string>() {
                 { "db", dbName },
                 { "q", measurementQuery },
                 {"chunked", "true" },
                 {"chunk_size", ChunkSize.ToString() },
-                { "epoch", precisionLiterals[(int)precision] } }, HttpCompletionOption.ResponseHeadersRead);
+                { "epoch", precisionLiterals[(int)precision] } };
+            if (retentionPolicy != null)
+            {
+                endPoint.Add("rp", retentionPolicy);
+            }
+            var response = await GetAsync(endPoint, HttpCompletionOption.ResponseHeadersRead);
             if (response == null) throw new ServiceUnavailableException();
             if (response.StatusCode == HttpStatusCode.OK)
             {

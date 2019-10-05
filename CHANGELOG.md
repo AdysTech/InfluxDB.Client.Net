@@ -1,11 +1,13 @@
 ## v0.9.0 [10/1/2019]
 
 ### Release Notes
-Add batch size variable in InfluxDbClient.PostPointsAsync method
+Add  MeasurementHierarchy to IInfluxDatabase, SeriesCount and PointsCount properties to IInfluxMeasurement
+Now calling `GetInfluxDBStructureAsync` populates the structure with retention policies, and also gives the unique series and point counts for each of the measurements
 
 ### Bugfixes
 
 - [#72](https://github.com/AdysTech/InfluxDB.Client.Net/issues/72): Performance improvements
+- [#69](https://github.com/AdysTech/InfluxDB.Client.Net/issues/69): easiest way to count the entries in the measurement
 
 ## v0.8.0 [3/14/2019]
 

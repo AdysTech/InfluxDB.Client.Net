@@ -38,7 +38,28 @@ namespace AdysTech.InfluxDB.Client.Net
 
         public override string ToString()
         {
-            return $"{Name} : Fileds-{Fields.Count}, Tags-{Tags.Count}";
+            return $"{Name} : Fileds-{Fields.Count}, Tags-{Tags.Count}, Series-{SeriesCount}, Points-{PointsCount}";
+        }
+
+        int _seriesCount = -1;
+        int _pointsCount = -1;
+
+        /// <summary>
+        /// Gets the number of series in the given measurement. -1 indicates invalid data.
+        /// </summary>
+        public int SeriesCount
+        {
+            get { return _seriesCount; }
+            internal set { _seriesCount = value; }
+        }
+
+        /// <summary>
+        /// Gets number of points in the given measurement
+        /// </summary>
+        public int PointsCount
+        {
+            get { return _pointsCount; }
+            internal set { _pointsCount = value; }
         }
 
     }

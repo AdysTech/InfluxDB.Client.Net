@@ -89,9 +89,28 @@ namespace AdysTech.InfluxDB.Client.Net
         /// </summary>
         /// <param name="dbName">Name of the database</param>
         /// <param name="measurementQuery">Query text, Supports multi series results</param>
+        /// <param name="retentionPolicy">retention policy containing the measurement</param>
         /// <param name="precision">epoch precision of the data set</param>
         /// <returns>List of InfluxSeries</returns>
-        Task<List<IInfluxSeries>> QueryMultiSeriesAsync (string dbName, string measurementQuery,TimePrecision precision = TimePrecision.Nanoseconds);
+        Task<List<IInfluxSeries>> QueryMultiSeriesAsync (string dbName, string measurementQuery,string retentionPolicy=null, TimePrecision precision = TimePrecision.Nanoseconds);
+
+
+        /// <summary>
+        /// Queries Influx DB and gets a time series data back. Ideal for fetching measurement values.
+        /// The return list is of InfluxSeries, and each element in there will have properties named after columns in series
+        /// THis uses Chunking support from InfluxDB. It returns results in streamed batches rather than as a single response
+        /// Responses will be chunked by series or by every ChunkSize points, whichever occurs first.
+        /// </summary>
+        /// <param name="dbName">Name of the database</param>
+        /// <param name="measurementQuery">Query text, Only results with single series are supported for now</param>
+        /// <param name="ChunkSize">Maximum Number of points in a chunk</param>
+        /// <param name="retentionPolicy">retention policy containing the measurement</param>
+        /// <param name="precision">epoch precision of the data set</param>
+        /// <returns>List of InfluxSeries</returns>
+        /// <seealso cref="InfluxSeries"/>
+
+        Task<List<IInfluxSeries>> QueryMultiSeriesAsync(string dbName, string measurementQuery, int ChunkSize, string retentionPolicy=null,TimePrecision precision = TimePrecision.Nanoseconds);
+
 
         /// <summary>
         /// Gets the list of Continuous Queries present in Influx Instance
