@@ -3,11 +3,13 @@
 ### Release Notes
 Add  MeasurementHierarchy to IInfluxDatabase, SeriesCount and PointsCount properties to IInfluxMeasurement
 Now calling `GetInfluxDBStructureAsync` populates the structure with retention policies, and also gives the unique series and point counts for each of the measurements
+Allow for deleting/dropping the Influx database by calling `DropDatabaseAsync`
 
 ### Bugfixes
 
 - [#72](https://github.com/AdysTech/InfluxDB.Client.Net/issues/72): Performance improvements
 - [#69](https://github.com/AdysTech/InfluxDB.Client.Net/issues/69): easiest way to count the entries in the measurement
+- [#67](https://github.com/AdysTech/InfluxDB.Client.Net/issues/67): delete an existing database
 
 ## v0.8.0 [3/14/2019]
 

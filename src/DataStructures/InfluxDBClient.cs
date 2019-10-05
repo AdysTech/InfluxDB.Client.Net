@@ -765,6 +765,20 @@ namespace AdysTech.InfluxDB.Client.Net
             }
             return false;
         }
+        public async Task<bool> DropDatabaseAsync(IInfluxDatabase db)
+        {
+            var query = (db as InfluxDatabase).GetDropSyntax();
+            if (query != null)
+            {
+                var response = await GetAsync(new Dictionary<string, string>() { { "q", query } });
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    (db as InfluxDatabase).Deleted = true;
+                    return true;
+                }
+            }
+            return false;
+        }
 
         public void Dispose()
         {

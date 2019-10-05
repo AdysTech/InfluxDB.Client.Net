@@ -35,6 +35,8 @@ namespace AdysTech.InfluxDB.Client.Net
             }
         }
 
+        public bool Deleted { get; internal set; }
+
         HashSet<IInfluxMeasurement> _measurements;
         Dictionary<IInfluxRetentionPolicy, ICollection<IInfluxMeasurement>> _rps;
 
@@ -45,7 +47,16 @@ namespace AdysTech.InfluxDB.Client.Net
             _rps = new Dictionary<IInfluxRetentionPolicy, ICollection<IInfluxMeasurement>>();
         }
 
-
+        internal string GetDropSyntax()
+        {
+            if (!String.IsNullOrWhiteSpace(Name) && !String.IsNullOrWhiteSpace(Name))
+            {
+                return $"DROP DATABASE \"{Name}\"";
+            }
+            else if (String.IsNullOrWhiteSpace(Name))
+                throw new ArgumentException("DBName is not set");
+            return null;
+        }
 
     }
 }

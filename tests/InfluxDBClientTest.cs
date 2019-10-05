@@ -842,5 +842,17 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             }
         }
 
+        [TestMethod, TestCategory("Drop")]
+        public async Task TestDropDatabaseAsync()
+        {
+            var db = "hara-kiri";
+            var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+            var r = await client.CreateDatabaseAsync(db);
+            Assert.IsTrue(r, "CreateDatabaseAsync retunred false");
+            var d = new InfluxDatabase(db);
+            r = await client.DropDatabaseAsync(d);
+            Assert.IsTrue(r && d.Deleted, "DropDatabaseAsync retunred false");
+        }
+
     }
 }

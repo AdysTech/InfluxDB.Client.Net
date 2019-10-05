@@ -121,15 +121,22 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <summary>
         /// Creates a Continuous Queries
         /// </summary>
-        /// <param name="cq">An instance of the Continuous Query, DBName, Name, Query must be set</param>
+        /// <param name="query">An instance of the Continuous Query, DBName, Name, Query must be set</param>
         /// <returns>True: Success</returns>
         Task<bool> CreateContinuousQueryAsync (IInfluxContinuousQuery query);
 
         /// <summary>
         /// Drops a Continuous Queries
         /// </summary>
-        /// <param name="cq">An instance of the Continuous Query, must be saved already</param>
+        /// <param name="query">An instance of the Continuous Query, must be saved already</param>
         /// <returns>True: Success</returns>
         Task<bool> DropContinuousQueryAsync (IInfluxContinuousQuery query);
+
+        /// <summary>
+        /// Drops a Continuous Queries
+        /// </summary>
+        /// <param name="db">An instance of InfluxDatabase</param>
+        /// <returns>True: Success</returns>
+        Task<bool> DropDatabaseAsync(IInfluxDatabase db);
     }
 }

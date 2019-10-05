@@ -8,5 +8,7 @@ namespace AdysTech.InfluxDB.Client.Net
 
         ICollection<IInfluxMeasurement> Measurements { get; }
         string Name { get; }
+
+        bool Deleted { get;}
     }
 }
