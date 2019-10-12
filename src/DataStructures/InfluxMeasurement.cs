@@ -38,8 +38,61 @@ namespace AdysTech.InfluxDB.Client.Net
 
         public override string ToString()
         {
-            return $"{Name} : Fileds-{Fields.Count}, Tags-{Tags.Count}";
+            return $"{Name} : Fileds-{Fields.Count}, Tags-{Tags.Count}, Series-{SeriesCount}, Points-{PointsCount}";
         }
 
+        int _seriesCount = -1;
+        int _pointsCount = -1;
+
+        /// <summary>
+        /// Gets the number of series in the given measurement. -1 indicates invalid data.
+        /// </summary>
+        public int SeriesCount
+        {
+            get { return _seriesCount; }
+            internal set { _seriesCount = value; }
+        }
+
+        /// <summary>
+        /// Gets number of points in the given measurement
+        /// </summary>
+        public int PointsCount
+        {
+            get { return _pointsCount; }
+            internal set { _pointsCount = value; }
+        }
+
+        public bool Deleted { get; internal set; }
+        internal string GetDropSyntax(IInfluxRetentionPolicy rp = null)
+        {
+            if (!String.IsNullOrWhiteSpace(Name) && !String.IsNullOrWhiteSpace(Name))
+            {
+                if (rp != null)
+                    return $"DROP MEASUREMENT \"{rp.Name}\".\"{Name}\"";
+                else
+                    return $"DROP MEASUREMENT \"{Name}\"";
+            }
+            else if (String.IsNullOrWhiteSpace(Name))
+                throw new ArgumentException("Measurement name is not set");
+            return null;
+        }
+
+        internal string GetDeleteSyntax(IInfluxRetentionPolicy rp = null, IList<string> whereClause = null)
+        {
+            if (!String.IsNullOrWhiteSpace(Name) && !String.IsNullOrWhiteSpace(Name))
+            {
+                string whereClauseText = "";
+                if (whereClause !=null)
+                    whereClauseText = $" where { String.Join(" and ", whereClause?.ToArray())}";
+                
+                if (rp != null)
+                    return $"DELETE from \"{rp.Name}\".\"{Name}\" {whereClauseText}";
+                else
+                    return $"DELETE from \"{Name}\" {whereClauseText}";
+            }
+            else if (String.IsNullOrWhiteSpace(Name))
+                throw new ArgumentException("Measurement name is not set");
+            return null;
+        }
     }
 }

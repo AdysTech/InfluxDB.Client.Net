@@ -52,31 +52,32 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <param name="doubleQuote">ignore  double quote</param>
         /// <param name="space">ignore space</param>
         /// <returns></returns>
-        public static string EscapeChars(this string val, bool comma = false, bool equalSign = false, bool doubleQuote = false, bool space = false)
+        public static string EscapeChars(this string value, bool comma = false, bool equalSign = false, bool doubleQuote = false, bool space = false)
         {
+            var val = new StringBuilder(value);
             // escape comma
-            if (comma && val.Contains(','))
-                val = val.Replace(",", "\\,");
+            if (comma && value.Contains(','))
+                val.Replace(",", "\\,");
 
             // escape space
-            if (space && val.Contains(' '))
-                val = val.Replace(" ", "\\ ");
+            if (space && value.Contains(' '))
+                val.Replace(" ", "\\ ");
 
             // escape double quotes
-            if (doubleQuote && val.Contains('"'))
-                val = val.Replace("\"", "\\\"");
+            if (doubleQuote && value.Contains('"'))
+                val.Replace("\"", "\\\"");
 
             // escape equal sign
-            if (equalSign && val.Contains('='))
-                val = val.Replace("=", "\\=");
+            if (equalSign && value.Contains('='))
+                val.Replace("=", "\\=");
 
-            if (val.Contains('\n'))
-                val = val.Replace(" ", "\\n");
+            if (value.Contains('\n'))
+                val.Replace(" ", "\\n");
             //edge case, which will trigger Unbalanced Quotes exception in InfluxDB
-            if (val.EndsWith("\\"))
-                val = val.Substring(0, val.Length - 1);
+            if (value.EndsWith("\\"))
+                return val.ToString(0, val.Length - 1);
 
-            return val;
+            return val.ToString();
         }
 
         public static TimeSpan ParseDuration(this string strDuration)

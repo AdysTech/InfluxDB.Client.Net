@@ -51,6 +51,13 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <returns></returns>
         /// <see cref="https://influxdb.com/docs/v0.9/write_protocols/write_syntax.html"/>
         string ConvertToInfluxLineProtocol();
+        
+        /// <summary>
+        /// Appends the points Influx line protocol representation to input StringBuilder
+        /// </summary>
+        /// <returns></returns>
+        void ConvertToInfluxLineProtocol(StringBuilder line);
+
     }
 
     /// <summary>

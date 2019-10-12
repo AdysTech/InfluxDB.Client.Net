@@ -7,5 +7,10 @@ namespace AdysTech.InfluxDB.Client.Net
         string Name { get; }
         ICollection<string> Fields { get; }
         ICollection<string> Tags { get; }
+
+        int SeriesCount { get; }
+        int PointsCount { get; }
+
+        bool Deleted { get; }
     }
 }
