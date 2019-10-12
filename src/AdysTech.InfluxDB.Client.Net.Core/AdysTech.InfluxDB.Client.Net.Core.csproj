@@ -12,6 +12,8 @@
     <PackageProjectUrl>https://github.com/AdysTech/InfluxDB.Client.Net</PackageProjectUrl>
     <RepositoryUrl>https://github.com/AdysTech/InfluxDB.Client.Net</RepositoryUrl>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+	<IncludeSymbols>true</IncludeSymbols>	
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PackageReleaseNotes>This is a feature rich .Net client for InfluxDB. All methods are exposed as Async methods, so that the calling thread will not be blocked. 
 It currently supports 
 
@@ -24,10 +26,13 @@ It currently supports
 7.  Post data to specific retention policies 
 8.  Query for all Continuous Queries 
 9.  Create/Drop Continuous Queries 
-10. Chunking Support in queries</PackageReleaseNotes>
+10. Chunking Support in queries
+11. Drop databases, measurements or points
+12. Get series count or points count for a measurement</PackageReleaseNotes>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <FileVersion>0.9.0.0</FileVersion>
     <PackageTags>InfluxDB Influx TSDB TimeSeries InfluxData Chunking retention RetentionPolicy</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
