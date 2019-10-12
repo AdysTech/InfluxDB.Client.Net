@@ -10,5 +10,7 @@ namespace AdysTech.InfluxDB.Client.Net
 
         int SeriesCount { get; }
         int PointsCount { get; }
+
+        bool Deleted { get; }
     }
 }

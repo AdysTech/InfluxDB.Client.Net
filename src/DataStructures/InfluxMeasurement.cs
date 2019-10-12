@@ -62,5 +62,37 @@ namespace AdysTech.InfluxDB.Client.Net
             internal set { _pointsCount = value; }
         }
 
+        public bool Deleted { get; internal set; }
+        internal string GetDropSyntax(IInfluxRetentionPolicy rp = null)
+        {
+            if (!String.IsNullOrWhiteSpace(Name) && !String.IsNullOrWhiteSpace(Name))
+            {
+                if (rp != null)
+                    return $"DROP MEASUREMENT \"{rp.Name}\".\"{Name}\"";
+                else
+                    return $"DROP MEASUREMENT \"{Name}\"";
+            }
+            else if (String.IsNullOrWhiteSpace(Name))
+                throw new ArgumentException("Measurement name is not set");
+            return null;
+        }
+
+        internal string GetDeleteSyntax(IInfluxRetentionPolicy rp = null, IList<string> whereClause = null)
+        {
+            if (!String.IsNullOrWhiteSpace(Name) && !String.IsNullOrWhiteSpace(Name))
+            {
+                string whereClauseText = "";
+                if (whereClause !=null)
+                    whereClauseText = $" where { String.Join(" and ", whereClause?.ToArray())}";
+                
+                if (rp != null)
+                    return $"DELETE from \"{rp.Name}\".\"{Name}\" {whereClauseText}";
+                else
+                    return $"DELETE from \"{Name}\" {whereClauseText}";
+            }
+            else if (String.IsNullOrWhiteSpace(Name))
+                throw new ArgumentException("Measurement name is not set");
+            return null;
+        }
     }
 }

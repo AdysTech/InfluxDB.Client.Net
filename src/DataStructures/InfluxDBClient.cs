@@ -186,6 +186,7 @@ namespace AdysTech.InfluxDB.Client.Net
             if (!String.IsNullOrWhiteSpace(retention))
                 endPoint.Add("rp", retention);
             HttpResponseMessage response = await PostAsync(endPoint, Encoding.UTF8.GetBytes(line.ToString()));
+            line.Clear();
 
             if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.BadGateway || (response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error")) //502 Connection refused
                 throw new UnauthorizedAccessException("InfluxDB needs authentication. Check uname, pwd parameters");
@@ -339,7 +340,7 @@ namespace AdysTech.InfluxDB.Client.Net
 
                     measurement.SeriesCount = (await QueryMultiSeriesAsync(dbName: dbName, retentionPolicy: policy.Name, measurementQuery: "SHOW SERIES")).FirstOrDefault().Entries?.Count() ?? -1;
 
-                    var points = (IDictionary<string, object>)(await QueryMultiSeriesAsync(dbName: dbName, retentionPolicy: policy.Name, measurementQuery: $"select count(*) from {s.SeriesName}")).FirstOrDefault().Entries?.FirstOrDefault();
+                    var points = (IDictionary<string, object>)(await QueryMultiSeriesAsync(dbName: dbName, retentionPolicy: policy.Name, measurementQuery: $"select count(*) from \"{s.SeriesName}\"")).FirstOrDefault().Entries?.FirstOrDefault();
                     //influx returns point counts for each of the fields. Pick the larget of them as total points in the measurement
                     measurement.PointsCount = measurement.Fields.Select(f => int.Parse(points[$"Count_{f}"].ToString())).Max();
                 }
@@ -748,6 +749,11 @@ namespace AdysTech.InfluxDB.Client.Net
             return false;
         }
 
+        /// <summary>
+        /// Drops a Continuous Queries
+        /// </summary>
+        /// <param name="cq">An instance of the Continuous Query, must be saved already</param>
+        /// <returns>True: Success</returns>
         public async Task<bool> DropContinuousQueryAsync(IInfluxContinuousQuery cq)
         {
             if (!cq.Saved)
@@ -765,6 +771,12 @@ namespace AdysTech.InfluxDB.Client.Net
             }
             return false;
         }
+
+        /// <summary>
+        /// Drops a Continuous InfluxDatabase
+        /// </summary>
+        /// <param name="db">An instance of InfluxDatabase</param>
+        /// <returns>True: Success</returns>
         public async Task<bool> DropDatabaseAsync(IInfluxDatabase db)
         {
             var query = (db as InfluxDatabase).GetDropSyntax();
@@ -774,6 +786,69 @@ namespace AdysTech.InfluxDB.Client.Net
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
                     (db as InfluxDatabase).Deleted = true;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Drops a InfluxMeasurement for a given retention policy
+        /// </summary>
+        /// <param name="im">An instance of IInfluxMeasurement</param>
+        /// <param name="rp">An instance of IInfluxRetentionPolicy, optional</param>
+        /// <returns>True: Success</returns>
+        public async Task<bool> DropMeasurementAsync(IInfluxDatabase db, IInfluxMeasurement im, IInfluxRetentionPolicy rp = null)
+        {
+            var query = (im as InfluxMeasurement).GetDropSyntax();
+            if (query != null)
+            {
+                var endPoint = new Dictionary<string, string>() { { "db", db.Name },{ "q", query } };
+                if (rp != null)
+                {
+                    endPoint.Add("rp", rp.Name);
+                }
+                var response = await GetAsync(endPoint);
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    if (content.Contains("error"))
+                    {
+                        throw new InfluxDBException("Drop Failed", new Regex(@"\""error\"":\""(.*?)\""").Match(content).Groups[1].Value);
+                    }
+                    (im as InfluxMeasurement).Deleted = true;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+        /// <summary>
+        /// Drops a Continuous Queries
+        /// </summary>
+        /// <param name="im">An instance of IInfluxMeasurement</param>
+        /// <param name="rp">An instance of IInfluxRetentionPolicy, optional</param>
+        /// <param name="whereClause"> key value pair defining the where clause to restrict deletion</param>
+        /// <returns>True: Success</returns>
+        public async Task<bool> DeletePointsAsync(IInfluxDatabase db, IInfluxMeasurement im, IInfluxRetentionPolicy rp = null, IList<string> whereClause = null)
+        {
+            var query = (im as InfluxMeasurement).GetDeleteSyntax(rp, whereClause);
+            if (query != null)
+            {
+                var endPoint = new Dictionary<string, string>() { { "db", db.Name }, { "q", query } };
+                if (rp != null)
+                {
+                    endPoint.Add("rp", rp.Name);
+                }
+                var response = await GetAsync(endPoint);
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    if(content.Contains("error"))
+                    {
+                        throw new InfluxDBException("Delete Failed", new Regex(@"\""error\"":\""(.*?)\""").Match(content).Groups[1].Value);
+                    }
                     return true;
                 }
             }

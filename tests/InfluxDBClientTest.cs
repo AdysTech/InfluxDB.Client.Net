@@ -679,25 +679,8 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             try
             {
                 var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
-                var time = DateTime.Now;
-                var TestDate = time.ToShortDateString();
-                var TestTime = time.ToShortTimeString();
-                var points = new List<IInfluxDatapoint>();
                 var retention = new InfluxRetentionPolicy() { Name = "autogen", DBName = dbName, Duration = TimeSpan.FromMinutes(0), IsDefault = true };
-
-                for (var i = 0; i < 10; i++)
-                {
-                    await Task.Delay(1);
-                    var point = new InfluxDatapoint<long>();
-                    point.Retention = retention;
-                    point.UtcTimestamp = DateTime.UtcNow.AddDays(-i);
-                    point.MeasurementName = "RetentionTest";
-                    point.Precision = TimePrecision.Nanoseconds;
-                    point.Tags.Add("TestDate", TestDate);
-                    point.Tags.Add("TestTime", TestTime);
-                    point.Fields.Add("Val", i);
-                    points.Add(point);
-                }
+                var points = await CreateTestPoints("RetentionTest", 10, TimePrecision.Nanoseconds, retention);
 
                 var r = await client.PostPointsAsync(dbName, points);
                 Assert.IsTrue(r, "PostPointsAsync retunred false");
@@ -712,31 +695,40 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             }
         }
 
+        private static async Task<List<IInfluxDatapoint>> CreateTestPoints(string MeasurementName, int size, TimePrecision? precision = null, InfluxRetentionPolicy retention = null)
+        {
+            var time = DateTime.Now;
+            var TestDate = time.ToShortDateString();
+            var TestTime = time.ToShortTimeString();
+            var points = new List<IInfluxDatapoint>();
+
+            for (var i = 0; i < size; i++)
+            {
+                await Task.Delay(1);
+                var point = new InfluxDatapoint<long>();
+                if (retention != null)
+                    point.Retention = retention;
+                point.UtcTimestamp = DateTime.UtcNow.AddDays(-i);
+                point.MeasurementName = MeasurementName;
+                if (precision != null)
+                    point.Precision = precision.Value;
+                point.Tags.Add("TestDate", TestDate);
+                point.Tags.Add("TestTime", TestTime);
+                point.Fields.Add("Val", i);
+                points.Add(point);
+            }
+
+            return points;
+        }
+
         [TestMethod, TestCategory("Post")]
         public async Task TestPostPointsAsync_OlderthanRetention()
         {
             try
             {
                 var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
-                var time = DateTime.Now;
-                var TestDate = time.ToShortDateString();
-                var TestTime = time.ToShortTimeString();
-                var points = new List<IInfluxDatapoint>();
                 InfluxRetentionPolicy retention = new InfluxRetentionPolicy() { Duration = TimeSpan.FromHours(1) };
-
-                for (var i = 0; i < 10; i++)
-                {
-                    await Task.Delay(1);
-                    var point = new InfluxDatapoint<long>();
-                    point.Retention = retention;
-                    point.UtcTimestamp = DateTime.UtcNow.AddDays(-i);
-                    point.MeasurementName = "RetentionTest";
-                    point.Precision = TimePrecision.Nanoseconds;
-                    point.Tags.Add("TestDate", TestDate);
-                    point.Tags.Add("TestTime", TestTime);
-                    point.Fields.Add("Val", i);
-                    points.Add(point);
-                }
+                var points = await CreateTestPoints("RetentionTest", 10, TimePrecision.Nanoseconds, retention);
 
                 var r = await client.PostPointsAsync(dbName, points);
                 Assert.IsTrue(r, "PostPointsAsync retunred false");
@@ -757,21 +749,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             try
             {
                 var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
-                var time = DateTime.Now;
-                var TestDate = time.ToShortDateString();
-                var TestTime = time.ToShortTimeString();
-                var points = new List<IInfluxDatapoint>();
-                for (var i = 0; i < 10; i++)
-                {
-                    await Task.Delay(1);
-                    var point = new InfluxDatapoint<long>();
-                    point.MeasurementName = "DefaultPrecisionTest";
-                    point.Tags.Add("TestDate", TestDate);
-                    point.Tags.Add("TestTime", TestTime);
-                    point.Fields.Add("Val", i);
-                    points.Add(point);
-                }
-
+                var points = await CreateTestPoints("DefaultPrecisionTest", 10);
                 var r = await client.PostPointsAsync(dbName, points);
                 Assert.IsTrue(r, "PostPointsAsync retunred false");
             }
@@ -782,7 +760,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             }
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("locsl")]
         public void TestInfluxEscape()
         {
             var strPoint = new InfluxDatapoint<string>();
@@ -854,5 +832,58 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             Assert.IsTrue(r && d.Deleted, "DropDatabaseAsync retunred false");
         }
 
+        [TestMethod, TestCategory("Drop")]
+        public async Task TestDropMeasurementAsync()
+        {
+            var measurement = "hara-kiri";
+            var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+            var points = await CreateTestPoints(measurement, 10);
+            var r = await client.PostPointsAsync(dbName, points);
+            var d = new InfluxMeasurement(measurement);
+            r = await client.DropMeasurementAsync(new InfluxDatabase(dbName), d);
+            Assert.IsTrue(r && d.Deleted, "DropMeasurementAsync retunred false");
+        }
+
+        [TestMethod, TestCategory("Drop")]
+        public async Task TestDropMeasurementAsyncError()
+        {
+            var measurement = "hara-kiri";
+            var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+            var points = await CreateTestPoints(measurement, 10);
+            var r = await client.PostPointsAsync(dbName, points);
+            var d = new InfluxMeasurement(measurement);
+            await AssertEx.ThrowsAsync<InfluxDBException>(() => client.DropMeasurementAsync(new InfluxDatabase(invalidDbName), d));
+        }
+        
+        [TestMethod, TestCategory("Delete")]
+        public async Task TestDeletePointsAsync()
+        {
+            var measurement = "hara-kiri-half";
+            var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+            await client.CreateDatabaseAsync(dbName);
+            var points = await CreateTestPoints(measurement, 10);
+            points.Skip(5).Select(p => { p.Tags.Add("purge", "'yes'"); return true; });
+            var r = await client.PostPointsAsync(dbName, points);
+            r = await client.DeletePointsAsync(
+                    new InfluxDatabase(dbName), 
+                    new InfluxMeasurement(measurement), 
+                    whereClause: new List<string>() { 
+                        "purge = yes", 
+                        $"time() > {DateTime.UtcNow.AddDays(-4).ToEpoch(TimePrecision.Hours)}" 
+                    });
+            Assert.IsTrue(r, "DropMeasurementAsync retunred false");
+        }
+
+        [TestMethod, TestCategory("Delete")]
+        public async Task TestDeletePointsAsyncError()
+        {
+            var measurement = "hara-kiri-half";
+            var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+            var points = await CreateTestPoints(measurement, 10);
+            points.Skip(5).Select(p => { p.Tags.Add("purge", "'yes'"); return true; });
+            var r = await client.PostPointsAsync(dbName, points);
+            await AssertEx.ThrowsAsync<InfluxDBException>(() => client.DeletePointsAsync(new InfluxDatabase(invalidDbName), new InfluxMeasurement(measurement), whereClause: new List<string>() { "purge = yes", $"time() > {DateTime.UtcNow.AddDays(-4).ToEpoch(TimePrecision.Hours)}" }));
+
+        }
     }
 }
