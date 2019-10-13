@@ -10,19 +10,24 @@
     <projectUrl>https://github.com/AdysTech/InfluxDB.Client.Net</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-    <releaseNotes>This is a feature rich .Net client for InfluxDB. All methods are exposed as Async methods, so that the calling thread will not be blocked. 
-	It currently supports
+    <releaseNotes>
+      This is a feature rich .Net client for InfluxDB. All methods are exposed as Async methods, so that the calling thread will not be blocked.
+      It currently supports
 
-	1.	Connecting using credentials
-	2.	Querying all existing databases
-	3.	Creating new database
-	4.	Querying for the whole DB structure (hierarchical structure of all measurements, and fields)
-	5.	Writing single, multiple values to db
-	6.  Retention policy management
-	7.  Post data to specific retention policies
-	8.  Query for all Continuous Queries
-	9.  Create/Drop Continuous Queries
-	</releaseNotes>
+      1. Connecting using credentials
+      2. Querying all existing databases
+      3. Creating new database
+      4. Querying for the whole DB structure (hierarchical structure of all measurements, and fields)
+      5. Writing single, multiple values to db
+      6.  Retention policy management
+      7.  Post data to specific retention policies
+      8.  Query for all Continuous Queries
+      9.  Create/Drop Continuous Queries
+      10. Chunking Support in queries
+      11. Drop databases, measurements or points
+      12. Get series count or points count for a measurement
+
+    </releaseNotes>
     <copyright>Copyright 2019</copyright>
     <tags>InfluxDB Influx TSDB TimeSeries InfluxData Chunking</tags>
   </metadata>
