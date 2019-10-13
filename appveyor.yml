@@ -12,6 +12,7 @@ build:
   verbosity: minimal
   publish_nuget: true
   publish_nuget_symbols: true
+  use_snupkg_format: true
 before_test:
 - ps: tests\InfluxDB.Client.Net.TestSetup.ps1
 after_test:
