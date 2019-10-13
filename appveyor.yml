@@ -12,10 +12,11 @@ build:
   verbosity: minimal
   publish_nuget: true
   publish_nuget_symbols: true
+  use_snupkg_format: true
 before_test:
 - ps: tests\InfluxDB.Client.Net.TestSetup.ps1
 after_test:
-- ps: Get-ChildItem -include "AdysTech.InfluxDB.Client.Net.Core*nupkg" -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+- ps: Get-ChildItem -include "AdysTech.InfluxDB.Client.Net.Core*nupkg" | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
 deploy:
 - provider: NuGet
   server: https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net
