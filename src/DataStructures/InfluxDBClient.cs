@@ -574,6 +574,7 @@ namespace AdysTech.InfluxDB.Client.Net
             {
                 var results = new List<IInfluxSeries>();
                 var rawResult = JsonConvert.DeserializeObject<InfluxResponse>(await response.Content.ReadAsStringAsync());
+                var partialResult = rawResult.Results?.Any(r => r.Partial == true);
 
                 if (rawResult?.Results?.Count > 1)
                     throw new ArgumentException("The query is resulting in a format, which is not supported by this method yet");
@@ -582,7 +583,7 @@ namespace AdysTech.InfluxDB.Client.Net
                 {
                     foreach (var series in rawResult?.Results[0]?.Series)
                     {
-                        InfluxSeries result = GetInfluxSeries(precision, series);
+                        InfluxSeries result = GetInfluxSeries(precision, series, partialResult);
                         results.Add(result);
                     }
                 }
@@ -629,11 +630,12 @@ namespace AdysTech.InfluxDB.Client.Net
                     {
                         var str = await reader.ReadLineAsync();
                         var rawResult = JsonConvert.DeserializeObject<InfluxResponse>(str);
+                        var partialResult = rawResult?.Results?.Any(r => r.Partial == true);
                         if (rawResult?.Results[0]?.Series != null)
                         {
                             foreach (var series in rawResult?.Results[0]?.Series)
                             {
-                                InfluxSeries result = GetInfluxSeries(precision, series);
+                                InfluxSeries result = GetInfluxSeries(precision, series, partialResult);
                                 results.Add(result);
                             }
                         }
@@ -650,9 +652,11 @@ namespace AdysTech.InfluxDB.Client.Net
         /// </summary>
         /// <param name="precision"></param>
         /// <param name="series"></param>
+        /// <param name="partialResult"></param>
         /// <param name="SafePropertyNames">If true the first letter of each property name will be Capital, making them safer to use in C#</param>
         /// <returns></returns>
-        private static InfluxSeries GetInfluxSeries(TimePrecision precision, Series series, bool SafePropertyNames = true)
+        private static InfluxSeries GetInfluxSeries(TimePrecision precision, Series series, bool? partialResult, 
+            bool SafePropertyNames = true)
         {
             var result = new InfluxSeries()
             {
@@ -661,6 +665,8 @@ namespace AdysTech.InfluxDB.Client.Net
 
             result.SeriesName = series.Name;
             result.Tags = series.Tags;
+            result.Partial = partialResult ?? false;
+
             var entries = new List<dynamic>();
             for (var row = 0; row < series?.Values?.Count; row++)
             {

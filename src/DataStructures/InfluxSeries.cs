@@ -33,5 +33,12 @@ namespace AdysTech.InfluxDB.Client.Net
         /// The objects will have columns as Peoperties with their current values
         /// </summary>
         public IReadOnlyList<dynamic> Entries { get; internal set; }
+
+        /// <summary>
+        /// True if the influx query was answered with a partial response due to e.g. exceeding a configured
+        /// max-row-limit in the InfluxDB. As we don't know which series was truncated by InfluxDB, all series
+        /// of the response will be flagged with Partial=true.
+        /// </summary>
+        public bool Partial { get; set; }
     }
 }
