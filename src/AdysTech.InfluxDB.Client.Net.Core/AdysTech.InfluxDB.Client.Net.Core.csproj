@@ -45,6 +45,7 @@ It currently supports
 	<Compile Include="..\DataStructures\InfluxMeasurement.cs" Link="DataStructures\InfluxMeasurement.cs" />
 	<Compile Include="..\DataStructures\InfluxRetentionPolicy.cs" Link="DataStructures\InfluxRetentionPolicy.cs" />
 	<Compile Include="..\DataStructures\InfluxSeries.cs" Link="DataStructures\InfluxSeries.cs" />
+  <Compile Include="..\DataStructures\InfluxResult.cs" Link="DataStructures\InfluxResult.cs" />
 	<Compile Include="..\DataStructures\InfluxValueField.cs" Link="DataStructures\InfluxValueField.cs" />
   <Compile Include="..\DataStructures\IInfluxValueField.cs" Link="DataStructures\IInfluxValueField.cs" />
 	<Compile Include="..\DataStructures\ServiceUnavailableException.cs" Link="DataStructures\ServiceUnavailableException.cs" />
