@@ -593,14 +593,14 @@ namespace AdysTech.InfluxDB.Client.Net
         }
 
         /// <summary>
-        /// Queries Influx DB and gets a time series data back. Ideal for fetching measurement values.
-        /// The return list is of InfluxSeries, and each element in there will have properties named after columns in series
+        /// Queries Influx DB and gets multiple time series data back. Ideal for fetching measurement values.
+        /// The return list is of InfluxResult, that contains multiple InfluxSeries and each element in there will have properties named after columns in series.
         /// </summary>
         /// <param name="dbName">Name of the database</param>
         /// <param name="measurementQuery">Query text, Only results with single series are supported for now</param>
         /// <param name="precision">epoch precision of the data set</param>
-        /// <returns>List of InfluxSeries</returns>
-        /// <seealso cref="InfluxSeries"/>
+        /// <returns>List of InfluxResult that contains multiple InfluxSeries.</returns>
+        /// <seealso cref="InfluxResult"/>
         public async Task<List<InfluxResult>> QueryMultiSeriesMultiResultAsync(string dbName, string measurementQuery, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds)
         {
             var endPoint = new Dictionary<string, string>() { { "db", dbName }, { "q", measurementQuery }, { "epoch", precisionLiterals[(int)precision] } };

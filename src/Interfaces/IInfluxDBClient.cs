@@ -95,14 +95,14 @@ namespace AdysTech.InfluxDB.Client.Net
         Task<List<IInfluxSeries>> QueryMultiSeriesAsync(string dbName, string measurementQuery, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds);
 
         /// <summary>
-        /// Queries Influx DB and gets a time series data back. Ideal for fetching measurement values.
-        /// The return list is of dynamics, and each element in there will have properties named after columns in series
+        /// Queries Influx DB and gets multiple time series data back. Ideal for fetching measurement values.
+        /// The return list is of InfluxResult, that contains multiple InfluxSeries and each element in there will have properties named after columns in series.
         /// </summary>
         /// <param name="dbName">Name of the database</param>
         /// <param name="measurementQuery">Query text, Supports multi series results</param>
         /// <param name="retentionPolicy">retention policy containing the measurement</param>
         /// <param name="precision">epoch precision of the data set</param>
-        /// <returns>List of InfluxSeries</returns>
+        /// <returns>List of InfluxResult that contains multiple InfluxSeries.</returns>
         Task<List<InfluxResult>> QueryMultiSeriesMultiResultAsync(string dbName, string measurementQuery, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds);
 
         /// <summary>
