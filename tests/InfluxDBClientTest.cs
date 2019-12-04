@@ -133,8 +133,9 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
         [TestMethod, TestCategory("Query")]
         public async Task TestQueryMultiSeriesMultiResultAsync()
         {
-            var measurement = "Partialtest";
+            var measurement = "QueryMultiSeriesMultiTest";
             var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+            await client.CreateDatabaseAsync(dbName);
             await client.DropMeasurementAsync(new InfluxDatabase(dbName), new InfluxMeasurement(measurement));
             var points = new List<IInfluxDatapoint>();
 
@@ -149,7 +150,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
                 valMixed.Tags.Add("TestTime", nowString);
                 valMixed.UtcTimestamp = now + TimeSpan.FromMilliseconds(i * 100);
                 valMixed.Fields.Add("Open", new InfluxValueField(DataGen.RandomDouble()));
-                valMixed.Fields.Add("High", new InfluxValueField(DataGen.RandomDouble()));
+                valMixed.Fields.Add("High", new InfluxValueField(DataGen.RandomInt()));
                 valMixed.Fields.Add("Low", new InfluxValueField(DataGen.RandomDouble()));
                 valMixed.Fields.Add("Close", new InfluxValueField(DataGen.RandomDouble()));
                 valMixed.Fields.Add("Volume", new InfluxValueField(DataGen.RandomDouble()));
@@ -163,20 +164,25 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
 
             Stopwatch s = new Stopwatch();
             s.Start();
-            var r = await client.QueryMultiSeriesMultiResultAsync(dbName, $"SELECT \"Open\" FROM {measurement} Limit 1; SELECT \"High\" FROM {measurement} Limit 1;");
+            var r = await client.QueryMultiSeriesMultiResultAsync(dbName, $"SELECT \"Open\", \"High\" FROM {measurement} Limit 1; SELECT \"Low\" FROM {measurement} Limit 1;");
 
             s.Stop();
             Debug.WriteLine($"Elapsed{s.ElapsedMilliseconds}");
             Assert.IsTrue(r != null, "QueryMultiSeriesAsync retunred null or invalid data");
             var firstResult = new Dictionary<string, object>(r[0].InfluxSeries.Entries[0]);
-            var valueActual = firstResult["Open"].ToString();
-            var valueExpected = ((InfluxDatapoint<InfluxValueField>)points[0]).Fields["Open"].Value.ToString().Replace(',', '.');
-            Assert.AreEqual(valueExpected, valueActual);
+            var secondResult = new Dictionary<string, object>(r[1].InfluxSeries.Entries[0]);
 
-            // Currently not working. 
-            //var valueActual = Convert.ToDouble(firstResult["Open"].ToString().Replace('.', ','));
-            //var valueExpected = Convert.ToDouble(((InfluxDatapoint<InfluxValueField>) points[0]).Fields["Open"].Value);
-            //Assert.AreEqual(valueExpected, valueActual);
+            var valueActual = Convert.ToDouble(firstResult["Open"].ToString().Replace('.', ','));
+            var valueExpected = Convert.ToDouble(((InfluxDatapoint<InfluxValueField>)points[0]).Fields["Open"].Value);
+            Assert.IsTrue(Math.Abs(valueExpected - valueActual) < 0.000001);
+            
+            valueActual = Convert.ToInt32(firstResult["High"].ToString().Replace('.', ','));
+            valueExpected = Convert.ToInt32(((InfluxDatapoint<InfluxValueField>)points[0]).Fields["High"].Value);
+            Assert.IsTrue(Math.Abs(valueExpected - valueActual) < 0.000001);
+
+            valueActual = Convert.ToDouble(secondResult["Low"].ToString().Replace('.', ','));
+            valueExpected = Convert.ToDouble(((InfluxDatapoint<InfluxValueField>)points[0]).Fields["Low"].Value);
+            Assert.IsTrue(Math.Abs(valueExpected - valueActual) < 0.000001);
         }
 
         [TestMethod, TestCategory("Post")]
