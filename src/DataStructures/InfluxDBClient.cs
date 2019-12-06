@@ -132,13 +132,10 @@ namespace AdysTech.InfluxDB.Client.Net
 
             try
             {
-                var pairs = new List<KeyValuePair<string, string>>
-                {
-                    new KeyValuePair<string, string>("q", query)
-                };
+                var body = new StringContent($"q={WebUtility.UrlEncode(query)}", Encoding.UTF8, 
+                    "application/x-www-form-urlencoded");
 
-                var content = new FormUrlEncodedContent(pairs);
-                HttpResponseMessage response = await _client.PostAsync(builder.Uri, content);
+                HttpResponseMessage response = await _client.PostAsync(builder.Uri, body);
 
                 if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.BadGateway || (response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error")) //502 Connection refused
                         throw new UnauthorizedAccessException("InfluxDB needs authentication. Check uname, pwd parameters");
@@ -667,7 +664,8 @@ namespace AdysTech.InfluxDB.Client.Net
 
                 return multiResult;
             }
-            return null;
+            throw new Exception($"InfluxDB returned status code {response.StatusCode}: " +
+                                $"{await response.Content.ReadAsStringAsync()}");
         }
 
         /// <summary>

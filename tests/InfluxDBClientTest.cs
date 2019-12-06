@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace AdysTech.InfluxDB.Client.Net.Tests
@@ -168,7 +169,7 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
 
             s.Stop();
             Debug.WriteLine($"Elapsed{s.ElapsedMilliseconds}");
-            Assert.IsTrue(r != null, "QueryMultiSeriesAsync retunred null or invalid data");
+            Assert.IsTrue(r != null, "QueryMultiSeriesMultiResultAsync returned null or invalid data");
             var firstResult = new Dictionary<string, object>(r[0].InfluxSeries.Entries[0]);
             var secondResult = new Dictionary<string, object>(r[1].InfluxSeries.Entries[0]);
 
@@ -184,6 +185,56 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             valueExpected = Convert.ToDouble(((InfluxDatapoint<InfluxValueField>)points[0]).Fields["Low"].Value);
             Assert.IsTrue(Math.Abs(valueExpected - valueActual) < 0.000001);
         }
+
+
+        [TestMethod, TestCategory("Query")]
+        public async Task TestQueryMultiSeriesMultiResultWithHugeRequestAsync()
+        {
+            var measurement = "QueryMultiSeriesMultiTestHugeQuery";
+            var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+            await client.CreateDatabaseAsync(dbName);
+            await client.DropMeasurementAsync(new InfluxDatabase(dbName), new InfluxMeasurement(measurement));
+            var points = new List<IInfluxDatapoint>();
+
+            var today = DateTime.Now.ToShortDateString();
+            var now = DateTime.UtcNow;
+            var nowString = DateTime.Now.ToShortTimeString();
+
+            for (int i = 0; i < 1; i++)
+            {
+                var valMixed = new InfluxDatapoint<InfluxValueField>();
+                valMixed.Tags.Add("TestDate", today);
+                valMixed.Tags.Add("TestTime", nowString);
+                valMixed.UtcTimestamp = now + TimeSpan.FromMilliseconds(i * 100);
+                valMixed.Fields.Add("Open", new InfluxValueField(DataGen.RandomDouble()));
+                valMixed.Fields.Add("High", new InfluxValueField(DataGen.RandomInt()));
+                valMixed.Fields.Add("Low", new InfluxValueField(DataGen.RandomDouble()));
+                valMixed.Fields.Add("Close", new InfluxValueField(DataGen.RandomDouble()));
+                valMixed.Fields.Add("Volume", new InfluxValueField(DataGen.RandomDouble()));
+
+                valMixed.MeasurementName = measurement;
+                valMixed.Precision = TimePrecision.Nanoseconds;
+                points.Add(valMixed);
+            }
+
+            await client.PostPointsAsync(dbName, points, 10000);
+
+            var query = new StringBuilder();
+            for (var i = 0; i < 1000; i++)
+            {
+                query.Append(
+                    $"SELECT Open, High, Low, Close, Volume FROM {measurement} " +
+                    $"WHERE time >= '{DateTime.UtcNow:O}' and time <= '{DateTime.UtcNow:O}';");
+            }
+            Stopwatch s = new Stopwatch();
+            s.Start();
+            var r = await client.QueryMultiSeriesMultiResultAsync(dbName, query.ToString());
+
+            s.Stop();
+            Debug.WriteLine($"Elapsed{s.ElapsedMilliseconds}");
+            Assert.IsTrue(r != null, "QueryMultiSeriesMultiResultAsync returned null or invalid data");
+        }
+
 
         [TestMethod, TestCategory("Post")]
         public async Task TestPostPointsAsync()
