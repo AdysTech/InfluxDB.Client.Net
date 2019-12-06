@@ -40,5 +40,12 @@ namespace AdysTech.InfluxDB.Client.Net
         /// of the response will be flagged with Partial=true.
         /// </summary>
         public bool Partial { get; set; }
+
+        public InfluxSeries() { }
+
+        public InfluxSeries(IReadOnlyList<dynamic> entries)
+        {
+            Entries = entries;
+        }
     }
 }
