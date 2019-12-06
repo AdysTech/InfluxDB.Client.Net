@@ -122,6 +122,37 @@ namespace AdysTech.InfluxDB.Client.Net
             return null;
         }
 
+        private async Task<HttpResponseMessage> PostQueryAsync(Dictionary<string, string> EndPoint, string query)
+        {
+            var querybaseUrl = new Uri(InfluxUrl);
+            var builder = new UriBuilder(querybaseUrl);
+            builder.Path += "query";
+
+            builder.Query = await new FormUrlEncodedContent(EndPoint).ReadAsStringAsync();
+
+            try
+            {
+                var pairs = new List<KeyValuePair<string, string>>
+                {
+                    new KeyValuePair<string, string>("q", query)
+                };
+
+                var content = new FormUrlEncodedContent(pairs);
+                HttpResponseMessage response = await _client.PostAsync(builder.Uri, content);
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.BadGateway || (response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error")) //502 Connection refused
+                        throw new UnauthorizedAccessException("InfluxDB needs authentication. Check uname, pwd parameters");
+
+                    return response;
+            }
+            catch (HttpRequestException e)
+            {
+                if (e.InnerException.Message == "Unable to connect to the remote server")
+                    throw new ServiceUnavailableException();
+            }
+            return null;
+        }
+
         private async Task<HttpResponseMessage> PostAsync(Dictionary<string, string> EndPoint, byte[] requestContent)
         {
             var querybaseUrl = new Uri(InfluxUrl);
@@ -603,13 +634,13 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <seealso cref="InfluxResult"/>
         public async Task<List<InfluxResult>> QueryMultiSeriesMultiResultAsync(string dbName, string measurementQuery, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds)
         {
-            var endPoint = new Dictionary<string, string>() { { "db", dbName }, { "q", measurementQuery }, { "epoch", precisionLiterals[(int)precision] } };
+            var endPoint = new Dictionary<string, string>() { { "db", dbName }, { "epoch", precisionLiterals[(int)precision] } };
 
             if (retentionPolicy != null)
             {
                 endPoint.Add("rp", retentionPolicy);
             }
-            var response = await GetAsync(endPoint, HttpCompletionOption.ResponseHeadersRead);
+            var response = await PostQueryAsync(endPoint, measurementQuery);
 
             if (response == null) throw new ServiceUnavailableException();
             if (response.StatusCode == HttpStatusCode.OK)
