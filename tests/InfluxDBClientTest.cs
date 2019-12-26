@@ -451,6 +451,16 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             Assert.IsTrue(p.Saved, "CreateRetentionPolicyAsync failed");
         }
 
+        [TestMethod, TestCategory("Create")]
+        public async Task TestCreateRetentionPolicyInfinite()
+        {
+            var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+            var p = new InfluxRetentionPolicy() { Name = "Test3", DBName = dbName, Duration = TimeSpan.Zero, IsDefault = false };
+
+            var r = await client.CreateRetentionPolicyAsync(p);
+            Assert.IsTrue(p.Saved, "CreateRetentionPolicyAsync failed");
+        }
+
         [TestMethod, TestCategory("Get")]
         public async Task TestGetContinuousQueriesAsync()
         {
