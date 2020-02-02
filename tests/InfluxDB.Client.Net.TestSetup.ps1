@@ -4,8 +4,10 @@
 #executed before CreateDatabase test
 #
 ##################################################################################################
-Stop-Process -name influxd -Force -ErrorAction SilentlyContinue
-
+if( $null -ne (Get-Process -name influxd -ErrorAction SilentlyContinue)){
+    Stop-Process -name influxd -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 10
+}
 
 $nightlies = $true
 if ($nightlies -ne $true) {
@@ -47,8 +49,8 @@ else {
 }
 
 
-$cred = Get-Content .\tests\cred.json -Encoding UTF8 | ConvertFrom-Json
-#$cred = @{User="admin"; Password="test123$€₹#₳₷ȅ"}
+#$cred = Get-Content .\tests\cred.json -Encoding UTF8 | ConvertFrom-Json
+$cred = @{User="admin"; Password="test123$€₹#₳₷ȅ"}
 $authHeader = @{Authorization = "Basic $([System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($cred.User):$($cred.Password)")))"}
 
 #$x = 7z e $archivepath -o"$env:Temp/influxdb" -y
@@ -88,6 +90,9 @@ $proc.Kill()
 
 write-output "enable auth in config"
 (get-content $influxconf | foreach-object {$_ -replace "auth-enabled = false" , "auth-enabled = true" })  | Set-Content $influxconf	
+
+write-output "max-row-limit to 100000"
+(get-content $influxconf | foreach-object {$_ -replace "[# ]?\s*max-row-limit = 0" , "  max-row-limit = 100000" })  | Set-Content $influxconf	
 
 write-output "start influxdb with auth enabled"
 $proc = Start-Process -FilePath $influxd -ArgumentList "-config $influxconf" -PassThru
