@@ -1,3 +1,28 @@
+## v0.11.0 [02/01/2020]
+
+### Release Notes
+Option to add a rentention policy with infinite duration - Thanks to @jasase 
+Handle truncated responses due to "max-row-limit", (flag "partial=true"). Thanks to @tbraun-hk 
+
+### Bugfixes
+
+- [#82](https://github.com/AdysTech/InfluxDB.Client.Net/issues/82): QueryMultiSeriesAsync should return "partial" if responses are truncated by InfluxDB
+- [#83](https://github.com/AdysTech/InfluxDB.Client.Net/issues/83): Create Infinite Retention Policy
+
+## v0.9.0 [10/12/2019]
+
+### Release Notes
+Add  MeasurementHierarchy to IInfluxDatabase, SeriesCount and PointsCount properties to IInfluxMeasurement
+Now calling `GetInfluxDBStructureAsync` populates the structure with retention policies, and also gives the unique series and point counts for each of the measurements
+Allow for deleting/dropping the Influx database by calling `DropDatabaseAsync`, allow delete entire measurement via	`DropMeasurementAsync` as well as specific data points with and where clause using `TestDeletePointsAsync`
+
+### Bugfixes
+
+- [#72](https://github.com/AdysTech/InfluxDB.Client.Net/issues/72): Performance improvements
+- [#69](https://github.com/AdysTech/InfluxDB.Client.Net/issues/69): easiest way to count the entries in the measurement
+- [#67](https://github.com/AdysTech/InfluxDB.Client.Net/issues/67): delete an existing database
+- [#41](https://github.com/AdysTech/InfluxDB.Client.Net/issues/41): DELETE FROM {Measurement} WHERE
+
 ## v0.9.0 [10/12/2019]
 
 ### Release Notes

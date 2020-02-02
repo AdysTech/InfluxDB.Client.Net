@@ -855,7 +855,8 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
                     points.Add(valMixed);
                 }
 
-                await client.PostPointsAsync(dbName, points, 10000);
+                
+                Assert.IsTrue(await client.PostPointsAsync(dbName, points, 25000), "PostPointsAsync retunred false");
 
                 var r = await client.QueryMultiSeriesAsync(dbName, "SELECT * FROM Partialtest");
                 Assert.IsTrue(r.All(s => s.Partial), "Not all influx series returned by the query contained the flag 'partial=true'");
