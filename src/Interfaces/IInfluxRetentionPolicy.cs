@@ -15,9 +15,9 @@ namespace AdysTech.InfluxDB.Client.Net
          string Name { get; set; }
 
         /// <summary>
-        /// Duration of the retention period that the policy is defining
+        /// Duration of the retention period that the policy is defining. If Duration is lower or equal TimeSpan.Zero retention policy will be Infinite
         /// </summary>
-         TimeSpan Duration { get; set; }
+        TimeSpan Duration { get; set; }
 
         /// <summary>
         /// If this policy instance is the default policy for the DB
