@@ -7,7 +7,7 @@ Handle truncated responses due to "max-row-limit", (flag "partial=true"). Thanks
 ### Bugfixes
 
 - [#82](https://github.com/AdysTech/InfluxDB.Client.Net/issues/82): QueryMultiSeriesAsync should return "partial" if responses are truncated by InfluxDB
-- [#82](https://github.com/AdysTech/InfluxDB.Client.Net/issues/83): Create Infinite Retention Policy
+- [#83](https://github.com/AdysTech/InfluxDB.Client.Net/issues/83): Create Infinite Retention Policy
 
 ## v0.9.0 [10/12/2019]
 
