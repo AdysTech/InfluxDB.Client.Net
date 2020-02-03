@@ -830,6 +830,58 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
             }
         }
 
+        /// <summary>
+        /// You need to configure your test InfluxDB with a max-row-limit of 100.000 for this test to succeed!
+        /// </summary>
+        /// <returns></returns>
+        [TestMethod, TestCategory("Perf")]
+        public async Task TestPartialResponseBecauseOfMaxRowLimit()
+        {
+            try
+            {
+                var client = new InfluxDBClient(influxUrl, dbUName, dbpwd);
+
+                var points = new List<IInfluxDatapoint>();
+
+                var today = DateTime.Now.ToShortDateString();
+                var now = DateTime.UtcNow;
+                var nowString = DateTime.Now.ToShortTimeString();
+                var measurement = "Partialtest";
+
+                for (int i = 0; i < 200000; i++)
+                {
+                    var valMixed = new InfluxDatapoint<InfluxValueField>();
+                    valMixed.Tags.Add("TestDate", today);
+                    valMixed.Tags.Add("TestTime", nowString);
+                    valMixed.UtcTimestamp = now + TimeSpan.FromMilliseconds(i * 100);
+                    valMixed.Fields.Add("Open", new InfluxValueField(DataGen.RandomDouble()));
+                    valMixed.Fields.Add("High", new InfluxValueField(DataGen.RandomDouble()));
+                    valMixed.Fields.Add("Low", new InfluxValueField(DataGen.RandomDouble()));
+                    valMixed.Fields.Add("Close", new InfluxValueField(DataGen.RandomDouble()));
+                    valMixed.Fields.Add("Volume", new InfluxValueField(DataGen.RandomDouble()));
+
+                    valMixed.MeasurementName = measurement;
+                    valMixed.Precision = TimePrecision.Nanoseconds;
+                    points.Add(valMixed);
+                }
+
+                
+                Assert.IsTrue(await client.PostPointsAsync(dbName, points, 25000), "PostPointsAsync retunred false");
+
+                var r = await client.QueryMultiSeriesAsync(dbName, "SELECT * FROM Partialtest");
+                Assert.IsTrue(r.All(s => s.Partial), "Not all influx series returned by the query contained the flag 'partial=true'");
+
+                r = await client.QueryMultiSeriesAsync(dbName, "SELECT * FROM Partialtest limit 50000");
+                Assert.IsTrue(!r.Any(s => s.Partial), "At least one of the influx series returned by the query contained the flag 'partial=true'");
+            }
+            catch (Exception e)
+            {
+
+                Assert.Fail($"Unexpected exception of type {e.GetType()} caught: {e.Message}");
+                return;
+            }
+        }
+
         [TestMethod, TestCategory("Drop")]
         public async Task TestDropDatabaseAsync()
         {
