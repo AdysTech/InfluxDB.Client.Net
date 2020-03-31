@@ -8,5 +8,9 @@ namespace AdysTech.InfluxDB.Client.Net
         {
             
         }
+        public ServiceUnavailableException(string Message) : base(Message)
+        {
+
+        }
     }
 }

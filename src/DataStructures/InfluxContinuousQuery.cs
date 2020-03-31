@@ -43,7 +43,7 @@ namespace AdysTech.InfluxDB.Client.Net
         /// </summary>
         public bool HasResampleClause { get { return (ResampleDuration != TimeSpan.MinValue || ResampleFrequency != TimeSpan.MinValue); } }
 
-        public InfluxContinuousQuery ()
+        public InfluxContinuousQuery()
         {
             ResampleDuration = TimeSpan.MinValue;
             ResampleFrequency = TimeSpan.MinValue;
@@ -57,38 +57,43 @@ namespace AdysTech.InfluxDB.Client.Net
 
         public bool Deleted { get; internal set; }
 
-        internal string GetCreateSyntax ()
+        internal string GetCreateSyntax()
         {
-            if (!String.IsNullOrWhiteSpace (DBName) && !String.IsNullOrWhiteSpace (Name) && !String.IsNullOrWhiteSpace (Query))
+            if (!String.IsNullOrWhiteSpace(DBName) && !String.IsNullOrWhiteSpace(Name) && !String.IsNullOrWhiteSpace(Query))
             {
                 if (ResampleDuration == TimeSpan.MinValue && ResampleFrequency == TimeSpan.MinValue)
                     return $"CREATE CONTINUOUS QUERY \"{Name}\" ON \"{DBName}\" BEGIN {Query} END";
                 else if (ResampleDuration != TimeSpan.MinValue && ResampleFrequency != TimeSpan.MinValue)
                     return $"CREATE CONTINUOUS QUERY \"{Name}\" ON \"{DBName}\" RESAMPLE EVERY {ResampleFrequency.TotalMinutes}m FOR {ResampleDuration.TotalMinutes}m BEGIN {Query} END";
                 else if (ResampleFrequency != TimeSpan.MinValue)
-                    return $"CREATE CONTINUOUS QUERY \"{Name}\" ON \"{DBName}\" RESAMPLE EVERY {ResampleFrequency.TotalMinutes}m BEGIN {Query} END";
+                {
+                    if (ResampleFrequency.TotalMinutes > 1)
+                        return $"CREATE CONTINUOUS QUERY \"{Name}\" ON \"{DBName}\" RESAMPLE EVERY {(int)ResampleFrequency.TotalMinutes}m BEGIN {Query} END";
+                    else
+                        return $"CREATE CONTINUOUS QUERY \"{Name}\" ON \"{DBName}\" RESAMPLE EVERY {(int)ResampleFrequency.TotalSeconds}s BEGIN {Query} END";
+                }
                 else if (ResampleDuration != TimeSpan.MinValue)
                     return $"CREATE CONTINUOUS QUERY \"{Name}\" ON \"{DBName}\" RESAMPLE FOR {ResampleDuration.TotalMinutes}m BEGIN {Query} END";
             }
-            else if (String.IsNullOrWhiteSpace (Query))
-                throw new ArgumentException ("Query part of CQ is not defined");
-            else if (String.IsNullOrWhiteSpace (Name))
-                throw new ArgumentException ("CQ Name not set");
-            else if (String.IsNullOrWhiteSpace (DBName))
-                throw new ArgumentException ("DBName for CQ is not set");
+            else if (String.IsNullOrWhiteSpace(Query))
+                throw new ArgumentException("Query part of CQ is not defined");
+            else if (String.IsNullOrWhiteSpace(Name))
+                throw new ArgumentException("CQ Name not set");
+            else if (String.IsNullOrWhiteSpace(DBName))
+                throw new ArgumentException("DBName for CQ is not set");
             return null;
         }
 
-        internal string GetDropSyntax ()
+        internal string GetDropSyntax()
         {
-            if (!String.IsNullOrWhiteSpace (DBName) && !String.IsNullOrWhiteSpace (Name))
+            if (!String.IsNullOrWhiteSpace(DBName) && !String.IsNullOrWhiteSpace(Name))
             {
                 return $"DROP CONTINUOUS QUERY \"{Name}\" ON \"{DBName}\"";
             }
-            else if (String.IsNullOrWhiteSpace (Name))
-                throw new ArgumentException ("CQ Name not set");
-            else if (String.IsNullOrWhiteSpace (DBName))
-                throw new ArgumentException ("DBName for CQ is not set");
+            else if (String.IsNullOrWhiteSpace(Name))
+                throw new ArgumentException("CQ Name not set");
+            else if (String.IsNullOrWhiteSpace(DBName))
+                throw new ArgumentException("DBName for CQ is not set");
             return null;
         }
     }
