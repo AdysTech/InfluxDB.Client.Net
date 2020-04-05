@@ -37,12 +37,12 @@ namespace AdysTech.InfluxDB.Client.Net
             else if (Value is double dblValue)
             {
                 // double has to have a . as decimal seperator for Influx
-                return String.Format(new CultureInfo("en-US"), "{0}", dblValue);
+                return String.Format(CultureInfo.GetCultureInfo("en-US"), "{0}", dblValue);
             }
             else if (Value is float flValue)
             {
                 // double has to have a . as decimal seperator for Influx
-                return String.Format(new CultureInfo("en-US"), "{0}", flValue);
+                return String.Format(CultureInfo.GetCultureInfo("en-US"), "{0}", flValue);
             }
             else if (Value is DateTime dtValue)
             {

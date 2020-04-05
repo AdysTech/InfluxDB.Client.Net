@@ -179,7 +179,7 @@ namespace AdysTech.InfluxDB.Client.Net
                 //double has to have a . as decimal seperator for Influx
                 Fields.ToList().ForEach(v =>
                 {
-                    line.AppendFormat("{0}={1},", v.Key.EscapeChars(comma: true, equalSign: true, space: true), String.Format(new CultureInfo("en-US"), "{0}", v.Value));
+                    line.AppendFormat("{0}={1},", v.Key.EscapeChars(comma: true, equalSign: true, space: true), String.Format(CultureInfo.GetCultureInfo("en-US"), "{0}", v.Value));
                 });
                 line.Remove(line.Length - 1, 1);
             }

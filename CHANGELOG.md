@@ -1,7 +1,18 @@
+## v0.15.0 [04/01/2020]
+
+### Release Notes
+Migrate to .net core 3.1. I have also moved the base .Net framework to 4.6 (long overdue). If there are anyone still using 4.5.1 I am sorry, its high time you upgrade. Bug & Performance fixes.
+
+### Bugfixes
+
+- [#90](https://github.com/AdysTech/InfluxDB.Client.Net/issues/90): PostPointsAsync method is so slow in linux os
+- [#91](https://github.com/AdysTech/InfluxDB.Client.Net/issues/91): StatusCode Forbidden not considered in GetAsync()
+- [#84](https://github.com/AdysTech/InfluxDB.Client.Net/issues/84): Execute Continuous Query every seconds 
+
 ## v0.11.0 [02/01/2020]
 
 ### Release Notes
-Option to add a rentention policy with infinite duration - Thanks to @jasase 
+Option to add a retention policy with infinite duration - Thanks to @jasase 
 Handle truncated responses due to "max-row-limit", (flag "partial=true"). Thanks to @tbraun-hk 
 
 ### Bugfixes
@@ -85,7 +96,7 @@ Fix escape sequence to match InfluxDB documentation
 
 ### Bugfixes
 
-- [#42](https://github.com/AdysTech/InfluxDB.Client.Net/issues/42): Stop chnaging column header case to Camel case
+- [#42](https://github.com/AdysTech/InfluxDB.Client.Net/issues/42): Stop changing column header case to Camel case
 - [#48](https://github.com/AdysTech/InfluxDB.Client.Net/issues/48): Incorrect escape sequence for string values with space
 - [#50](https://github.com/AdysTech/InfluxDB.Client.Net/issues/50): Missing quotes for retention policy name
 
@@ -107,7 +118,7 @@ Allow non ASCII passwords, escape double quotes (Thanks to [@siavelis](https://g
 ## v0.6.1 [6/03/2017]
 
 ### Release Notes
-Allow points to be passed without explictly setting time or precision. It also fixes an issue with previopus implementation of the chunking support.
+Allow points to be passed without explicitly setting time or precision. It also fixes an issue with previous implementation of the chunking support.
 
 
 ### Bugfixes
@@ -120,7 +131,7 @@ Allow points to be passed without explictly setting time or precision. It also f
 
 
 ### Breaking Change
-- Library will silently drop points older than retention period. This is similar to InfluDB behavios where it will reject those points with an `{"error":"partial write: points beyond retention policy dropped=225"}`
+- Library will silently drop points older than retention period. This is similar to InfluDB behavior where it will reject those points with an `{"error":"partial write: points beyond retention policy dropped=225"}`
 
 
 ## v0.6.1 [3/28/2017]
@@ -156,7 +167,7 @@ This version adds support for .Net Core.
 Minor release to fix a blocking bug with data series with microsecond precision.
 
 ### Breaking Change
-- `InfluxDBClient` now implements `IDispobale`, so plan to expect few warnings in your code. Similarly custom exceptions from this library are marked as `Serializable`
+- `InfluxDBClient` now implements `IDisposable`, so plan to expect few warnings in your code. Similarly custom exceptions from this library are marked as `Serializable`
 
 ### Bugfixes
 
@@ -168,12 +179,12 @@ Minor release to fix a blocking bug with data series with microsecond precision.
 ### Release Notes
 This version is a precursor to enable support for .Net Core.  This restructures the solution folders, makes the unit tests truly independent of each other. It also supports deleting Continuous Queries. As of now it still does not support the .NBet Core as there are few open issues (e.g. [#3199](https://github.com/dotnet/cli/issues/3199), [#147](https://github.com/aspnet/Tooling/issues/147)) which are rooted in .Net Core's dependency on `xproj` model. Once they move to `csproj` these issues will be resolved, and this library will support .Net Core as well via .Net Standard (1.6+) PCL. Final goal is to have same set of source files, which gets complied as normal .Net 4.5 class library, and a PCL for the Core.
 
-This version moves away from `JavaScriptSerializer` to [Json.NET](https://github.com/JamesNK/Newtonsoft.Json). Functionally this is a transparent chnage. But this is required as former is not supported in .Net Core.
+This version moves away from `JavaScriptSerializer` to [Json.NET](https://github.com/JamesNK/Newtonsoft.Json). Functionally this is a transparent change. But this is required as former is not supported in .Net Core.
 
 ### Features
 
 - [#16](https://github.com/AdysTech/InfluxDB.Client.Net/issues/16): Create / Delete Continuous Query
-- QueryMultiSeriesAsync returns the time in a `DateTime` object if the series has one. The method also supports different epoch precisoins in query results now.
+- QueryMultiSeriesAsync returns the time in a `DateTime` object if the series has one. The method also supports different epoch precisions in query results now.
 
 
 ### Breaking Change

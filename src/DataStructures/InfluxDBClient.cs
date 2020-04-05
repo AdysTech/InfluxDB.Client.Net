@@ -105,8 +105,16 @@ namespace AdysTech.InfluxDB.Client.Net
                 {
                     return response;
                 }
-                else if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.BadGateway || (response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error")) //502 Connection refused
+                else if (response.StatusCode == HttpStatusCode.Unauthorized 
+                        || (response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error")
+                        || response.StatusCode == HttpStatusCode.Forbidden 
+                        || response.StatusCode == HttpStatusCode.ProxyAuthenticationRequired
+                        || (int)response.StatusCode == 511) //511 NetworkAuthenticationRequired
                     throw new UnauthorizedAccessException("InfluxDB needs authentication. Check uname, pwd parameters");
+                else if(response.StatusCode == HttpStatusCode.BadGateway || response.StatusCode == HttpStatusCode.GatewayTimeout)
+                {
+                    throw new ServiceUnavailableException(await response.Content.ReadAsStringAsync());
+                }
                 else if (response.StatusCode == HttpStatusCode.BadRequest)
                 {
                     throw InfluxDBException.ProcessInfluxDBError(await response.Content.ReadAsStringAsync());
@@ -148,8 +156,20 @@ namespace AdysTech.InfluxDB.Client.Net
                     zippedByteArrayContent.Headers.ContentEncoding.Add("gzip");
                     HttpResponseMessage response = await _client.PostAsync(builder.Uri, zippedByteArrayContent);
 
-                    if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.BadGateway || (response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error")) //502 Connection refused
+                    if (response.StatusCode == HttpStatusCode.Unauthorized
+                       || (response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error")
+                       || response.StatusCode == HttpStatusCode.Forbidden
+                       || response.StatusCode == HttpStatusCode.ProxyAuthenticationRequired
+                       || (int)response.StatusCode == 511) //511 NetworkAuthenticationRequired
                         throw new UnauthorizedAccessException("InfluxDB needs authentication. Check uname, pwd parameters");
+                    else if (response.StatusCode == HttpStatusCode.BadGateway || response.StatusCode == HttpStatusCode.GatewayTimeout)
+                    {
+                        throw new ServiceUnavailableException(await response.Content.ReadAsStringAsync());
+                    }
+                    else if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        throw InfluxDBException.ProcessInfluxDBError(await response.Content.ReadAsStringAsync());
+                    }
 
                     return response;
                 }
@@ -188,8 +208,16 @@ namespace AdysTech.InfluxDB.Client.Net
             HttpResponseMessage response = await PostAsync(endPoint, Encoding.UTF8.GetBytes(line.ToString()));
             line.Clear();
 
-            if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.BadGateway || (response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error")) //502 Connection refused
+            if (response.StatusCode == HttpStatusCode.Unauthorized
+                       || (response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error")
+                       || response.StatusCode == HttpStatusCode.Forbidden
+                       || response.StatusCode == HttpStatusCode.ProxyAuthenticationRequired
+                       || (int)response.StatusCode == 511) //511 NetworkAuthenticationRequired
                 throw new UnauthorizedAccessException("InfluxDB needs authentication. Check uname, pwd parameters");
+            else if (response.StatusCode == HttpStatusCode.BadGateway || response.StatusCode == HttpStatusCode.GatewayTimeout)
+            {
+                throw new ServiceUnavailableException(await response.Content.ReadAsStringAsync());
+            }
             //if(response.StatusCode==HttpStatusCode.NotFound)
             else if (response.StatusCode == HttpStatusCode.BadRequest)
             {
@@ -487,8 +515,20 @@ namespace AdysTech.InfluxDB.Client.Net
                 {
                     return response.Headers.GetValues("X-Influxdb-Version").FirstOrDefault();
                 }
-                else if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.BadGateway || (response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error")) //502 Connection refused
+                if (response.StatusCode == HttpStatusCode.Unauthorized
+                       || (response.StatusCode == HttpStatusCode.InternalServerError && response.ReasonPhrase == "INKApi Error")
+                       || response.StatusCode == HttpStatusCode.Forbidden
+                       || response.StatusCode == HttpStatusCode.ProxyAuthenticationRequired
+                       || (int)response.StatusCode == 511) //511 NetworkAuthenticationRequired
                     throw new UnauthorizedAccessException("InfluxDB needs authentication. Check uname, pwd parameters");
+                else if (response.StatusCode == HttpStatusCode.BadGateway || response.StatusCode == HttpStatusCode.GatewayTimeout)
+                {
+                    throw new ServiceUnavailableException(await response.Content.ReadAsStringAsync());
+                }
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    throw InfluxDBException.ProcessInfluxDBError(await response.Content.ReadAsStringAsync());
+                }
             }
             catch (HttpRequestException e)
             {
