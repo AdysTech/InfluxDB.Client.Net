@@ -1,14 +1,12 @@
 #### Build Status
 
 1. AppVeyor [![Build status](https://ci.appveyor.com/api/projects/status/ryj9u8dpcasu1xur?svg=true)](https://ci.appveyor.com/project/AdysTech/influxdb-client-net)
-2. Travis CI [![Build status](https://travis-ci.org/AdysTech/InfluxDB.Client.Net.svg?branch=master)](https://travis-ci.org/AdysTech/InfluxDB.Client.Net.svg?branch=master)
 
 **Now supports .Net Core, run same .Net code in Windows and Linux**
 
 #### Nuget
 
-1. .Net Standard 2.0 > [AdysTech.InfluxDB.Client.Net.Core](https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net.Core/) _(this is the preferred version)_
-2. .Net 4.5.1 > [AdysTech.InfluxDB.Client.Net](https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net)
+.Net Standard 2.0 and .Net 4.5.1 > [AdysTech.InfluxDB.Client.Net.Core](https://www.nuget.org/packages/AdysTech.InfluxDB.Client.Net.Core/) _(this version now supports both .NET Framework and .NET Core)_
 
 # InfluxDB.Client.Net
 
