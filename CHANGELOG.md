@@ -1,3 +1,15 @@
+## v0.20.0 [08/11/2020]
+
+### Release Notes
+This version merges the .NET Framework and .NET Core projects into one multi-target project. Revert the .NET Standard 2.1 to .NET Standard 2.0.
+
+### Bugfixes
+
+- [#97](https://github.com/AdysTech/InfluxDB.Client.Net/issues/97): Switch to .NET Standard 2.1 prevent use from applications using .NET framework
+- [#96](https://github.com/AdysTech/InfluxDB.Client.Net/issues/96): Improve error handling for 400  
+
+
+
 ## v0.15.0 [04/01/2020]
 
 ### Release Notes

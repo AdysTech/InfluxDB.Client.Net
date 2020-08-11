@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net46;netstandard2.0</TargetFrameworks>
+    <Description>.Net client for InfluxDB. Supports all InfluxDB version from 0.9 onwards. Supports both .Net 4.6.1+ and .Net Core 2.0+.</Description>
+    <Product>AdysTech.InfluxDB.Client.Net</Product>
+    <Company>AdysTech</Company>
+    <Authors>AdysTech;mvadu</Authors>
+    <Version>0.20.0.0</Version>
+    <PackageId>AdysTech.InfluxDB.Client.Net.Core</PackageId>
+    <Copyright>© AdysTech 2016-2020</Copyright>
+    <PackageProjectUrl>https://github.com/AdysTech/InfluxDB.Client.Net</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/AdysTech/InfluxDB.Client.Net</RepositoryUrl>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageReleaseNotes>
+      This is a feature rich .Net client for InfluxDB. All methods are exposed as Async methods, so that the calling thread will not be blocked.
+      It currently supports
+
+      1.  Connecting using credentials
+      2.  Querying all existing databases
+      3.  Creating new database
+      4.  Querying for the whole DB structure (hierarchical structure of all measurements, and fields)
+      5.  Writing single, multiple values to db
+      6.  Retention policy management
+      7.  Post data to specific retention policies
+      8.  Query for all Continuous Queries
+      9.  Create/Drop Continuous Queries
+      10. Chunking Support in queries
+      11. Drop databases, measurements or points
+      12. Get series count or points count for a measurement
+    </PackageReleaseNotes>
+    <AssemblyVersion>0.20.0.0</AssemblyVersion>
+    <FileVersion>0.20.0.0</FileVersion>
+    <PackageTags>InfluxDB Influx TSDB TimeSeries InfluxData Chunking retention RetentionPolicy</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net46'">
+    <Reference Include="System.Net.Http" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+</Project>
