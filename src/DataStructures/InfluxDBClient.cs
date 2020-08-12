@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Dynamic;
 using System.IO;
 using System.IO.Compression;
@@ -9,6 +10,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -268,6 +270,112 @@ namespace AdysTech.InfluxDB.Client.Net
                 return false;
         }
 
+        private static IInfluxDatapoint ToInfluxDataPoint<T>(T point)
+        {
+            if (typeof(IInfluxDatapoint).IsAssignableFrom(typeof(T)))
+            {
+                return point as IInfluxDatapoint;
+            }
+
+            var measurementProp = typeof(T)
+               .GetProperties()
+               .Where(prop => prop.IsDefined(typeof(InfluxDbMeasurementName), true))
+               .ToList();
+            if (!measurementProp.Any())
+                throw new CustomAttributeFormatException("InfluxDbMeasurement attribute is required on object published to InfluxDb");
+            var measurementName = measurementProp.First().GetValue(point, null) as string;
+
+            var timeProp = typeof(T)
+               .GetProperties()
+               .Where(prop => prop.IsDefined(typeof(InfluxDbTime), true))
+               .ToList();
+            var time = timeProp.Any() ? (DateTime)timeProp.First().GetValue(point, null) : DateTime.Now;
+
+            var precisionProp = typeof(T)
+               .GetProperties()
+               .Where(prop => prop.IsDefined(typeof(InfluxDbPrecision), true))
+               .ToList();
+            var precision = precisionProp.Any()
+               ? (TimePrecision)precisionProp.First().GetValue(point, null)
+               : TimePrecision.Seconds;
+
+            var retentionProp = typeof(T)
+                .GetProperties()
+                .Where(prop => prop.IsDefined(typeof(InfluxDbRetentionPolicy), true))
+                .ToList();
+            var retentionPolicy = retentionProp.Any()
+                ? retentionProp.First().GetValue(point, null) is IInfluxRetentionPolicy policy 
+                    ? policy 
+                    : new InfluxRetentionPolicy
+                    {
+                        Name = retentionProp.First().GetValue(point, null) as string
+                    }
+                : null;
+
+            var tags = typeof(T)
+               .GetProperties()
+               .Where(prop => prop.IsDefined(typeof(InfluxDbTag), true))
+               .ToDictionary(
+                  prop => (prop.GetCustomAttributes(typeof(InfluxDbTag), true).First() as InfluxDbTag)?.Name,
+                  prop => prop.GetValue(point, null).ToString()
+               );
+
+            var fields = typeof(T)
+               .GetProperties()
+               .Where(prop => prop.IsDefined(typeof(InfluxDbField), true))
+               .ToDictionary(
+                  prop => (prop.GetCustomAttributes(typeof(InfluxDbField), true).First() as InfluxDbField)?.Name,
+                  prop => new InfluxValueField(prop.GetValue(point, null) as IComparable)
+               );
+
+            return new InfluxDatapoint<InfluxValueField>
+            {
+                Precision = precision,
+                UtcTimestamp = time,
+                MeasurementName = measurementName,
+                Retention = retentionPolicy,
+                Tags = tags,
+                Fields = fields
+            };
+        }
+
+        private static T FromInfluxDataPoint<T>(dynamic entry)
+        {
+            var instance = (T)Activator.CreateInstance(typeof(T));
+            var timeProp = typeof(T)
+                .GetProperties()
+                .Where(prop => prop.IsDefined(typeof(InfluxDbTime), true))
+                .ToList();
+            if (timeProp.Any())
+                timeProp.First().SetValue(instance, entry.Time);
+
+            var dict = (IDictionary<string, object>)entry;
+
+            foreach (var prop in typeof(T)
+                .GetProperties()
+                .Where(prop => prop.IsDefined(typeof(InfluxDbTag), true))
+                .Where(prop =>
+                    dict.ContainsKey((prop.GetCustomAttributes(typeof(InfluxDbTag), true).First() as InfluxDbTag)?.Name ?? "")))
+            {
+                var converter = TypeDescriptor.GetConverter(prop.PropertyType);
+                var tagName = (Enumerable.First(prop.GetCustomAttributes(typeof(InfluxDbTag), true)) as InfluxDbTag)?.Name;
+                prop.SetValue(instance, converter.ConvertFrom(dict[tagName ?? ""].ToString()));
+            }
+
+            foreach (var prop in typeof(T)
+                .GetProperties()
+                .Where(prop => prop.IsDefined(typeof(InfluxDbField), true))
+                .Where(prop =>
+                    dict.ContainsKey((prop.GetCustomAttributes(typeof(InfluxDbField), true).First() as InfluxDbField)?.Name ?? "")))
+            {
+                var converter = TypeDescriptor.GetConverter(prop.PropertyType);
+                var fieldName = (Enumerable.First(prop.GetCustomAttributes(typeof(InfluxDbField), true)) as InfluxDbField)?.Name;
+                prop.SetValue(instance, converter.ConvertFrom(dict[fieldName ?? ""].ToString()));
+            }
+
+            return instance;
+        }
+
         #endregion private methods
 
         /// <summary>
@@ -459,6 +567,18 @@ namespace AdysTech.InfluxDB.Client.Net
         }
 
         /// <summary>
+        /// Posts an arbitrary object decorated with InfluxDb attributes to a given measurement
+        /// </summary>
+        /// <param name="dbName">InfluxDB database name</param>
+        /// <param name="point">Object to be converted to influx data point and written</param>
+        /// <returns>True:Success, False:Failure</returns>
+        ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
+        ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>   
+        ///<exception cref="CustomAttributeFormatException">When the provided object is missing required attributes</exception>   
+        public Task<bool> PostPointAsync<T>(string dbName, T point) 
+            => PostPointAsync(dbName, ToInfluxDataPoint(point));
+
+        /// <summary>
         /// Posts series of InfluxDataPoints to given measurement, in batches of 255
         /// </summary>
         /// <param name="dbName">InfluxDB database name</param>
@@ -498,6 +618,19 @@ namespace AdysTech.InfluxDB.Client.Net
 
             return finalResult;
         }
+
+        /// <summary>
+        /// Posts series of arbitrary objects decorated with InfluxDb attributes to a given measurement, in batches of 255
+        /// </summary>
+        /// <param name="dbName">InfluxDB database name</param>
+        /// <param name="Points">Collection of object to be converted to data points and be written</param>
+        /// <param name="maxBatchSize">Maximal size of Influx batch to be written</param>
+        /// <returns>True:Success, False:Failure</returns>
+        ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
+        ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
+        ///<exception cref="CustomAttributeFormatException">When the provided object is missing required attributes</exception>   
+        public Task<bool> PostPointsAsync<T>(string dbName, IEnumerable<T> points, int maxBatchSize = 255)
+            => PostPointsAsync(dbName, points.Select(ToInfluxDataPoint), maxBatchSize);
 
         /// <summary>
         /// InfluxDB engine version
@@ -686,6 +819,56 @@ namespace AdysTech.InfluxDB.Client.Net
             }
             return null;
         }
+
+        /// <summary>
+        /// Queries Influx DB and gets a time series data back. Ideal for fetching measurement values.
+        /// The return list is of T objects, and each element in there will have values deserialized assuming correct attribute usage
+        /// </summary>
+        /// <param name="dbName">Name of the database</param>
+        /// <param name="measurementQuery">Query text, Supports multi series results</param>
+        /// <param name="retentionPolicy">retention policy containing the measurement</param>
+        /// <param name="precision">epoch precision of the data set</param>
+        /// <returns>List of InfluxSeries<T></returns>
+        public async Task<List<IInfluxSeries<T>>> QueryMultiSeriesAsync<T>(string dbName, string measurementQuery, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds)
+            => (await QueryMultiSeriesAsync(dbName, measurementQuery, retentionPolicy, precision))
+                .Select(series =>
+                    new InfluxSeries<T>
+                    {
+                        SeriesName = series.SeriesName,
+                        Tags = series.Tags,
+                        HasEntries = series.HasEntries,
+                        Partial = series.Partial,
+                        Entries = series.Entries.Select(FromInfluxDataPoint<T>).ToList().AsReadOnly(),
+                    } as IInfluxSeries<T>)
+                .ToList();
+
+        /// <summary>
+        /// Queries Influx DB and gets a time series data back. Ideal for fetching measurement values.
+        /// The return list is of T objects, and each element in there will have values deserialized assuming correct attribute usage
+        /// THis uses Chunking support from InfluxDB. It returns results in streamed batches rather than as a single response
+        /// Responses will be chunked by series or by every ChunkSize points, whichever occurs first.
+        /// </summary>
+        /// <param name="dbName">Name of the database</param>
+        /// <param name="measurementQuery">Query text, Only results with single series are supported for now</param>
+        /// <param name="ChunkSize">Maximum Number of points in a chunk</param>
+        /// <param name="retentionPolicy">retention policy containing the measurement</param>
+        /// <param name="precision">epoch precision of the data set</param>
+        /// <returns>List of InfluxSeries<T></returns>
+        /// <seealso cref="InfluxSeries"/>
+
+        public async Task<List<IInfluxSeries<T>>> QueryMultiSeriesAsync<T>(string dbName, string measurementQuery, int ChunkSize, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds)
+            => (await QueryMultiSeriesAsync(dbName, measurementQuery, ChunkSize, retentionPolicy, precision))
+                .Select(series =>
+                    new InfluxSeries<T>
+                    {
+                        SeriesName = series.SeriesName,
+                        Tags = series.Tags,
+                        HasEntries = series.HasEntries,
+                        Partial = series.Partial,
+                        Entries = series.Entries.Select(FromInfluxDataPoint<T>).ToList().AsReadOnly(),
+                    } as IInfluxSeries<T>)
+                .ToList();
+
 
         /// <summary>
         /// Convert the Influx Series JSON objects to InfluxSeries

@@ -93,6 +93,50 @@ var r = await client.PostPointAsync(dbName, valMixed);
 
 A collection of points can be posted using `await client.PostPointsAsync (dbName, points)`, where `points` can be collection of different types of `InfluxDatapoint`
 
+#### Writing strongly typed data points to DB
+
+```Csharp
+class YourPoint
+{
+    [InfluxDbMeasurementName]
+    public string Measurement { get; set; }
+
+    [InfluxDbTime]
+    public DateTime Time { get; set; }
+
+    [InfluxDbPrecision]
+    public TimePrecision Precision { get; set; }
+
+    [InfluxDbRetentionPolicy]
+    public InfluxRetentionPolicy Retention { get; set; }
+
+    [InfluxDbField("FieldName")]
+    public string FieldProperty { get; set; }
+
+    [InfluxDbTag("TagName")]
+    public string TagProperty { get; set; }
+
+}
+
+var point = new YourPoint
+{
+    Time = DateTime.UtcNow,
+    Measurement = measurementName,
+    Precision = TimePrecision.Seconds,
+    FieldProperty = "FieldValue",
+    TagProperty = "TagValue",
+    Retention = new InfluxRetentionPolicy() { Name = "Test2" };
+};
+
+var r = await client.PostPointAsync(dbName, point);
+```
+
+This supports all types `InfluxValueField` supports. Additionally it supports tags other than strings, as long as they can be converted to string.
+
+The parameter that has `InfluxDbRetentionPolicy` applied to it can be an `IInfluxRetentionPolicy` alternatively it will be treated as a string and will be used as the name of the retention policy.
+
+A collection of points can be posted using `await client.PostPointsAsync<T>(dbName, points)`, where `points` can be collection of arbitrary type `T` with appropriate attributes
+
 #### Query for data points
 
 ```Csharp
@@ -106,6 +150,18 @@ var rc = await client.QueryMultiSeriesAsync ("_internal", "select * from runtime
 Second example above will provide multiple series objects, and allows to get data like `r.FirstOrDefault(x=>x.SeriesName=="queryExecutor").Entries[0].QueryDurationNs`.
 
 The last example above makes InfluxDB to split the selected points (100 limited by `limit` clause) to multiple series, each having 10 points as given by `chunk` size.
+
+
+#### Query for strongly typed data points
+
+```Csharp
+var r = await client.QueryMultiSeriesAsync<YourPoint>(dbName, $"select * from {measurementName}");
+```
+
+`QueryMultiSeriesAsync<T>` method returns `List<InfluxSeries<T>>`, `InfluxSeries<T>` behaves similar to `InfluxSeries` except Entries are not dynamic but strongly typed as T. It uses the same attributes as used for writing the points to match the fields and tags to the matching properties. If a matching property can't be found, the field is discarded. If a property doesn't have a matching field, it's left empty.
+
+It supports multiple chuncks similarly to `QueryMultiSeriesAsync`.
+
 
 #### Retention Policies
 
