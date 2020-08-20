@@ -110,8 +110,17 @@ class YourPoint
     [InfluxDbRetentionPolicy]
     public InfluxRetentionPolicy Retention { get; set; }
 
-    [InfluxDbField("FieldName")]
-    public string FieldProperty { get; set; }
+    [InfluxDbField("StringFieldName")]
+    public string StringFieldProperty { get; set; }
+
+    [InfluxDbField("IntFieldName")]
+    public int IntFieldProperty { get; set; }
+
+    [InfluxDbField("BoolFieldName")]
+    public bool BoolFieldProperty { get; set; }
+
+    [InfluxDbField("DoubleFieldName")]
+    public double DoubleFieldProperty { get; set; }
 
     [InfluxDbTag("TagName")]
     public string TagProperty { get; set; }
@@ -123,7 +132,10 @@ var point = new YourPoint
     Time = DateTime.UtcNow,
     Measurement = measurementName,
     Precision = TimePrecision.Seconds,
-    FieldProperty = "FieldValue",
+    StringFieldProperty = "FieldValue",
+    IntFieldProperty = 42,
+    BoolFieldProperty = true,
+    DoubleFieldProperty = 3.1415,
     TagProperty = "TagValue",
     Retention = new InfluxRetentionPolicy() { Name = "Test2" };
 };
