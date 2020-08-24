@@ -98,31 +98,31 @@ A collection of points can be posted using `await client.PostPointsAsync (dbName
 ```Csharp
 class YourPoint
 {
-    [InfluxDbMeasurementName]
+    [InfluxDBMeasurementName]
     public string Measurement { get; set; }
 
-    [InfluxDbTime]
+    [InfluxDBTime]
     public DateTime Time { get; set; }
 
-    [InfluxDbPrecision]
+    [InfluxDBPrecision]
     public TimePrecision Precision { get; set; }
 
-    [InfluxDbRetentionPolicy]
+    [InfluxDBRetentionPolicy]
     public InfluxRetentionPolicy Retention { get; set; }
 
-    [InfluxDbField("StringFieldName")]
+    [InfluxDBField("StringFieldName")]
     public string StringFieldProperty { get; set; }
 
-    [InfluxDbField("IntFieldName")]
+    [InfluxDBField("IntFieldName")]
     public int IntFieldProperty { get; set; }
 
-    [InfluxDbField("BoolFieldName")]
+    [InfluxDBField("BoolFieldName")]
     public bool BoolFieldProperty { get; set; }
 
-    [InfluxDbField("DoubleFieldName")]
+    [InfluxDBField("DoubleFieldName")]
     public double DoubleFieldProperty { get; set; }
 
-    [InfluxDbTag("TagName")]
+    [InfluxDBTag("TagName")]
     public string TagProperty { get; set; }
 
 }
@@ -145,7 +145,7 @@ var r = await client.PostPointAsync(dbName, point);
 
 This supports all types `InfluxValueField` supports. Additionally it supports tags other than strings, as long as they can be converted to string.
 
-The parameter that has `InfluxDbRetentionPolicy` applied to it can be an `IInfluxRetentionPolicy` alternatively it will be treated as a string and will be used as the name of the retention policy.
+The parameter that has `InfluxDBRetentionPolicy` applied to it can be an `IInfluxRetentionPolicy` alternatively it will be treated as a string and will be used as the name of the retention policy.
 
 A collection of points can be posted using `await client.PostPointsAsync<T>(dbName, points)`, where `points` can be collection of arbitrary type `T` with appropriate attributes
 

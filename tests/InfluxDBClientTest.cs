@@ -1093,43 +1093,43 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
 
     internal abstract class PointObject
     {
-        [InfluxDbMeasurementName]
+        [InfluxDBMeasurementName]
         public string Measurement { get; set; }
 
-        [InfluxDbTime]
+        [InfluxDBTime]
         public DateTime Time { get; set; }
 
-        [InfluxDbPrecision]
+        [InfluxDBPrecision]
         public TimePrecision Precision { get; set; }
 
-        [InfluxDbField("IntField")]
+        [InfluxDBField("IntField")]
         public int IntField { get; set; }
 
-        [InfluxDbField("DoubleField")]
+        [InfluxDBField("DoubleField")]
         public double DoubleField { get; set; }
 
-        [InfluxDbField("BoolField")]
+        [InfluxDBField("BoolField")]
         public bool BoolField { get; set; }
 
-        [InfluxDbField("StringField")]
+        [InfluxDBField("StringField")]
         public string StringField { get; set; }
 
-        [InfluxDbTag("StringTag")]
+        [InfluxDBTag("StringTag")]
         public string StringTag { get; set; }
 
-        [InfluxDbTag("IntTag")]
+        [InfluxDBTag("IntTag")]
         public int IntTag { get; set; }
     }
 
     internal class PointObjectWithStringRetention : PointObject
     {
-        [InfluxDbRetentionPolicy]
+        [InfluxDBRetentionPolicy]
         public string Retention { get; set; }
     }
 
     internal class PointObjectWithObjectRetention : PointObject
     {
-        [InfluxDbRetentionPolicy]
+        [InfluxDBRetentionPolicy]
         public InfluxRetentionPolicy Retention { get; set; }
     }
 }

@@ -279,21 +279,21 @@ namespace AdysTech.InfluxDB.Client.Net
 
             var measurementProp = typeof(T)
                .GetProperties()
-               .Where(prop => prop.IsDefined(typeof(InfluxDbMeasurementName), true))
+               .Where(prop => prop.IsDefined(typeof(InfluxDBMeasurementName), true))
                .ToList();
             if (!measurementProp.Any())
-                throw new CustomAttributeFormatException("InfluxDbMeasurement attribute is required on object published to InfluxDb");
+                throw new CustomAttributeFormatException("InfluxDBMeasurement attribute is required on object published to InfluxDB");
             var measurementName = measurementProp.First().GetValue(point, null) as string;
 
             var timeProp = typeof(T)
                .GetProperties()
-               .Where(prop => prop.IsDefined(typeof(InfluxDbTime), true))
+               .Where(prop => prop.IsDefined(typeof(InfluxDBTime), true))
                .ToList();
             var time = timeProp.Any() ? (DateTime)timeProp.First().GetValue(point, null) : DateTime.Now;
 
             var precisionProp = typeof(T)
                .GetProperties()
-               .Where(prop => prop.IsDefined(typeof(InfluxDbPrecision), true))
+               .Where(prop => prop.IsDefined(typeof(InfluxDBPrecision), true))
                .ToList();
             var precision = precisionProp.Any()
                ? (TimePrecision)precisionProp.First().GetValue(point, null)
@@ -301,7 +301,7 @@ namespace AdysTech.InfluxDB.Client.Net
 
             var retentionProp = typeof(T)
                 .GetProperties()
-                .Where(prop => prop.IsDefined(typeof(InfluxDbRetentionPolicy), true))
+                .Where(prop => prop.IsDefined(typeof(InfluxDBRetentionPolicy), true))
                 .ToList();
             var retentionPolicy = retentionProp.Any()
                 ? retentionProp.First().GetValue(point, null) is IInfluxRetentionPolicy policy 
@@ -314,17 +314,17 @@ namespace AdysTech.InfluxDB.Client.Net
 
             var tags = typeof(T)
                .GetProperties()
-               .Where(prop => prop.IsDefined(typeof(InfluxDbTag), true))
+               .Where(prop => prop.IsDefined(typeof(InfluxDBTag), true))
                .ToDictionary(
-                  prop => (prop.GetCustomAttributes(typeof(InfluxDbTag), true).First() as InfluxDbTag)?.Name,
+                  prop => (prop.GetCustomAttributes(typeof(InfluxDBTag), true).First() as InfluxDBTag)?.Name,
                   prop => prop.GetValue(point, null).ToString()
                );
 
             var fields = typeof(T)
                .GetProperties()
-               .Where(prop => prop.IsDefined(typeof(InfluxDbField), true))
+               .Where(prop => prop.IsDefined(typeof(InfluxDBField), true))
                .ToDictionary(
-                  prop => (prop.GetCustomAttributes(typeof(InfluxDbField), true).First() as InfluxDbField)?.Name,
+                  prop => (prop.GetCustomAttributes(typeof(InfluxDBField), true).First() as InfluxDBField)?.Name,
                   prop => new InfluxValueField(prop.GetValue(point, null) as IComparable)
                );
 
@@ -344,7 +344,7 @@ namespace AdysTech.InfluxDB.Client.Net
             var instance = (T)Activator.CreateInstance(typeof(T));
             var timeProp = typeof(T)
                 .GetProperties()
-                .Where(prop => prop.IsDefined(typeof(InfluxDbTime), true))
+                .Where(prop => prop.IsDefined(typeof(InfluxDBTime), true))
                 .ToList();
             if (timeProp.Any())
                 timeProp.First().SetValue(instance, entry.Time);
@@ -353,23 +353,23 @@ namespace AdysTech.InfluxDB.Client.Net
 
             foreach (var prop in typeof(T)
                 .GetProperties()
-                .Where(prop => prop.IsDefined(typeof(InfluxDbTag), true))
+                .Where(prop => prop.IsDefined(typeof(InfluxDBTag), true))
                 .Where(prop =>
-                    dict.ContainsKey((prop.GetCustomAttributes(typeof(InfluxDbTag), true).First() as InfluxDbTag)?.Name ?? "")))
+                    dict.ContainsKey((prop.GetCustomAttributes(typeof(InfluxDBTag), true).First() as InfluxDBTag)?.Name ?? "")))
             {
                 var converter = TypeDescriptor.GetConverter(prop.PropertyType);
-                var tagName = (Enumerable.First(prop.GetCustomAttributes(typeof(InfluxDbTag), true)) as InfluxDbTag)?.Name;
+                var tagName = (Enumerable.First(prop.GetCustomAttributes(typeof(InfluxDBTag), true)) as InfluxDBTag)?.Name;
                 prop.SetValue(instance, converter.ConvertFrom(dict[tagName ?? ""].ToString()));
             }
 
             foreach (var prop in typeof(T)
                 .GetProperties()
-                .Where(prop => prop.IsDefined(typeof(InfluxDbField), true))
+                .Where(prop => prop.IsDefined(typeof(InfluxDBField), true))
                 .Where(prop =>
-                    dict.ContainsKey((prop.GetCustomAttributes(typeof(InfluxDbField), true).First() as InfluxDbField)?.Name ?? "")))
+                    dict.ContainsKey((prop.GetCustomAttributes(typeof(InfluxDBField), true).First() as InfluxDBField)?.Name ?? "")))
             {
                 var converter = TypeDescriptor.GetConverter(prop.PropertyType);
-                var fieldName = (Enumerable.First(prop.GetCustomAttributes(typeof(InfluxDbField), true)) as InfluxDbField)?.Name;
+                var fieldName = (Enumerable.First(prop.GetCustomAttributes(typeof(InfluxDBField), true)) as InfluxDBField)?.Name;
                 prop.SetValue(instance, converter.ConvertFrom(dict[fieldName ?? ""].ToString()));
             }
 
@@ -567,7 +567,7 @@ namespace AdysTech.InfluxDB.Client.Net
         }
 
         /// <summary>
-        /// Posts an arbitrary object decorated with InfluxDb attributes to a given measurement
+        /// Posts an arbitrary object decorated with InfluxDB attributes to a given measurement
         /// </summary>
         /// <param name="dbName">InfluxDB database name</param>
         /// <param name="point">Object to be converted to influx data point and written</param>
@@ -620,7 +620,7 @@ namespace AdysTech.InfluxDB.Client.Net
         }
 
         /// <summary>
-        /// Posts series of arbitrary objects decorated with InfluxDb attributes to a given measurement, in batches of 255
+        /// Posts series of arbitrary objects decorated with InfluxDB attributes to a given measurement, in batches of 255
         /// </summary>
         /// <param name="dbName">InfluxDB database name</param>
         /// <param name="Points">Collection of object to be converted to data points and be written</param>

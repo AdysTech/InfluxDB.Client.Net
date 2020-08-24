@@ -58,7 +58,7 @@ namespace AdysTech.InfluxDB.Client.Net
         Task<bool> PostPointAsync(string dbName, IInfluxDatapoint point);
 
         /// <summary>
-        /// Posts an arbitrary object decorated with InfluxDb attributes to a given measurement
+        /// Posts an arbitrary object decorated with InfluxDB attributes to a given measurement
         /// </summary>
         /// <param name="dbName">InfluxDB database name</param>
         /// <param name="point">Object to be converted to influx data point and written</param>
@@ -80,7 +80,7 @@ namespace AdysTech.InfluxDB.Client.Net
         Task<bool> PostPointsAsync(string dbName, IEnumerable<IInfluxDatapoint> points, int maxBatchSize = 255);
 
         /// <summary>
-        /// Posts series of arbitrary objects decorated with InfluxDb attributes to a given measurement, in batches of 255
+        /// Posts series of arbitrary objects decorated with InfluxDB attributes to a given measurement, in batches of 255
         /// </summary>
         /// <param name="dbName">InfluxDB database name</param>
         /// <param name="Points">Collection of object to be converted to data points and be written</param>

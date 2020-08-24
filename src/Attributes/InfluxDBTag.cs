@@ -3,10 +3,10 @@ using System;
 namespace AdysTech.InfluxDB.Client.Net
 {
    [AttributeUsage(AttributeTargets.Property, Inherited = true)]
-   public class InfluxDbTag : Attribute
+   public class InfluxDBTag : Attribute
    {
       public readonly string Name;
-      public InfluxDbTag(string name)
+      public InfluxDBTag(string name)
       {
          Name = name;
       }

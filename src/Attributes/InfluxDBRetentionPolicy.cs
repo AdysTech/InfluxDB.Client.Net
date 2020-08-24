@@ -3,5 +3,5 @@
 namespace AdysTech.InfluxDB.Client.Net
 {
     [AttributeUsage(AttributeTargets.Property, Inherited = true)]
-    public class InfluxDbRetentionPolicy : Attribute { }
+    public class InfluxDBRetentionPolicy : Attribute { }
 }
