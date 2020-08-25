@@ -289,7 +289,7 @@ namespace AdysTech.InfluxDB.Client.Net
                .GetProperties()
                .Where(prop => prop.IsDefined(typeof(InfluxDBTime), true))
                .ToList();
-            var time = timeProp.Any() ? (DateTime)timeProp.First().GetValue(point, null) : DateTime.Now;
+            var time = timeProp.Any() ? (DateTime)timeProp.First().GetValue(point, null) : DateTime.UtcNow;
 
             var precisionProp = typeof(T)
                .GetProperties()
