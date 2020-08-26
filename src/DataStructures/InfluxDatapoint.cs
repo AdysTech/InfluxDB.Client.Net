@@ -22,13 +22,13 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <summary>
         /// Dictionary storing all Tag/Value combinations
         /// </summary>
-        public Dictionary<string, string> Tags { get; private set; }
+        public Dictionary<string, string> Tags { get; internal set; }
 
         /// <summary>
         /// The key-value pair in InfluxDB’s data structure that records metadata and the actual data value.
         /// Fields are required in InfluxDB’s data structure and they are not indexed.
         /// </summary>
-        public Dictionary<string, T> Fields { get; private set; }
+        public Dictionary<string, T> Fields { get; internal set; }
 
         /// <summary>
         /// Timestamp for the point, will be converted to Epoch, expcted to be in UTC

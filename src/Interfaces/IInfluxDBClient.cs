@@ -58,6 +58,17 @@ namespace AdysTech.InfluxDB.Client.Net
         Task<bool> PostPointAsync(string dbName, IInfluxDatapoint point);
 
         /// <summary>
+        /// Posts an arbitrary object decorated with InfluxDB attributes to a given measurement
+        /// </summary>
+        /// <param name="dbName">InfluxDB database name</param>
+        /// <param name="point">Object to be converted to influx data point and written</param>
+        /// <returns>True:Success, False:Failure</returns>
+        ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
+        ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
+        ///<exception cref="CustomAttributeFormatException">When the provided object is missing required attributes</exception>   
+        Task<bool> PostPointAsync<T>(string dbName, T point);
+
+        /// <summary>
         /// Posts series of InfluxDataPoints to given measurement, in batches of 255
         /// </summary>
         /// <param name="dbName">InfluxDB database name</param>
@@ -68,6 +79,17 @@ namespace AdysTech.InfluxDB.Client.Net
         ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>   
         Task<bool> PostPointsAsync(string dbName, IEnumerable<IInfluxDatapoint> points, int maxBatchSize = 255);
 
+        /// <summary>
+        /// Posts series of arbitrary objects decorated with InfluxDB attributes to a given measurement, in batches of 255
+        /// </summary>
+        /// <param name="dbName">InfluxDB database name</param>
+        /// <param name="Points">Collection of object to be converted to data points and be written</param>
+        /// <param name="maxBatchSize">Maximal size of Influx batch to be written</param>
+        /// <returns>True:Success, False:Failure</returns>
+        ///<exception cref="UnauthorizedAccessException">When Influx needs authentication, and no user name password is supplied or auth fails</exception>
+        ///<exception cref="HttpRequestException">all other HTTP exceptions</exception>
+        ///<exception cref="CustomAttributeFormatException">When the provided object is missing required attributes</exception>   
+        Task<bool> PostPointsAsync<T>(string dbName, IEnumerable<T> points, int maxBatchSize = 255);
 
         /// <summary>
         /// Gets the list of retention policies present in a DB
@@ -94,6 +116,17 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <returns>List of InfluxSeries</returns>
         Task<List<IInfluxSeries>> QueryMultiSeriesAsync(string dbName, string measurementQuery, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds);
 
+        /// <summary>
+        /// Queries Influx DB and gets a time series data back. Ideal for fetching measurement values.
+        /// The return list is of T objects, and each element in there will have values deserialized assuming correct attribute usage
+        /// </summary>
+        /// <param name="dbName">Name of the database</param>
+        /// <param name="measurementQuery">Query text, Supports multi series results</param>
+        /// <param name="retentionPolicy">retention policy containing the measurement</param>
+        /// <param name="precision">epoch precision of the data set</param>
+        /// <returns>List of InfluxSeries<T></returns>
+        Task<List<IInfluxSeries<T>>> QueryMultiSeriesAsync<T>(string dbName, string measurementQuery, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds);
+
 
         /// <summary>
         /// Queries Influx DB and gets a time series data back. Ideal for fetching measurement values.
@@ -110,6 +143,22 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <seealso cref="InfluxSeries"/>
 
         Task<List<IInfluxSeries>> QueryMultiSeriesAsync(string dbName, string measurementQuery, int ChunkSize, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds);
+
+        /// <summary>
+        /// Queries Influx DB and gets a time series data back. Ideal for fetching measurement values.
+        /// The return list is of T objects, and each element in there will have values deserialized assuming correct attribute usage
+        /// THis uses Chunking support from InfluxDB. It returns results in streamed batches rather than as a single response
+        /// Responses will be chunked by series or by every ChunkSize points, whichever occurs first.
+        /// </summary>
+        /// <param name="dbName">Name of the database</param>
+        /// <param name="measurementQuery">Query text, Only results with single series are supported for now</param>
+        /// <param name="ChunkSize">Maximum Number of points in a chunk</param>
+        /// <param name="retentionPolicy">retention policy containing the measurement</param>
+        /// <param name="precision">epoch precision of the data set</param>
+        /// <returns>List of InfluxSeries<T></returns>
+        /// <seealso cref="InfluxSeries"/>
+
+        Task<List<IInfluxSeries<T>>> QueryMultiSeriesAsync<T>(string dbName, string measurementQuery, int ChunkSize, string retentionPolicy = null, TimePrecision precision = TimePrecision.Nanoseconds);
 
 
         /// <summary>

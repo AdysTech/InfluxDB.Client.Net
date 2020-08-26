@@ -1,3 +1,9 @@
+## v0.21.0 [08/25/2020]
+
+### Release Notes
+This version introduces methods to query and post strongly typed points using attributes. Thanks to @tituszban for adding the attribute support. Refer to [Readme.md](https://github.com/AdysTech/InfluxDB.Client.Net/blob/master/README.md) for examples. 
+
+
 ## v0.20.0 [08/11/2020]
 
 ### Release Notes
