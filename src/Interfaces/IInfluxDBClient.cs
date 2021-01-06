@@ -107,7 +107,7 @@ namespace AdysTech.InfluxDB.Client.Net
 
         /// <summary>
         /// Queries Influx DB and gets a time series data back. Ideal for fetching measurement values.
-        /// The return list is of dynamics, and each element in there will have properties named after columns in series
+        /// The return list is of Dictionary<string, object>, and each element in there will have properties(keys) named after columns in series
         /// </summary>
         /// <param name="dbName">Name of the database</param>
         /// <param name="measurementQuery">Query text, Supports multi series results</param>

@@ -681,9 +681,9 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
                     var x = val?.Entries?.FirstOrDefault();
                     try
                     {
-                        var d = new DateTime(long.Parse(x.Ticks));
-                        TimeSpan t = d - x.Time;
-                        TimePrecision p = Enum.Parse(typeof(TimePrecision), x.Precision);
+                        var d = new DateTime(long.Parse(x["Ticks"].ToString()));
+                        TimeSpan t = d - (DateTime)x["Time"];
+                        TimePrecision p = (TimePrecision)Enum.Parse(typeof(TimePrecision), x["Precision"].ToString());
                         switch (p)
                         {
                             case TimePrecision.Hours: Assert.IsTrue(t.TotalHours < 1); break;

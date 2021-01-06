@@ -7,11 +7,11 @@ namespace AdysTech.InfluxDB.Client.Net
     /// </summary>
     public interface IInfluxSeries
     {
-        /// <summary>
-        /// Read only List of ExpandoObjects (in the form of dynamic) representing the entries in the query result 
-        /// The objects will have columns as Properties with their current values
-        /// </summary>
-        IReadOnlyList<dynamic> Entries { get; }
+         /// <summary>
+         /// Read only List of Dictionaries representing the entries in the query result 
+         /// The objects will have columns as Properties with their current values
+         /// </summary>
+         IReadOnlyList<Dictionary<string, object>> Entries { get; }
         
         /// <summary>
         /// Indicates whether this Series has any entries or not

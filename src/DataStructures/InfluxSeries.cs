@@ -29,10 +29,10 @@ namespace AdysTech.InfluxDB.Client.Net
         public bool HasEntries { get; internal set; }
 
         /// <summary>
-        /// Read only List of ExpandoObjects (in the form of dynamic) representing the entries in the query result 
+        /// Read only List of Dictionaries representing the entries in the query result 
         /// The objects will have columns as Peoperties with their current values
         /// </summary>
-        public IReadOnlyList<dynamic> Entries { get; internal set; }
+        public IReadOnlyList<Dictionary<string, object>> Entries { get; internal set; }
 
         /// <summary>
         /// True if the influx query was answered with a partial response due to e.g. exceeding a configured
@@ -65,7 +65,7 @@ namespace AdysTech.InfluxDB.Client.Net
         public bool HasEntries { get; internal set; }
 
         /// <summary>
-        /// Read only List of ExpandoObjects (in the form of dynamic) representing the entries in the query result 
+        /// Read only List of Dictionaries representing the entries in the query result 
         /// The objects will have columns as Peoperties with their current values
         /// </summary>
         public IReadOnlyList<T> Entries { get; internal set; }
