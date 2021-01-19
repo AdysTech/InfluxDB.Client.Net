@@ -738,9 +738,9 @@ namespace AdysTech.InfluxDB.Client.Net.Tests
                 var values = await client.QueryMultiSeriesAsync(dbName, $"select sum(Val) from ChunkTest where TestTime ='{ TestTime}' group by ChunkSeries", chunkSize * 10);
                 foreach (var val in values)
                 {
-                    var x = val?.Entries?.Count;
-                    //the series should be smaller than the chunk size, each resultset will only one series
-                    Assert.IsTrue(x == 1);
+                    var x = val?.EntriesAsDictionary?.Count;
+                     //the series should be smaller than the chunk size, each resultset will only one series
+                     Assert.IsTrue(x == 1);
                 }
             }
             catch (Exception e)

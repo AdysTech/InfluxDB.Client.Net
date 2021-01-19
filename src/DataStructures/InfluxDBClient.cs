@@ -442,7 +442,7 @@ namespace AdysTech.InfluxDB.Client.Net
 
          var dbs = await QueryMultiSeriesAsync(null, "SHOW DATABASES");
 
-         foreach (var db in dbs?.FirstOrDefault()?.Entries)
+         foreach (var db in dbs?.FirstOrDefault()?.EntriesAsDictionary)
             dbNames.Add(db?["Name"].ToString());
 
          return dbNames;
@@ -470,7 +470,7 @@ namespace AdysTech.InfluxDB.Client.Net
                dbStructure.Measurements.Add(measurement);
                dbStructure.MeasurementHierarchy[policy].Add(measurement);
 
-               foreach (var e in s.Entries)
+               foreach (var e in s.EntriesAsDictionary)
                   measurement.Fields.Add(e["FieldKey"].ToString());
 
                measurement.SeriesCount = (await QueryMultiSeriesAsync(dbName: dbName, retentionPolicy: policy.Name, measurementQuery: "SHOW SERIES")).FirstOrDefault().Entries?.Count() ?? -1;
@@ -484,7 +484,7 @@ namespace AdysTech.InfluxDB.Client.Net
             foreach (var t in tags)
             {
                var measurement = dbStructure.Measurements.FirstOrDefault(x => x.Name == t.SeriesName);
-               foreach (var e in t.Entries)
+               foreach (var e in t.EntriesAsDictionary)
                   measurement.Tags.Add(e["TagKey"].ToString());
             }
          }
@@ -680,7 +680,7 @@ namespace AdysTech.InfluxDB.Client.Net
          var rawpolicies = await QueryMultiSeriesAsync(dbName, "show retention policies on " + dbName);
          var policies = new List<IInfluxRetentionPolicy>();
 
-         foreach (Dictionary<string, object> policy in rawpolicies.FirstOrDefault()?.Entries ?? Enumerable.Empty<Dictionary<string, object>>())
+         foreach (Dictionary<string, object> policy in rawpolicies.FirstOrDefault()?.EntriesAsDictionary ?? Enumerable.Empty<Dictionary<string, object>>())
          {
             var pol = new InfluxRetentionPolicy()
             {
@@ -837,7 +837,7 @@ namespace AdysTech.InfluxDB.Client.Net
                      Tags = series.Tags,
                      HasEntries = series.HasEntries,
                      Partial = series.Partial,
-                     Entries = series.Entries.Select(FromInfluxDataPoint<T>).ToList().AsReadOnly(),
+                     EntriesAsDictionary = series.EntriesAsDictionary.Select(FromInfluxDataPoint<T>).ToList().AsReadOnly(),
                   } as IInfluxSeries<T>)
               .ToList();
 
@@ -864,7 +864,7 @@ namespace AdysTech.InfluxDB.Client.Net
                      Tags = series.Tags,
                      HasEntries = series.HasEntries,
                      Partial = series.Partial,
-                     Entries = series.Entries.Select(FromInfluxDataPoint<T>).ToList().AsReadOnly(),
+                     EntriesAsDictionary = series.EntriesAsDictionary.Select(FromInfluxDataPoint<T>).ToList().AsReadOnly(),
                   } as IInfluxSeries<T>)
               .ToList();
 
@@ -908,7 +908,7 @@ namespace AdysTech.InfluxDB.Client.Net
                   ((IDictionary<string, object>)entry).Add(header, series.Values[row][col]);
             }
          }
-         result.Entries = entries;
+         result.EntriesAsDictionary = entries;
          return result;
       }
 
@@ -925,7 +925,7 @@ namespace AdysTech.InfluxDB.Client.Net
 
          foreach (var dbEntry in rawCQList.Where(cq => cq.HasEntries == true))
          {
-            foreach (var rawCQ in dbEntry.Entries)
+            foreach (var rawCQ in dbEntry.EntriesAsDictionary)
             {
                var cq = new InfluxContinuousQuery()
                {

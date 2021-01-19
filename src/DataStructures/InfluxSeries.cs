@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AdysTech.InfluxDB.Client.Net.Core.Extensions;
 
 namespace AdysTech.InfluxDB.Client.Net
 {
@@ -29,10 +30,16 @@ namespace AdysTech.InfluxDB.Client.Net
         public bool HasEntries { get; internal set; }
 
         /// <summary>
-        /// Read only List of Dictionaries representing the entries in the query result 
-        /// The objects will have columns as Peoperties with their current values
+        /// Read only List of ExpandoObjects (in the form of dynamic) representing the entries in the query result 
+        /// The objects will have columns as Properties with their current values
         /// </summary>
-        public IReadOnlyList<Dictionary<string, object>> Entries { get; internal set; }
+        public IReadOnlyList<dynamic> Entries { get { return EntriesAsDictionary.ToExpando();} }
+
+        /// <summary>
+        /// Read only List of Dictionaries representing the entries in the query result 
+        /// The objects will have columns as Properties with their current values
+        /// </summary>
+        public IReadOnlyList<Dictionary<string, object>> EntriesAsDictionary { get; internal set; }
 
         /// <summary>
         /// True if the influx query was answered with a partial response due to e.g. exceeding a configured
@@ -45,10 +52,8 @@ namespace AdysTech.InfluxDB.Client.Net
     /// <summary>
     /// Represents the results returned by Query end point of the InfluxDB engine
     /// </summary>
-
     public class InfluxSeries<T> : IInfluxSeries<T>
     {
-
         /// <summary>
         /// Name of the series. Usually its MeasurementName in case of select queries
         /// </summary>
@@ -65,10 +70,16 @@ namespace AdysTech.InfluxDB.Client.Net
         public bool HasEntries { get; internal set; }
 
         /// <summary>
-        /// Read only List of Dictionaries representing the entries in the query result 
-        /// The objects will have columns as Peoperties with their current values
+        /// Read only List of ExpandoObjects (in the form of dynamic) representing the entries in the query result 
+        /// The objects will have columns as Properties with their current values
         /// </summary>
-        public IReadOnlyList<T> Entries { get; internal set; }
+        public IReadOnlyList<T> Entries { get { return (IReadOnlyList<T>)EntriesAsDictionary.ToExpando(); } }
+
+        /// <summary>
+        /// Read only List of Dictionaries representing the entries in the query result 
+        /// The objects will have columns as Properties with their current values
+        /// </summary>
+        public IReadOnlyList<T> EntriesAsDictionary { get; internal set; }
 
         /// <summary>
         /// True if the influx query was answered with a partial response due to e.g. exceeding a configured
