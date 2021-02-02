@@ -396,7 +396,19 @@ namespace AdysTech.InfluxDB.Client.Net
         /// <param name="UserName">User name to authenticate InflexDB</param>
         /// <param name="Password">password</param>
         /// <param name="ClientHandler">HttpClientHandler which can be used to set the Web Proxy </param>
-        public InfluxDBClient(string InfluxUrl, string UserName, string Password, HttpClientHandler ClientHandler)
+        public InfluxDBClient(string InfluxUrl, string UserName, string Password, HttpClientHandler ClientHandler) : this(InfluxUrl, UserName, Password, ClientHandler, null)
+        {
+        }
+
+        /// <summary>
+        /// Creates the InfluxDB Client with custom request headers
+        /// </summary>
+        /// <param name="InfluxUrl">Url for the Inflex Server, e.g. http://localhost:8086</param>
+        /// <param name="UserName">User name to authenticate InflexDB</param>
+        /// <param name="Password">password</param>
+        /// <param name="ClientHandler">HttpClientHandler which can be used to set the Web Proxy </param>
+        /// <param name="CustomHeaders">A Dictionary of custom HTTP request headers to add to the requests sent to Influx </param>
+        public InfluxDBClient(string InfluxUrl, string UserName, string Password, HttpClientHandler ClientHandler, IDictionary<string, string> CustomHeaders)
         {
             try
             {
@@ -412,6 +424,15 @@ namespace AdysTech.InfluxDB.Client.Net
                 if (!(String.IsNullOrWhiteSpace(InfluxDBUserName) && String.IsNullOrWhiteSpace(InfluxDBPassword)))
                     _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic",
                         Convert.ToBase64String(Encoding.UTF8.GetBytes($"{InfluxDBUserName}:{InfluxDBPassword}")));
+
+                // if custom headers were supplied then lets add them
+                if (CustomHeaders != null)
+                {
+                    foreach (var key in CustomHeaders.Keys)
+                    {
+                        _client.DefaultRequestHeaders.Add(key, CustomHeaders[key]);
+                    }
+                }
 
                 _client.DefaultRequestHeaders.ConnectionClose = false;
             }
