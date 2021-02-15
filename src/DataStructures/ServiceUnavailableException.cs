@@ -8,6 +8,10 @@ namespace AdysTech.InfluxDB.Client.Net
         {
             
         }
+        public ServiceUnavailableException(Exception innerException) : base("InfluxDB service is not available", innerException)
+        {
+
+        }
         public ServiceUnavailableException(string Message) : base(Message)
         {
 
