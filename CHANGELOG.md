@@ -1,3 +1,14 @@
+## v0.25.0 [02/18/2021]
+
+### Features
+
+- [#106](https://github.com/AdysTech/InfluxDB.Client.Net/pull/106): This version adds support for custom HTTP Request Headers. Useful when you are dealing with bearer tokens. Thanks to @willwhite1. 
+
+### Bugfixes
+
+- [#107](https://github.com/AdysTech/InfluxDB.Client.Net/issues/107): Null references in exception handling code for service unavailability. Thanks to @DmitryNaumov for finding it and fixing it in [#108](https://github.com/AdysTech/InfluxDB.Client.Net/pull/108)
+
+
 ## v0.21.0 [08/25/2020]
 
 ### Release Notes

@@ -6,9 +6,9 @@
     <Product>AdysTech.InfluxDB.Client.Net</Product>
     <Company>AdysTech</Company>
     <Authors>AdysTech;mvadu</Authors>
-    <Version>0.21.0.0</Version>
+    <Version>0.25.0.0</Version>
     <PackageId>AdysTech.InfluxDB.Client.Net.Core</PackageId>
-    <Copyright>© AdysTech 2016-2020</Copyright>
+    <Copyright>© AdysTech 2016-2021</Copyright>
     <PackageProjectUrl>https://github.com/AdysTech/InfluxDB.Client.Net</PackageProjectUrl>
     <RepositoryUrl>https://github.com/AdysTech/InfluxDB.Client.Net</RepositoryUrl>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -31,8 +31,8 @@
       11. Drop databases, measurements or points
       12. Get series count or points count for a measurement
     </PackageReleaseNotes>
-    <AssemblyVersion>0.21.0.0</AssemblyVersion>
-    <FileVersion>0.21.0.0</FileVersion>
+    <AssemblyVersion>0.25.0.0</AssemblyVersion>
+    <FileVersion>0.25.0.0</FileVersion>
     <PackageTags>InfluxDB Influx TSDB TimeSeries InfluxData Chunking retention RetentionPolicy</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
