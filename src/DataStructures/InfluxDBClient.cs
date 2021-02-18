@@ -121,15 +121,13 @@ namespace AdysTech.InfluxDB.Client.Net
                 {
                     throw InfluxDBException.ProcessInfluxDBError(await response.Content.ReadAsStringAsync());
                 }
+
+                return response;
             }
             catch (HttpRequestException e)
             {
-                if (e.InnerException.Message == "Unable to connect to the remote server" ||
-                    e.InnerException.Message == "A connection with the server could not be established" ||
-                    e.InnerException.Message.StartsWith("The remote name could not be resolved:"))
-                    throw new ServiceUnavailableException();
+                throw new ServiceUnavailableException(e);
             }
-            return null;
         }
 
         private async Task<HttpResponseMessage> PostAsync(Dictionary<string, string> EndPoint, byte[] requestContent)
@@ -179,10 +177,8 @@ namespace AdysTech.InfluxDB.Client.Net
             }
             catch (HttpRequestException e)
             {
-                if (e.InnerException.Message == "Unable to connect to the remote server")
-                    throw new ServiceUnavailableException();
+                throw new ServiceUnavailableException(e);
             }
-            return null;
         }
 
         private async Task<bool> PostPointsAsync(string dbName, TimePrecision precision, string retention, IEnumerable<IInfluxDatapoint> points)
@@ -811,7 +807,6 @@ namespace AdysTech.InfluxDB.Client.Net
                 endPoint.Add("rp", retentionPolicy);
             }
             var response = await GetAsync(endPoint, HttpCompletionOption.ResponseHeadersRead);
-            if (response == null) throw new ServiceUnavailableException();
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 var results = new List<IInfluxSeries>();
